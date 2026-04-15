@@ -1,0 +1,328 @@
+{{define "title"}}{{.Title}}{{end}}
+
+{{define "main"}}
+<div class="course-container">
+  <!-- Header Section -->
+  <div class="course-header">
+    <div class="header-content">
+        <div class="left-section">
+            {{if .Sources}}
+                {{range .Sources}}
+                    {{if .ImageURL}}
+                        <a href="{{.DownloadURL}}" target="_blank" class="book-item">
+                          <img src="{{.ImageURL}}" alt="{{.Title}}" class="book-cover">
+                        </a>
+                    {{end}}
+                {{end}}
+            {{end}}
+        </div>
+        
+        <div class="right-section">
+            <h1 class="course-title">{{.Title}}</h1>
+            
+            <div class="info-boxes">
+                <div class="info-box semester-info">
+                    <span>{{.Semester.SemesterName}}</span>
+                </div>
+                <a href="{{ .Teacher.PageURL }}" class="teacher-link" style="text-decoration:none; color:inherit;" target="_blank" 
+    rel="noopener noreferrer">
+    <div class="info-box teacher-info">
+        <span>دکتر {{ .Teacher.FirstName }} {{ .Teacher.LastName }}</span>
+        <img 
+            src="{{ .Teacher.ImageURL }}" 
+            alt="تصویر استاد" 
+            class="teacher-image"
+            onerror="this.style.display='none';"
+        />
+    </div>
+</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="course-info-section" dir="rtl">
+    <div class="section-title">
+        اطلاعات دوره
+    </div>
+    
+    <div class="info-content">
+        {{if .CourseDescription.Description}}
+        <div class="description-container">
+            <h3>توضیحات دوره</h3>
+            <p dir="rtl">{{.CourseDescription.Description}}</p>
+        </div>
+        {{end}}
+
+        
+        {{if .CourseDescription.ClassSchedule.DayOfWeek}}
+        <div class="schedule-container">
+            <h3>زمان‌بندی کلاس</h3>
+            <div class="schedule-details">
+                <p><strong>روز:</strong> {{.CourseDescription.ClassSchedule.DayOfWeek}}</p>
+                <p><strong>زمان:</strong> {{.CourseDescription.ClassSchedule.StartTime}} تا {{.CourseDescription.ClassSchedule.EndTime}}</p>
+                <p><strong>محل:</strong> {{.CourseDescription.ClassSchedule.Location}}</p>
+            </div>
+        </div>
+        {{end}}
+
+        {{if .CourseDescription.GradeDistribution}}
+        <div class="grade-distribution-container">
+            <h3>توزیع نمرات</h3>
+            <table class="grade-table">
+                {{range .CourseDescription.GradeDistribution}}
+                    <tr>
+                        <td>{{.Name}}</td>
+                        <td>{{.Percentage}} %</td>
+                    </tr>
+                {{end}}
+            </table>
+        </div>
+        {{end}}
+    </div>
+</div>
+
+<div class="nav-section" dir="rtl">
+    <div class="nav-bar">
+        
+        <div class="nav-item{{if eq $.ActiveSection "announcements"}} active{{end}}" id="announcements-nav">
+            اعلان‌ها
+        </div>
+
+         <div class="nav-item{{if eq $.ActiveSection "slides"}} active{{end}}" id="slides-nav">
+           اسلایدها
+        </div>
+
+        <div class="nav-item{{if eq $.ActiveSection "assignments"}} active{{end}}" id="assignments-nav">
+          تمرین‌ها
+        </div>
+       
+       
+    </div>
+    
+    <div class="announcements-section" id="announcements-content">
+        {{if .Announcements}}
+            {{range .Announcements}}
+            <div class="announcement-item">
+                <div class="announcement-author">
+                    <div class="author-image"></div>
+                    <div class="author-name">استاد محمدی</div>
+                </div>
+                <p class="announcement-text">
+                    {{.Content}}
+                </p>
+            </div>
+            {{end}}
+        {{else}}
+        <div class="no-content-message">
+            اطلاعیه ای موجود نیست
+        </div>
+        {{end}}
+    </div>
+    
+    
+<div class="assignments-section" id="assignments-content">
+    {{if .Assignments}}
+    <div class="table-container">
+        <table class="assignments-table">
+            <thead>
+                <tr>
+                    <th>عنوان تمرین</th>
+                    <th>تاریخ انتشار</th>
+                    <th>آخرین مهلت</th>
+                    <th>عملیات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .Assignments}}
+                <tr>
+                    <td>
+                        <div class="assignment-title-container">
+                            {{.Title}}
+                            {{if .IsExtended}}
+                             <span class="extended-badge">تمدید شده</span>
+                            {{end}}
+                        </div>
+                        
+                    </td>
+                    <td>
+                        {{if .ReleaseDate.IsZero}}
+                            -
+                        {{else}}
+                            {{ $jalaliReleaseDate := .ConvertToJalali .ReleaseDate}}
+                            {{$jalaliReleaseDate.ToPersianString}}
+                        {{end}}
+                    </td>
+                    <td>
+                        {{if .DeadlineDate.IsZero}}
+                            -
+                        {{else}}
+                            {{ $jalaliReleaseDate := .ConvertToJalali .DeadlineDate}}
+                            {{$jalaliReleaseDate.ToPersianString}}
+                        {{end}}
+                    </td>
+                    <td class="actions-cell">
+                        <div class="action-buttons">
+                            <a href="/data/courses/{{$.Id}}/assignments/{{.FileName}}" class="download-btn" target="_blank">
+                            دانلود تمرین
+                            </a>
+                            {{if .SolutionName}}
+                                <a href="/data/courses/{{$.Id}}/solutions/{{.SolutionName}}" class="download-btn solution-btn" target="_blank">
+                            دانلود سلوشن
+                            </a>
+                            {{end}}
+                        </div>
+                        
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Mobile view for small screens -->
+    <div class="mobile-assignments-list">
+        {{range .Assignments}}
+        <div class="mobile-assignment-item">
+            <div class="mobile-assignment-title">
+                {{.Title}}
+                {{if .IsExtended}}
+                    <span class="extended-badge">تمدید شده</span>
+                {{end}}
+            </div>
+            <div class="mobile-assignment-actions">
+                <a href="/data/courses/{{$.Id}}/assignments/{{.FileName}}" class="download-btn" target="_blank">
+                   دانلود تمرین
+                </a>
+                {{if .SolutionName}}
+                <a href="/data/courses/{{$.Id}}/solutions/{{.SolutionName}}" class="download-btn solution-btn" target="_blank">
+                   دانلود سلوشن
+                </a>
+                {{end}}
+            </div>
+        </div>
+        {{end}}
+    </div>
+    
+    {{else}}
+    <div class="no-content-message">
+        تمرینی موجود نیست
+    </div>
+    {{end}}
+</div>
+
+<div class="assignments-section" id="slides-content">
+    {{if .Slides}}
+    <div class="table-container">
+        <table class="assignments-table">
+            <thead>
+                <tr>
+                    <th>ایندکس</th>
+                    <th>عنوان اسلاید</th>
+                    <th>عملیات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range $i, $slide := .Slides}}
+                <tr>
+                    <td>
+                        {{$i}}
+                    </td>
+                    <td>
+                        <div class="assignment-title-container">
+                            {{$slide.Title}}
+                        </div>
+                        
+                    </td>
+                    <td class="actions-cell">
+                        <div class="action-buttons">
+                            <a href="/data/courses/{{$.Id}}/slides/{{$slide.FileName}}" class="download-btn" target="_blank">
+                            دانلود
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Mobile view for slides -->
+    <div class="mobile-slides-list">
+        {{range $i, $slide := .Slides}}
+        <div class="mobile-assignment-item">
+            <div class="mobile-assignment-title">
+                {{$slide.Title}}
+            </div>
+            <div class="mobile-assignment-actions">
+                <a href="/data/courses/{{$.Id}}/slides/{{$slide.FileName}}" class="download-btn" target="_blank">
+                   دانلود اسلاید
+                </a>
+            </div>
+        </div>
+        {{end}}
+    </div>
+
+    {{else}}
+    <div class="no-content-message">
+        اسلایدی موجود نیست
+    </div>
+    {{end}}
+</div>
+
+</div>
+
+<!-- Announcements Section (will be shown only when there are announcements) -->
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle navigation clicks
+    const navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(item => {
+        item.addEventListener('click', function() {
+            // Remove active class from all items
+            navItems.forEach(navItem => navItem.classList.remove('active'));
+            
+            // Add active class to clicked item
+            this.classList.add('active');
+            
+            // Hide all content sections
+            const announcementsContent = document.getElementById('announcements-content');
+            const assignmentsContent = document.getElementById('assignments-content');
+            const slidesContent = document.getElementById('slides-content');
+            
+            if (announcementsContent) {
+                announcementsContent.style.display = 'none';
+            }
+            if (assignmentsContent) {
+                assignmentsContent.style.display = 'none';
+            }
+            if (slidesContent) {
+                slidesContent.style.display = 'none';
+            }
+            
+            // Show the selected section
+            const sectionId = this.id.replace('-nav', '-content');
+            const contentElement = document.getElementById(sectionId);
+            if (contentElement) {
+                contentElement.style.display = 'block';
+            }
+        });
+    });
+    
+    // Initialize with first section visible
+    if (document.getElementById('announcements-nav') && document.getElementById('announcements-content')) {
+        document.getElementById('announcements-content').style.display = 'block';
+        document.getElementById('assignments-content').style.display = 'none';
+        document.getElementById('slides-content').style.display = 'none';
+    } else if (document.getElementById('assignments-nav') && document.getElementById('assignments-content')) {
+        document.getElementById('announcements-content').style.display = 'none';
+    } else if (document.getElementById('slides-nav') && document.getElementById('slides-content')) {
+        document.getElementById('announcements-content').style.display = 'none';
+    }
+});
+</script>
+
+</div>
+{{end}}

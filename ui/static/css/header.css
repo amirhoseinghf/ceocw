@@ -1,0 +1,60 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    padding: 10px 40px;
+    background-color: #242424;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.logo {
+    background-size: cover;
+    width: 45px;
+    height: 45px;
+    margin-right: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.university-info h1 {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: white;
+    font-weight: 500;
+    font-size: 17px;
+}
+
+.university-info p {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: rgb(205, 205, 205);
+    font-weight: 400;
+    font-size: 14px;
+}
+
+/* 768 */ 
+@media (max-width: 400px) {
+    .header {
+        flex-direction: column;
+        text-align: center;
+        padding: 15px;
+    }
+    
+    .logo {
+        margin-right: 0;
+        margin-bottom: 10px;
+        width: 60px;
+        height: 60px;
+    }
+    
+    .university-info h1 {
+        font-size: 20px;
+    }
+}
