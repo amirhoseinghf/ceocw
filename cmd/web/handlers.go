@@ -175,6 +175,8 @@ func (app *application) courseView(w http.ResponseWriter, r *http.Request) {
 		Notes: []models.Note{
 			note1,
 		},
+		TelegramLink: "fsfsf",
+		BaleLink:     "fsfs",
 	}
 
 	files := []string{

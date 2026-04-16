@@ -51,6 +51,7 @@
     background-color: #363636;
     width: 100%;
     padding: 20px 60px;
+    
 }
 
 .header-content {
@@ -82,6 +83,8 @@
     flex-direction: column;
     justify-content: space-between;
     flex-grow: 1;
+    vertical-align: middle;
+    margin-top: 10px;
 }
 
 .course-title {
@@ -95,10 +98,16 @@
 
 .info-boxes {
     display: flex;
-    gap: 20px;
-    align-items: center;
+    flex-direction: column;
+    gap: 15px;
+    align-items: end;
     flex-wrap: wrap;
     justify-content: flex-end;
+}
+
+.top-row, .bottom-row {
+    display: flex;
+    gap: 10px;
 }
 
 .info-box {
@@ -126,9 +135,40 @@
     
 }
 
-
-.teacher-info:hover {
+.teacher-info:hover,
+.teacher-info:active {
     background-color: #303030;
+}
+
+.telegram-info:hover,
+.telegram-info:active {
+    background-color: #0088cc; /* Telegram blue color */
+
+}
+
+.bottom-row a {
+    text-decoration: none;
+}
+
+.bale-info:hover,
+.bale-info:active {
+    background-color: #0ac99afe;
+
+}
+
+.bale-info,
+.telegram-info {
+    height: 45px;
+}
+
+.bale-icon {
+    width: 22px;
+    height: 22px;
+}
+
+.telegram-icon {
+    width: 25px;
+    height: 25px;
 }
 
 @media (max-width: 895px) {
@@ -137,6 +177,13 @@
         align-items: center;
         text-align: center;
         gap: 20px;
+    }
+
+    .top-row,
+    .bottom-row {
+        flex-direction: column;
+        flex-wrap: wrap;
+        align-items: center;
     }
     
     .course-title {
@@ -211,13 +258,14 @@
 }
 
 .section-title {
-    background-color: #282828;
+    /* background-color: #282828; */
     border-radius: 17px;
-    padding: 15px 25px;
+    padding: 15px 0px;
     text-align: right;
-    color: white;
+    color: #282828;
     margin-bottom: 5px;
     font-size: 1.3rem;
+    font-weight: bold;
 }
 
 .info-content {
@@ -285,6 +333,7 @@
     gap: 0px;
 }
 
+
 .nav-item {
     padding: 12px 23px;
     border-radius: 15px;
@@ -298,6 +347,52 @@
     background-color: #fff;
     color: #282828;
 }
+
+/* MOBILE DROPDOWN HEADER */
+.nav-dropdown-header {
+    display: none;
+    background-color: #282828;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 17px;
+    cursor: pointer;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 16px;
+}
+
+.nav-dropdown-header .arrow {
+    font-size: 14px;
+}
+
+/* Mobile behavior */
+@media (max-width: 768px) {
+
+    /* Show dropdown header */
+    .nav-dropdown-header {
+        display: flex;
+        margin-bottom: 10px;
+    }
+
+    /* Hide nav bar until opened */
+    .nav-bar {
+        flex-direction: column;
+        display: none; /* toggled later */
+        margin-top: 8px;
+        transition: 500 1s ease-in-out;
+    }
+
+    .nav-item {
+        padding: 12px 20px;
+        border-radius: 12px;
+    }
+
+    /* When dropdown is open */
+    .nav-bar.open {
+        display: flex;
+    }
+}
+
 
 /* Announcement section styling */
 .announcements-section {
