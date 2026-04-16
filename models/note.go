@@ -1,6 +1,7 @@
 package models
 
 type Note struct {
-	Title    string
-	FileName string
+	Title     string
+	FileName  string
+	IsUpdated bool
 }

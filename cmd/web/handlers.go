@@ -50,8 +50,9 @@ func (app *application) courseView(w http.ResponseWriter, r *http.Request) {
 	// }
 
 	note1 := models.Note{
-		Title:    "جزوه 96",
-		FileName: "Hoosh-Salimi96.pdf",
+		Title:     "جزوه 96",
+		FileName:  "Hoosh-Salimi96.pdf",
+		IsUpdated: true,
 	}
 
 	slide1 := models.Slide{

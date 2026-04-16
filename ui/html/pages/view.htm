@@ -311,8 +311,10 @@
                     <td>
                         <div class="assignment-title-container">
                             {{.Title}}
+                            {{if .IsUpdated}}
+                             <span class="project-badge">آپدیت شده</span>
+                            {{end}}
                         </div>
-                        
                     </td>
                     <td class="actions-cell">
                         <div class="action-buttons">
@@ -333,6 +335,9 @@
         <div class="mobile-assignment-item">
             <div class="mobile-assignment-title">
                 {{.Title}}
+                {{if .IsUpdated}}
+                 <span class="project-badge">آپدیت شده</span>
+                {{end}}
             </div>
             <div class="mobile-assignment-actions">
                 <a href="/data/courses/{{$.Id}}/notes/{{.FileName}}" class="download-btn" target="_blank">
