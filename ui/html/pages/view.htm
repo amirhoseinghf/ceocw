@@ -96,31 +96,39 @@
         <div class="nav-item{{if eq $.ActiveSection "assignments"}} active{{end}}" id="assignments-nav">
           تمرین‌ها
         </div>
+
+
+        <div class="nav-item{{if eq $.ActiveSection "notes"}} active{{end}}" id="notes-nav">
+          جزوه‌ها
+        </div>
        
        
     </div>
     
-    <div class="announcements-section" id="announcements-content">
-        {{if .Announcements}}
-            {{range .Announcements}}
-            <div class="announcement-item">
-                <div class="announcement-author">
-                    <div class="author-image"></div>
-                    <div class="author-name">استاد محمدی</div>
-                </div>
-                <p class="announcement-text">
-                    {{.Content}}
-                </p>
+
+<!-- Announcements Section -->
+<div class="announcements-section" id="announcements-content">
+    {{if .Announcements}}
+        {{range .Announcements}}
+        <div class="announcement-item">
+            <div class="announcement-author">
+                <div class="author-image"></div>
+                <div class="author-name">استاد محمدی</div>
             </div>
-            {{end}}
-        {{else}}
-        <div class="no-content-message">
-            اطلاعیه ای موجود نیست
+            <p class="announcement-text">
+                {{.Content}}
+            </p>
         </div>
         {{end}}
+    {{else}}
+    <div class="no-content-message">
+        اطلاعیه ای موجود نیست
     </div>
+    {{end}}
+</div>
     
-    
+
+<!-- Assignments Section -->    
 <div class="assignments-section" id="assignments-content">
     {{if .Assignments}}
     <div class="table-container">
@@ -141,6 +149,9 @@
                             {{.Title}}
                             {{if .IsExtended}}
                              <span class="extended-badge">تمدید شده</span>
+                            {{end}}
+                            {{if .IsProject}}
+                             <span class="project-badge">پروژه</span>
                             {{end}}
                         </div>
                         
@@ -164,7 +175,12 @@
                     <td class="actions-cell">
                         <div class="action-buttons">
                             <a href="/data/courses/{{$.Id}}/assignments/{{.FileName}}" class="download-btn" target="_blank">
-                            دانلود تمرین
+                            {{if .IsProject}}
+                                دانلود
+                            {{else}}
+                                دانلود تمرین
+                            {{end}}
+                            
                             </a>
                             {{if .SolutionName}}
                                 <a href="/data/courses/{{$.Id}}/solutions/{{.SolutionName}}" class="download-btn solution-btn" target="_blank">
@@ -189,10 +205,17 @@
                 {{if .IsExtended}}
                     <span class="extended-badge">تمدید شده</span>
                 {{end}}
+                {{if .IsProject}}
+                 <span class="project-badge">پروژه</span>
+                {{end}}
             </div>
             <div class="mobile-assignment-actions">
                 <a href="/data/courses/{{$.Id}}/assignments/{{.FileName}}" class="download-btn" target="_blank">
-                   دانلود تمرین
+                    {{if .IsProject}}
+                        دانلود
+                    {{else}}
+                        دانلود تمرین
+                    {{end}}
                 </a>
                 {{if .SolutionName}}
                 <a href="/data/courses/{{$.Id}}/solutions/{{.SolutionName}}" class="download-btn solution-btn" target="_blank">
@@ -211,6 +234,7 @@
     {{end}}
 </div>
 
+<!-- Slides Section -->
 <div class="assignments-section" id="slides-content">
     {{if .Slides}}
     <div class="table-container">
@@ -270,6 +294,62 @@
     {{end}}
 </div>
 
+<!-- Notes Section -->
+<div class="assignments-section" id="notes-content">
+    {{if .Notes}}
+    <div class="table-container">
+        <table class="assignments-table">
+            <thead>
+                <tr>
+                    <th>عنوان</th>
+                    <th>عملیات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .Notes}}
+                <tr>
+                    <td>
+                        <div class="assignment-title-container">
+                            {{.Title}}
+                        </div>
+                        
+                    </td>
+                    <td class="actions-cell">
+                        <div class="action-buttons">
+                            <a href="/data/courses/{{$.Id}}/notes/{{.FileName}}" class="download-btn" target="_blank">
+                            دانلود
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Mobile view for slides -->
+    <div class="mobile-notes-list">
+        {{range .Notes}}
+        <div class="mobile-assignment-item">
+            <div class="mobile-assignment-title">
+                {{.Title}}
+            </div>
+            <div class="mobile-assignment-actions">
+                <a href="/data/courses/{{$.Id}}/notes/{{.FileName}}" class="download-btn" target="_blank">
+                   دانلود
+                </a>
+            </div>
+        </div>
+        {{end}}
+    </div>
+
+    {{else}}
+    <div class="no-content-message">
+        جزوه ای موجود نیست
+    </div>
+    {{end}}
+</div>
+
 </div>
 
 <!-- Announcements Section (will be shown only when there are announcements) -->
@@ -291,6 +371,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const announcementsContent = document.getElementById('announcements-content');
             const assignmentsContent = document.getElementById('assignments-content');
             const slidesContent = document.getElementById('slides-content');
+            const notesContent = document.getElementById('notes-content')
             
             if (announcementsContent) {
                 announcementsContent.style.display = 'none';
@@ -300,6 +381,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             if (slidesContent) {
                 slidesContent.style.display = 'none';
+            }
+            if (notesContent) {
+                notesContent.style.display = 'none';
             }
             
             // Show the selected section
@@ -316,9 +400,12 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('announcements-content').style.display = 'block';
         document.getElementById('assignments-content').style.display = 'none';
         document.getElementById('slides-content').style.display = 'none';
+        document.getElementById('notes-content').style.display = 'none';
     } else if (document.getElementById('assignments-nav') && document.getElementById('assignments-content')) {
         document.getElementById('announcements-content').style.display = 'none';
     } else if (document.getElementById('slides-nav') && document.getElementById('slides-content')) {
+        document.getElementById('announcements-content').style.display = 'none';
+    } else if (document.getElementById('notes-nav') && document.getElementById('notes-content')) {
         document.getElementById('announcements-content').style.display = 'none';
     }
 });

@@ -8,6 +8,7 @@ type Course struct {
 	Semester          Semester
 	Teacher           Teacher
 	Slides            []Slide
+	Notes             []Note
 	Assignments       []Assignment
 	Announcements     []Announcement    // New section for announcements
 	CourseDescription CourseDescription // New field for course description

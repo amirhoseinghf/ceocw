@@ -49,20 +49,25 @@ func (app *application) courseView(w http.ResponseWriter, r *http.Request) {
 	// 	CreatedAt: time.Now(),
 	// }
 
-	// slide1 := models.Slide{
-	// 	Title:    "طرح درس",
-	// 	FileName: "0.pdf",
-	// }
+	note1 := models.Note{
+		Title:    "جزوه 96",
+		FileName: "Hoosh-Salimi96.pdf",
+	}
 
-	// slide2 := models.Slide{
-	// 	Title:    "مقدمه",
-	// 	FileName: "1.pdf",
-	// }
+	slide1 := models.Slide{
+		Title:    "طرح درس",
+		FileName: "0.pdf",
+	}
 
-	// slide3 := models.Slide{
-	// 	Title:    "عامل های هوشمند",
-	// 	FileName: "2.pdf",
-	// }
+	slide2 := models.Slide{
+		Title:    "مقدمه",
+		FileName: "1.pdf",
+	}
+
+	slide3 := models.Slide{
+		Title:    "عامل های هوشمند",
+		FileName: "2.pdf",
+	}
 
 	gdassignment := models.GradeItem{
 		Name:       "تمرین ها",
@@ -131,6 +136,13 @@ func (app *application) courseView(w http.ResponseWriter, r *http.Request) {
 		IsExtended: true,
 	}
 
+	project := models.Assignment{
+		Id:        2,
+		Title:     "پروژه درس",
+		FileName:  "AI-FinalProject-Phase_1-Fall2024-HOTK.pdf",
+		IsProject: true,
+	}
+
 	book1 := models.Book{
 		Title:       "stewart",
 		ImageURL:    "./static/img/stewart.png",
@@ -151,12 +163,16 @@ func (app *application) courseView(w http.ResponseWriter, r *http.Request) {
 		Assignments: []models.Assignment{
 			hw1,
 			hw2,
+			project,
 		},
 		ActiveSection: "announcements",
-		Slides:        []models.Slide{
-			// slide1,
-			// slide2,
-			// slide3,
+		Slides: []models.Slide{
+			slide1,
+			slide2,
+			slide3,
+		},
+		Notes: []models.Note{
+			note1,
 		},
 	}
 

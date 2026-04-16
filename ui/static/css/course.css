@@ -431,6 +431,17 @@
     vertical-align: middle;
 }
 
+.project-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    background-color: #1976D2;
+    color: white;
+    border-radius: 8px;
+    font-size: 10px;
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
 .no-content-message {
     text-align: center;
     padding: 20px;
@@ -475,6 +486,13 @@
     margin-top: 20px;
 }
 
+.mobile-notes-list {
+    display: none; /* Hide by default */
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+}
+
 /* Update existing classes if needed */
 .mobile-assignments-list {
     display: none; /* Initially hidden */
@@ -494,13 +512,15 @@
     
     /* Show mobile list for assignments */
     #assignments-content .mobile-assignments-list,
-    #slides-content .mobile-slides-list {
+    #slides-content .mobile-slides-list,
+    #notes-content .mobile-notes-list {
         display: flex; /* Show mobile list */
     }
     
     /* Ensure only one is visible at a time in mobile view */
     .mobile-assignments-list, 
-    .mobile-slides-list {
+    .mobile-slides-list,
+    .mobile-notes-list {
         display: none;
     }
     

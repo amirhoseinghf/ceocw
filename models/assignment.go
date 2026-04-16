@@ -14,6 +14,7 @@ type Assignment struct {
 	ReleaseDate  time.Time
 	DeadlineDate time.Time
 	IsExtended   bool
+	IsProject    bool
 }
 
 // Jalali date structure
