@@ -82,13 +82,13 @@ rel="noopener noreferrer">
 
 <div class="course-info-section" dir="rtl">
     <div class="section-title">
-        اطلاعات دوره
+        اطلاعات درس
     </div>
     
     <div class="info-content">
         {{if .CourseDescription.Description}}
         <div class="description-container">
-            <h3>توضیحات دوره</h3>
+            <h3>توضیحات درس</h3>
             <p dir="rtl">{{.CourseDescription.Description}}</p>
         </div>
         {{end}}
@@ -142,11 +142,13 @@ rel="noopener noreferrer">
           تمرین‌ها
         </div>
 
-
         <div class="nav-item{{if eq $.ActiveSection "notes"}} active{{end}}" id="notes-nav">
           جزوه‌ها
         </div>
-       
+        
+        <div class="nav-item{{if eq $.ActiveSection "exams"}} active{{end}}" id="exams-nav">
+          امتحانات
+        </div>
        
     </div>
     
@@ -400,6 +402,84 @@ rel="noopener noreferrer">
     {{end}}
 </div>
 
+<!-- Notes Section -->
+<div class="assignments-section" id="exams-content">
+    {{if .Exams}}
+    <div class="table-container">
+        <table class="assignments-table">
+            <thead>
+                <tr>
+                    <th>ترم</th>
+                    <th>نوع امتحان</th>
+                    <th>عملیات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .Exams}}
+                <tr>
+                    <td>
+                        <div class="assignment-title-container">
+                            {{if ne .Semester.Id 0}}
+                                {{.Semester.SemesterName}}
+                            {{else}}
+                                نامشخص
+                            {{end}}
+                            {{if .ThisSemester}}
+                             <span class="project-badge">این ترم</span>
+                            {{end}}
+                        </div>
+                    </td>
+                    <td class="actions-cell">
+                        {{.ExamType}}
+                    </td>
+                    <td class="actions-cell">
+                        <div class="action-buttons">
+                            <a href="/data/courses/{{$.Id}}/exams/{{.FileName}}" class="download-btn" target="_blank">
+                            دانلود
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Mobile view for slides -->
+    <div class="mobile-exams-list">
+        {{range .Exams}}
+        <div class="mobile-assignment-item">
+            <div class="mobile-assignment-title">
+                {{if ne .Semester.Id 0}}
+                    {{.Semester.SemesterName}}
+                {{else}}
+                    نامشخص
+                {{end}}
+                
+                {{if .ThisSemester}}
+                 <span class="project-badge">این ترم</span>
+                {{end}}
+
+                <span>- {{.ExamType}}</span>
+
+            </div>
+            
+            <div class="mobile-assignment-actions">
+                <a href="/data/courses/{{$.Id}}/exams/{{.FileName}}" class="download-btn" target="_blank">
+                   دانلود
+                </a>
+            </div>
+        </div>
+        {{end}}
+    </div>
+
+    {{else}}
+    <div class="no-content-message">
+        امتحانی موجود نیست
+    </div>
+    {{end}}
+</div>
+
 </div>
 
 <!-- Announcements Section (will be shown only when there are announcements) -->
@@ -421,8 +501,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const announcementsContent = document.getElementById('announcements-content');
             const assignmentsContent = document.getElementById('assignments-content');
             const slidesContent = document.getElementById('slides-content');
-            const notesContent = document.getElementById('notes-content')
-            
+            const notesContent = document.getElementById('notes-content');
+            const examsContent = document.getElementById('exams-content');
+
             if (announcementsContent) {
                 announcementsContent.style.display = 'none';
             }
@@ -434,6 +515,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             if (notesContent) {
                 notesContent.style.display = 'none';
+            }
+            if (examsContent) {
+                examsContent.style.display = 'none';
             }
             
             // Show the selected section
@@ -451,13 +535,16 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('assignments-content').style.display = 'none';
         document.getElementById('slides-content').style.display = 'none';
         document.getElementById('notes-content').style.display = 'none';
+         document.getElementById('exams-content').style.display = 'none';
     } else if (document.getElementById('assignments-nav') && document.getElementById('assignments-content')) {
         document.getElementById('announcements-content').style.display = 'none';
     } else if (document.getElementById('slides-nav') && document.getElementById('slides-content')) {
         document.getElementById('announcements-content').style.display = 'none';
     } else if (document.getElementById('notes-nav') && document.getElementById('notes-content')) {
         document.getElementById('announcements-content').style.display = 'none';
-    }
+    } else if (document.getElementById('exams-nav') && document.getElementById('exams-content')) {
+        document.getElementById('announcements-content').style.display = 'none';
+    } 
 
     const header = document.querySelector(".nav-dropdown-header");
     const dropdown = document.getElementById("nav-dropdown");

@@ -13,6 +13,7 @@ func (app *application) routes() *http.ServeMux {
 
 	mux.HandleFunc("/", app.home)
 	mux.HandleFunc("/course", app.courseView)
+	mux.HandleFunc("/course/create", app.courseCreate)
 
 	return mux
 }

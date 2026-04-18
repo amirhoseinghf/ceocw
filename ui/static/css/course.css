@@ -574,19 +574,15 @@
 }
 
 /* Add this new class for slides mobile list */
-.mobile-slides-list {
+.mobile-slides-list,
+.mobile-notes-list,
+.mobile-exams-list {
     display: none; /* Hide by default */
     flex-direction: column;
     gap: 15px;
     margin-top: 20px;
 }
 
-.mobile-notes-list {
-    display: none; /* Hide by default */
-    flex-direction: column;
-    gap: 15px;
-    margin-top: 20px;
-}
 
 /* Update existing classes if needed */
 .mobile-assignments-list {
@@ -608,14 +604,16 @@
     /* Show mobile list for assignments */
     #assignments-content .mobile-assignments-list,
     #slides-content .mobile-slides-list,
-    #notes-content .mobile-notes-list {
+    #notes-content .mobile-notes-list,
+    #exams-content .mobile-exams-list {
         display: flex; /* Show mobile list */
     }
     
     /* Ensure only one is visible at a time in mobile view */
     .mobile-assignments-list, 
     .mobile-slides-list,
-    .mobile-notes-list {
+    .mobile-notes-list,
+    .mobile-exams-list {
         display: none;
     }
     

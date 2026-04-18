@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"html/template"
 	"net/http"
 	"time"
@@ -39,15 +40,10 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 func (app *application) courseView(w http.ResponseWriter, r *http.Request) {
 
 	sem404 := models.Semester{
-		Id: "4032",
+		Id:     1,
+		Season: "بهار",
+		Year:   1404,
 	}
-
-	// announcement := models.Announcement{
-	// 	Id:        1,
-	// 	Title:     "برگزاری مجازی کلاس ها",
-	// 	Content:   "به استحضار می رساند. کلاس شنبه به صورت مجازی برگزار می شود.",
-	// 	CreatedAt: time.Now(),
-	// }
 
 	note1 := models.Note{
 		Title:     "جزوه 96",
@@ -104,12 +100,12 @@ func (app *application) courseView(w http.ResponseWriter, r *http.Request) {
 	}
 
 	description := models.CourseDescription{
-		// ClassSchedule: models.ClassSchedule{
-		// 	DayOfWeek: "شنبه و دوشنبه",
-		// 	StartTime: "10:30",
-		// 	EndTime:   "12:00",
-		// 	Location:  "102",
-		// },
+		ClassSchedule: models.ClassSchedule{
+			DayOfWeek: "شنبه و دوشنبه",
+			StartTime: "10:30",
+			EndTime:   "12:00",
+			Location:  "102",
+		},
 		GradeDistribution: gdistro,
 	}
 
@@ -144,9 +140,16 @@ func (app *application) courseView(w http.ResponseWriter, r *http.Request) {
 		IsProject: true,
 	}
 
+	exam1 := models.Exam{
+		Id:           1,
+		ExamType:     "میان ترم",
+		ThisSemester: false,
+		FileName:     "midterm95.pdf",
+	}
+
 	book1 := models.Book{
 		Title:       "stewart",
-		ImageURL:    "./static/img/stewart.png",
+		ImageURL:    "./data/courses/1/books_thumbnails/stewart.png",
 		DownloadURL: "./static/stewart.pdf",
 	}
 
@@ -160,7 +163,9 @@ func (app *application) courseView(w http.ResponseWriter, r *http.Request) {
 		Teacher:           teacher,
 		CourseDescription: description,
 		Announcements:     []models.Announcement{},
-		Exams:             []models.Exam{},
+		Exams: []models.Exam{
+			exam1,
+		},
 		Assignments: []models.Assignment{
 			hw1,
 			hw2,
@@ -175,8 +180,8 @@ func (app *application) courseView(w http.ResponseWriter, r *http.Request) {
 		Notes: []models.Note{
 			note1,
 		},
-		TelegramLink: "fsfsf",
-		BaleLink:     "fsfs",
+		TelegramLink: "https://t.me/ai",
+		BaleLink:     "https://bale.me/ai",
 	}
 
 	files := []string{
@@ -194,4 +199,56 @@ func (app *application) courseView(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		app.serverError(w, err)
 	}
+}
+
+func (app *application) courseCreate(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.Header().Set("Allow", http.MethodPost)
+		app.clientError(w, http.StatusMethodNotAllowed)
+		return
+	}
+
+	sem404 := models.Semester{
+		Id:     1,
+		Season: "بهار",
+		Year:   1404,
+	}
+
+	description := models.CourseDescription{
+		ClassSchedule: models.ClassSchedule{
+			DayOfWeek: "شنبه و دوشنبه",
+			StartTime: "10:30",
+			EndTime:   "12:00",
+			Location:  "102",
+		},
+	}
+
+	teacher := models.Teacher{
+		Id:        1,
+		FirstName: "آرمین",
+		LastName:  "سلیمی بدر",
+		Courses:   []models.Course{},
+		ImageURL:  "https://cse.sbu.ac.ir/faculty?p_p_id=ir_sain_university_people_portlet_FacultyProfilePortlet&p_p_lifecycle=2&p_p_state=normal&p_p_mode=view&p_p_resource_id=%2Funiversity_people%2Fperson_image&p_p_cacheability=cacheLevelPage&_ir_sain_university_people_portlet_FacultyProfilePortlet_universityPersonImageId=46238673&_ir_sain_university_people_portlet_FacultyProfilePortlet__ir_sain_university_people_FacultyHomePortlet_friendlyURLRequest=a_salimibadr&_ir_sain_university_people_portlet_FacultyProfilePortlet_friendlyURLRequest=a_salimibadr",
+		PageURL:   "https://cse.sbu.ac.ir/~a_salimibadr",
+	}
+
+	course1 := models.Course{
+		Title:             "هوش مصنوعی و سیستم های خبره",
+		ShortName:         "ai",
+		Semester:          sem404,
+		Teacher:           teacher,
+		CourseDescription: description,
+		ActiveSection:     "announcements",
+		TelegramLink:      "https://t.me/ai",
+		BaleLink:          "https://bale.me/ai",
+	}
+
+	id, err := app.courses.Insert(course1)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("/courses/view?id=%d", id), http.StatusSeeOther)
+
 }
