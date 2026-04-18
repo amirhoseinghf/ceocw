@@ -1,4 +1,4 @@
-{{define "title"}}{{.Title}}{{end}}
+{{define "title"}}{{.Course.Title}}{{end}}
 
 {{define "main"}}
 <div class="course-container">
@@ -6,8 +6,8 @@
   <div class="course-header">
     <div class="header-content">
         <div class="left-section">
-            {{if .Sources}}
-                {{range .Sources}}
+            {{if .Course.Sources}}
+                {{range .Course.Sources}}
                     {{if .ImageURL}}
                         <a href="{{.DownloadURL}}" target="_blank" class="book-item">
                           <img src="{{.ImageURL}}" alt="{{.Title}}" class="book-cover">
@@ -18,21 +18,21 @@
         </div>
         
         <div class="right-section">
-            <h1 class="course-title">{{.Title}}</h1>
+            <h1 class="course-title">{{.Course.Title}}</h1>
             
              <div class="info-boxes">
         <!-- Top row: Semester and Teacher info side by side -->
         <div class="top-row">
             <div class="info-box semester-info">
-                <span>{{.Semester.SemesterName}}</span>
+                <span>{{.Course.Semester.SemesterName}}</span>
             </div>
             
-            <a href="{{ .Teacher.PageURL }}" class="teacher-link" style="text-decoration:none; color:inherit;" target="_blank" 
+            <a href="{{ .Course.Teacher.PageURL }}" class="teacher-link" style="text-decoration:none; color:inherit;" target="_blank" 
 rel="noopener noreferrer">
                 <div class="info-box teacher-info">
-                    <span>دکتر {{ .Teacher.FirstName }} {{ .Teacher.LastName }}</span>
+                    <span>دکتر {{ .Course.Teacher.FirstName }} {{ .Course.Teacher.LastName }}</span>
                     <img 
-                        src="{{ .Teacher.ImageURL }}" 
+                        src="{{ .Course.Teacher.ImageURL }}" 
                         alt="تصویر استاد" 
                         class="teacher-image"
                         onerror="this.style.display='none';"
@@ -44,8 +44,8 @@ rel="noopener noreferrer">
         <!-- Bottom row: Telegram and Bale info side by side -->
         <div class="bottom-row" dir="rtl">
             <!-- Telegram Info Box -->
-            {{ if .TelegramLink }}
-            <a href="{{ .TelegramLink }}" target="_blank" rel="noopener noreferrer">
+            {{ if .Course.TelegramLink }}
+            <a href="{{ .Course.TelegramLink }}" target="_blank" rel="noopener noreferrer">
                 <div class="info-box telegram-info">
                     <div class="telegram-icon">
                         <svg  viewBox="0 0 1080 1080" version="1.1" xmlns="http://www.w3.org/2000/svg">
@@ -60,8 +60,8 @@ rel="noopener noreferrer">
             {{ end }}
             
             <!-- Bale Info Box -->
-            {{ if .BaleLink }}
-            <a href="{{ .BaleLink }}" target="_blank" rel="noopener noreferrer">
+            {{ if .Course.BaleLink }}
+            <a href="{{ .Course.BaleLink }}" target="_blank" rel="noopener noreferrer">
                 <div class="info-box bale-info">
                     <div class="bale-icon">
                        <svg viewBox="0 0 128 129" version="1.1" xmlns="http://www.w3.org/2000/svg">
@@ -86,30 +86,30 @@ rel="noopener noreferrer">
     </div>
     
     <div class="info-content">
-        {{if .CourseDescription.Description}}
+        {{if .Course.CourseDescription.Description}}
         <div class="description-container">
             <h3>توضیحات درس</h3>
-            <p dir="rtl">{{.CourseDescription.Description}}</p>
+            <p dir="rtl">{{.Course.CourseDescription.Description}}</p>
         </div>
         {{end}}
 
         
-        {{if .CourseDescription.ClassSchedule.DayOfWeek}}
+        {{if .Course.CourseDescription.ClassSchedule.DayOfWeek}}
         <div class="schedule-container">
             <h3>زمان‌بندی کلاس</h3>
             <div class="schedule-details">
-                <p><strong>روز:</strong> {{.CourseDescription.ClassSchedule.DayOfWeek}}</p>
-                <p><strong>زمان:</strong> {{.CourseDescription.ClassSchedule.StartTime}} تا {{.CourseDescription.ClassSchedule.EndTime}}</p>
-                <p><strong>محل:</strong> {{.CourseDescription.ClassSchedule.Location}}</p>
+                <p><strong>روز:</strong> {{.Course.CourseDescription.ClassSchedule.DayOfWeek}}</p>
+                <p><strong>زمان:</strong> {{.Course.CourseDescription.ClassSchedule.StartTime}} تا {{.Course.CourseDescription.ClassSchedule.EndTime}}</p>
+                <p><strong>محل:</strong> {{.Course.CourseDescription.ClassSchedule.Location}}</p>
             </div>
         </div>
         {{end}}
 
-        {{if .CourseDescription.GradeDistribution}}
+        {{if .Course.CourseDescription.GradeDistribution}}
         <div class="grade-distribution-container">
             <h3>توزیع نمرات</h3>
             <table class="grade-table">
-                {{range .CourseDescription.GradeDistribution}}
+                {{range .Course.CourseDescription.GradeDistribution}}
                     <tr>
                         <td>{{.Name}}</td>
                         <td>{{.Percentage}} %</td>
@@ -130,23 +130,23 @@ rel="noopener noreferrer">
 
     <div class="nav-bar" id="nav-dropdown">
         
-        <div class="nav-item{{if eq $.ActiveSection "announcements"}} active{{end}}" id="announcements-nav">
+        <div class="nav-item{{if eq $.Course.ActiveSection "announcements"}} active{{end}}" id="announcements-nav">
             اطلاعیه‌ها
         </div>
 
-         <div class="nav-item{{if eq $.ActiveSection "slides"}} active{{end}}" id="slides-nav">
+         <div class="nav-item{{if eq $.Course.ActiveSection "slides"}} active{{end}}" id="slides-nav">
            اسلایدها
         </div>
 
-        <div class="nav-item{{if eq $.ActiveSection "assignments"}} active{{end}}" id="assignments-nav">
+        <div class="nav-item{{if eq $.Course.ActiveSection "assignments"}} active{{end}}" id="assignments-nav">
           تمرین‌ها
         </div>
 
-        <div class="nav-item{{if eq $.ActiveSection "notes"}} active{{end}}" id="notes-nav">
+        <div class="nav-item{{if eq $.Course.ActiveSection "notes"}} active{{end}}" id="notes-nav">
           جزوه‌ها
         </div>
         
-        <div class="nav-item{{if eq $.ActiveSection "exams"}} active{{end}}" id="exams-nav">
+        <div class="nav-item{{if eq $.Course.ActiveSection "exams"}} active{{end}}" id="exams-nav">
           امتحانات
         </div>
        
@@ -155,8 +155,8 @@ rel="noopener noreferrer">
 
 <!-- Announcements Section -->
 <div class="announcements-section" id="announcements-content">
-    {{if .Announcements}}
-        {{range .Announcements}}
+    {{if .Course.Announcements}}
+        {{range .Course.Announcements}}
         <div class="announcement-item">
             <div class="announcement-author">
                 <div class="author-image"></div>
@@ -177,7 +177,7 @@ rel="noopener noreferrer">
 
 <!-- Assignments Section -->    
 <div class="assignments-section" id="assignments-content">
-    {{if .Assignments}}
+    {{if .Course.Assignments}}
     <div class="table-container">
         <table class="assignments-table">
             <thead>
@@ -189,7 +189,7 @@ rel="noopener noreferrer">
                 </tr>
             </thead>
             <tbody>
-                {{range .Assignments}}
+                {{range .Course.Assignments}}
                 <tr>
                     <td>
                         <div class="assignment-title-container">
@@ -245,7 +245,7 @@ rel="noopener noreferrer">
     
     <!-- Mobile view for small screens -->
     <div class="mobile-assignments-list">
-        {{range .Assignments}}
+        {{range .Course.Assignments}}
         <div class="mobile-assignment-item">
             <div class="mobile-assignment-title">
                 {{.Title}}
@@ -283,7 +283,7 @@ rel="noopener noreferrer">
 
 <!-- Slides Section -->
 <div class="assignments-section" id="slides-content">
-    {{if .Slides}}
+    {{if .Course.Slides}}
     <div class="table-container">
         <table class="assignments-table">
             <thead>
@@ -294,7 +294,7 @@ rel="noopener noreferrer">
                 </tr>
             </thead>
             <tbody>
-                {{range $i, $slide := .Slides}}
+                {{range $i, $slide := .Course.Slides}}
                 <tr>
                     <td>
                         {{$i}}
@@ -320,7 +320,7 @@ rel="noopener noreferrer">
 
     <!-- Mobile view for slides -->
     <div class="mobile-slides-list">
-        {{range $i, $slide := .Slides}}
+        {{range $i, $slide := .Course.Slides}}
         <div class="mobile-assignment-item">
             <div class="mobile-assignment-title">
                 {{$slide.Title}}
@@ -343,7 +343,7 @@ rel="noopener noreferrer">
 
 <!-- Notes Section -->
 <div class="assignments-section" id="notes-content">
-    {{if .Notes}}
+    {{if .Course.Notes}}
     <div class="table-container">
         <table class="assignments-table">
             <thead>
@@ -353,7 +353,7 @@ rel="noopener noreferrer">
                 </tr>
             </thead>
             <tbody>
-                {{range .Notes}}
+                {{range .Course.Notes}}
                 <tr>
                     <td>
                         <div class="assignment-title-container">
@@ -404,7 +404,7 @@ rel="noopener noreferrer">
 
 <!-- Notes Section -->
 <div class="assignments-section" id="exams-content">
-    {{if .Exams}}
+    {{if .Course.Exams}}
     <div class="table-container">
         <table class="assignments-table">
             <thead>
@@ -415,7 +415,7 @@ rel="noopener noreferrer">
                 </tr>
             </thead>
             <tbody>
-                {{range .Exams}}
+                {{range .Course.Exams}}
                 <tr>
                     <td>
                         <div class="assignment-title-container">
@@ -447,11 +447,11 @@ rel="noopener noreferrer">
 
     <!-- Mobile view for slides -->
     <div class="mobile-exams-list">
-        {{range .Exams}}
+        {{range .Course.Exams}}
         <div class="mobile-assignment-item">
             <div class="mobile-assignment-title">
-                {{if ne .Semester.Id 0}}
-                    {{.Semester.SemesterName}}
+                {{if ne .Course.Semester.Id 0}}
+                    {{.Course.Semester.SemesterName}}
                 {{else}}
                     نامشخص
                 {{end}}
