@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -90,7 +91,26 @@ func (c *CourseModel) Insert(course Course) (int, error) {
 	return int(id), nil
 }
 
-func (c *CourseModel) Get(id int) (*Course, error) {
+func (c *CourseModel) Get(slug string) (*Course, error) {
+
+	// Split slug into components
+	parts := strings.Split(slug, "-")
+	if len(parts) < 5 {
+		return nil, ErrNoRecord
+	}
+
+	shortName := parts[0]
+	season := parts[1]
+	yearStr := parts[2]
+	firstName := parts[3]
+	// The rest forms the last name (may contain hyphens)
+	lastNamePart := strings.Join(parts[4:], "-")
+
+	year, err := strconv.Atoi(yearStr)
+	if err != nil {
+		return nil, ErrNoRecord
+	}
+
 	// 1. Main query: course + teacher + semester + class schedule (embedded)
 	stmt := `
         SELECT 
@@ -104,16 +124,21 @@ func (c *CourseModel) Get(id int) (*Course, error) {
         FROM courses c
         JOIN teachers t ON c.teacher_id = t.id
         JOIN semesters s ON c.semester_id = s.id
-        WHERE c.id = ?
+        WHERE LOWER(c.short_name) = LOWER(?)
+          AND LOWER(s.season) = LOWER(?)
+          AND s.year = ?
+          AND LOWER(t.first_name_english) = LOWER(?)
+          AND LOWER(REPLACE(t.last_name_english, ' ', '-')) = LOWER(?)
+        LIMIT 1
     `
 
-	row := c.DB.QueryRow(stmt, id)
+	row := c.DB.QueryRow(stmt, shortName, season, year, firstName, lastNamePart)
 
 	course := &Course{}
 	teacher := Teacher{}
 	semester := Semester{}
 
-	err := row.Scan(
+	err = row.Scan(
 		&course.Id, &course.Title, &course.ShortName, &course.ImageUrl,
 		&course.TelegramLink, &course.BaleLink, &course.ActiveSection,
 		&course.CourseDescription.Description,
@@ -140,7 +165,7 @@ func (c *CourseModel) Get(id int) (*Course, error) {
 	// 2. Grade items → GradeDistribution
 	gradeRows, err := c.DB.Query(`
         SELECT name, percentage FROM grade_items WHERE course_id = ?
-    `, id)
+    `, course.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -159,7 +184,7 @@ func (c *CourseModel) Get(id int) (*Course, error) {
 	// 3. Books
 	bookRows, err := c.DB.Query(`
         SELECT title, image_url, download_url FROM books WHERE course_id = ?
-    `, id)
+    `, course.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -178,7 +203,7 @@ func (c *CourseModel) Get(id int) (*Course, error) {
 	// 4. Slides
 	slideRows, err := c.DB.Query(`
         SELECT title, file_name FROM slides WHERE course_id = ?
-    `, id)
+    `, course.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -197,7 +222,7 @@ func (c *CourseModel) Get(id int) (*Course, error) {
 	// 5. Notes
 	noteRows, err := c.DB.Query(`
         SELECT title, file_name, is_updated FROM notes WHERE course_id = ?
-    `, id)
+    `, course.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -218,7 +243,7 @@ func (c *CourseModel) Get(id int) (*Course, error) {
         SELECT id, title, file_name, solution_name, description,
                release_date, deadline_date, is_extended, is_project
         FROM assignments WHERE course_id = ?
-    `, id)
+    `, course.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -250,7 +275,7 @@ func (c *CourseModel) Get(id int) (*Course, error) {
         SELECT id, title, content, created_at, updated_at
         FROM announcements WHERE course_id = ?
         ORDER BY created_at DESC
-    `, id)
+    `, course.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -270,7 +295,7 @@ func (c *CourseModel) Get(id int) (*Course, error) {
 	examRows, err := c.DB.Query(`
         SELECT id, exam_type, file_name, this_semester
         FROM exams WHERE course_id = ?
-    `, id)
+    `, course.Id)
 	if err != nil {
 		return nil, err
 	}

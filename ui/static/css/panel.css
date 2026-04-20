@@ -1,0 +1,160 @@
+/* Medium Weight (Normal) */
+@font-face {
+  font-family: "Vazir";
+  src: url("../fonts/Vazir/Vazir-Medium-FD-WOL.woff2") format("woff2"),
+       url("../fonts/Vazir/Vazir-Medium-FD-WOL.woff") format("woff");
+  font-weight: 500; /* یا normal که معمولاً معادل 400 یا 500 هست */
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Light Weight */
+@font-face {
+  font-family: "Vazir";
+  src: url("../fonts/Vazir/Vazir-Thin-FD-WOL.woff2") format("woff2"),
+       url("../fonts/Vazir/Vazir-Thin-FD-WOL.woff") format("woff");
+  font-weight: 200; /* Thin */
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Light Weight */
+@font-face {
+  font-family: "Vazir";
+  src: url("../fonts/Vazir/Vazir-Light-FD-WOL.woff2") format("woff2"),
+       url("../fonts/Vazir/Vazir-Light-FD-WOL.woff") format("woff");
+  font-weight: 300; /* Light */
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Bold Weight */
+@font-face {
+  font-family: "Vazir";
+  src: url("../fonts/Vazir/Vazir-Bold-FD-WOL.woff2") format("woff2"),
+       url("../fonts/Vazir/Vazir-Bold-FD-WOL.woff") format("woff");
+  font-weight: 700; /* Bold */
+  font-style: normal;
+  font-display: swap;
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    font-family: 'Vazir';
+}
+
+.panel-container {
+    display: flex;
+    flex: 1;
+    background-color: #f0f0f1;
+    font-family: 'Segoe UI', 'Vazir', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.sidebar {
+    width: 200px;
+    background-color: #1e1e1e;  
+    color: #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar-nav {
+    flex: 1;
+    padding: 20px 0;
+}
+
+.sidebar-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-item {
+    margin: 4px 7px;
+}
+
+.nav-item a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 5px 14px;
+    color: #e0e0e0;
+    text-decoration: none;
+    font-family: 'Vazir', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 16px;
+    transition: all 0.2s ease;
+}
+
+.nav-item a:hover {
+    background-color: #2c2c2c;
+    color: #ffffff;
+}
+
+.nav-item.active a {
+    background-color: #007cba;
+    color: white;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.nav-icon {
+    font-size: 1.3rem;
+    width: 28px;
+    text-align: center;
+}
+
+.nav-text {
+    flex: 1;
+    font-size: 14px;
+}
+
+.content {
+    flex: 1;
+    background-color: #f0f0f1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.content-header {
+    background-color: #ffffff;
+    padding: 20px 24px;
+    border-bottom: 1px solid #c3c4c7;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+}
+
+.content-header h1 {
+    font-family: 'Vazir', 'Segoe UI', sans-serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: #1d2327;
+    margin: 0;
+}
+
+.content-inner {
+    padding: 24px;
+    flex: 1;
+}
+
+.content-inner p {
+    font-size: 14px;
+    font-family: 'Vazir';
+    color: #3c434a;
+    line-height: 1.5;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+

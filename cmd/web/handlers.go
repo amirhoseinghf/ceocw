@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
-	"strconv"
 
 	"cearchieve.amirhoseinghf.ir/models"
 	"github.com/julienschmidt/httprouter"
@@ -42,14 +41,9 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 func (app *application) courseView(w http.ResponseWriter, r *http.Request) {
 
 	params := httprouter.ParamsFromContext(r.Context())
+	slug := params.ByName("slug")
 
-	id, err := strconv.Atoi(params.ByName("id"))
-	if err != nil || id < 1 {
-		app.notFound(w)
-		return
-	}
-
-	course, err := app.courses.Get(id)
+	course, err := app.courses.Get(slug)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w)
@@ -111,4 +105,24 @@ func (app *application) courseCreatePost(w http.ResponseWriter, r *http.Request)
 
 	http.Redirect(w, r, fmt.Sprintf("/courses/%d", id), http.StatusSeeOther)
 
+}
+
+func (app *application) panel(w http.ResponseWriter, r *http.Request) {
+	files := []string{
+		"./ui/html/base_panel.htm",
+		"./ui/html/partials/header_panel.htm",
+		"./ui/html/pages/panel.htm",
+	}
+
+	ts, err := template.ParseFiles(files...)
+	if err != nil {
+		app.errorLog.Print(err.Error())
+		app.serverError(w, err)
+	}
+
+	err = ts.ExecuteTemplate(w, "base_panel", nil)
+	if err != nil {
+		app.errorLog.Print(err.Error())
+		app.serverError(w, err)
+	}
 }

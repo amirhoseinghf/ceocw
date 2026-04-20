@@ -1,3 +1,4 @@
+/* Medium Weight (Normal) */
 @font-face {
   font-family: "Vazir";
   src: url("../fonts/Vazir/Vazir-Medium-FD-WOL.woff2") format("woff2"),
@@ -17,6 +18,27 @@
   font-display: swap;
 }
 
+/* Light Weight */
+@font-face {
+  font-family: "Vazir";
+  src: url("../fonts/Vazir/Vazir-Light-FD-WOL.woff2") format("woff2"),
+       url("../fonts/Vazir/Vazir-Light-FD-WOL.woff") format("woff");
+  font-weight: 300; /* Light */
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Bold Weight */
+@font-face {
+  font-family: "Vazir";
+  src: url("../fonts/Vazir/Vazir-Bold-FD-WOL.woff2") format("woff2"),
+       url("../fonts/Vazir/Vazir-Bold-FD-WOL.woff") format("woff");
+  font-weight: 700; /* Bold */
+  font-style: normal;
+  font-display: swap;
+}
+
+
 * {
     margin: 0;
     padding: 0;
@@ -29,23 +51,36 @@
     padding: 10px 40px;
     background-color: #242424;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+    /* No flex-direction change – always row */
 }
 
-a {
+/* Home link – contains logo + title */
+.home-link {
+    display: flex;
+    align-items: center;
     text-decoration: none;
+    color: inherit;
+    gap: 20px;  /* replaces margin-right on .logo */
 }
 
+/* Logo styling – no extra margin, because gap handles spacing */
 .logo {
-    background-size: cover;
     width: 45px;
     height: 45px;
-    margin-right: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
     font-weight: bold;
     font-size: 18px;
+    flex-shrink: 0;
+}
+
+.logo svg {
+    width: 100%;
+    height: 100%;
+    display: block;
 }
 
 .university-info h1 {
@@ -62,41 +97,24 @@ a {
     font-size: 14px;
 }
 
+/* Admin panel – pushed to far right */
 .admin-panel-title {
     font-family: 'Vazir', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     font-size: 15px;
     font-weight: 400;
-    margin-left: auto;
     color: #e0e0e0;
-    background-color: rgba(255, 255, 255, 0.1);
-    padding: 6px 16px;
-    border-radius: 10px;
-    margin-right: auto;        /* چسبیدن به راست در دسکتاپ */
+    padding: 6px 0px;
+    border-radius: 16px;
+    margin-left: auto;          /* sends it to the right end */
     white-space: nowrap;
-    direction: rtl;            /* جهت راست به چپ برای متن فارسی */
+    direction: rtl;
     transition: background 0.2s;
 }
 
-.admin-panel:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-}
 
-/* 768 */ 
-@media (max-width: 400px) {
-    .header {
-        flex-direction: column;
-        text-align: center;
-        padding: 15px;
-    }
-    
-    .logo {
-        margin-right: 0;
-        margin-bottom: 10px;
-        width: 60px;
-        height: 60px;
-    }
-    
-    .university-info h1 {
-        font-size: 20px;
-    }
+/* Optional: remove any underline or focus outline from the home link */
+.home-link:focus,
+.home-link:hover {
+    text-decoration: none;
+    outline: none;
 }

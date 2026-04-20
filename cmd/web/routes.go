@@ -21,8 +21,9 @@ func (app *application) routes() http.Handler {
 	router.Handler(http.MethodGet, "/data/*filepath", http.StripPrefix("/data/", fileServerData))
 
 	router.HandlerFunc(http.MethodGet, "/", app.home)
-	router.HandlerFunc(http.MethodGet, "/course/:id", app.courseView)
+	router.HandlerFunc(http.MethodGet, "/course/:slug", app.courseView)
 	router.HandlerFunc(http.MethodPost, "/course/create", app.courseCreatePost)
+	router.HandlerFunc(http.MethodGet, "/panel", app.panel)
 
 	standard := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
 

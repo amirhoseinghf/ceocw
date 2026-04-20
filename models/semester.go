@@ -10,7 +10,15 @@ type Semester struct {
 	Year   int
 }
 
+func (s Semester) SeasonPersian() string {
+	if s.Season == "spring" {
+		return "بهار"
+	} else {
+		return "پاییز"
+	}
+}
+
 func (s Semester) SemesterName() string {
 
-	return fmt.Sprintf("%s %d", s.Season, s.Year)
+	return fmt.Sprintf("%s %d", s.SeasonPersian(), s.Year)
 }
