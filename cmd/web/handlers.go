@@ -1,10 +1,12 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
+	"strconv"
 
 	"cearchieve.amirhoseinghf.ir/models"
 	"github.com/julienschmidt/httprouter"
@@ -125,4 +127,70 @@ func (app *application) panel(w http.ResponseWriter, r *http.Request) {
 		app.errorLog.Print(err.Error())
 		app.serverError(w, err)
 	}
+}
+
+func (app *application) teachersGetAll(w http.ResponseWriter, r *http.Request) {
+	teachers, err := app.teachers.GetAll()
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+	json.NewEncoder(w).Encode(teachers)
+}
+
+func (app *application) teachersGet(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil || id < 1 {
+		app.notFound(w)
+		return
+	}
+	teacher, err := app.teachers.Get(id)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+
+	json.NewEncoder(w).Encode(teacher)
+}
+
+func (app *application) teachersPut(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil || id < 1 {
+		app.notFound(w)
+		return
+	}
+	var teacher models.Teacher
+	if err := json.NewDecoder(r.Body).Decode(&teacher); err != nil {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
+	teacher.Id = id
+	if err := app.teachers.Update(teacher); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (app *application) teachersPost(w http.ResponseWriter, r *http.Request) {
+	var teacher models.Teacher
+	if err := json.NewDecoder(r.Body).Decode(&teacher); err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	if err := app.teachers.Insert(teacher); err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
 }

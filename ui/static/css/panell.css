@@ -166,21 +166,38 @@ body {
     position: fixed;
     bottom: 30px;
     left: 30px;
-    background: rgba(0, 225, 255, 0.8);
-    color: #fff;
-    padding: 12px 24px;
-    border-radius: 8px;
+    min-width: 250px;
+    padding: 12px 20px;
+    border-radius: 4px;
     font-size: 0.9rem;
+    font-weight: 500;
     z-index: 1100;
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255,255,255,0.2);
-    transition: opacity 0.3s, transform 0.3s;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border-right: 4px solid;
+    transition: all 0.2s ease;
     opacity: 0;
     transform: translateY(20px);
     pointer-events: none;
     direction: rtl;
 }
-.toast.show{transform:translateY(0);opacity:1}
+
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast.success {
+    border-right-color: #00a32a;
+    background: #049019;
+    color: #ffffff;
+}
+
+.toast.error {
+    border-right-color: #d63638;
+    background: #fcf0f1;
+    color: #8a2424;
+}
 
 #modal-title {
     margin-bottom: 25px;
@@ -366,7 +383,9 @@ body {
     }
     
     #image-url,
-    #page-url {
+    #page-url,
+    #first-name-en,
+    #last-name-en{
         text-align: left;
     }
 
