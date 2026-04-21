@@ -219,6 +219,8 @@ body {
     background: #007cba;
     color: #fff;
 }
+
+
 .btn-primary:hover {
     background: #006ba1;
 }
@@ -418,7 +420,7 @@ body {
             display: none;
         }
         .content {
-            margin-right: 70px;
+            margin-right: 0px;
         }
         .teacher-info {
             flex-wrap: wrap;

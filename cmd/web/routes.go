@@ -23,11 +23,18 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, "/", app.home)
 	router.HandlerFunc(http.MethodGet, "/course/:slug", app.courseView)
 	router.HandlerFunc(http.MethodPost, "/course/create", app.courseCreatePost)
+
 	router.HandlerFunc(http.MethodGet, "/panel", app.panel)
+
 	router.HandlerFunc(http.MethodGet, "/teachers", app.teachersGetAll)
+	router.HandlerFunc(http.MethodPost, "/teachers", app.teachersPost)
 	router.HandlerFunc(http.MethodGet, "/teachers/:id", app.teachersGet)
 	router.HandlerFunc(http.MethodPut, "/teachers/:id", app.teachersPut)
-	router.HandlerFunc(http.MethodPost, "/teachers", app.teachersPost)
+
+	router.HandlerFunc(http.MethodGet, "/semesters", app.semestersGetAll)
+	router.HandlerFunc(http.MethodGet, "/semesters/:id", app.semesterGet)
+	router.HandlerFunc(http.MethodPost, "/semesters", app.semesterInsert)
+	router.HandlerFunc(http.MethodPut, "/semesters/:id", app.semesterUpdate)
 
 	standard := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
 

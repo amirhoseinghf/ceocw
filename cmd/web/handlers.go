@@ -194,3 +194,72 @@ func (app *application) teachersPost(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusCreated)
 }
+
+// GET /semesters
+func (app *application) semestersGetAll(w http.ResponseWriter, r *http.Request) {
+	semesters, err := app.semesters.GetAll()
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+	json.NewEncoder(w).Encode(semesters)
+}
+
+// GET /semesters/{id}
+func (app *application) semesterGet(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil || id < 1 {
+		app.notFound(w)
+		return
+	}
+	semester, err := app.semesters.Get(id)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+	json.NewEncoder(w).Encode(semester)
+}
+
+// POST /semesters
+func (app *application) semesterInsert(w http.ResponseWriter, r *http.Request) {
+	var semester models.Semester
+	if err := json.NewDecoder(r.Body).Decode(&semester); err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	if err := app.semesters.Insert(semester); err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+}
+
+// PUT /semesters/{id}
+func (app *application) semesterUpdate(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil || id < 1 {
+		app.notFound(w)
+		return
+	}
+	var semester models.Semester
+	if err := json.NewDecoder(r.Body).Decode(&semester); err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	semester.Id = id
+	if err := app.semesters.Update(semester); err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}

@@ -17,6 +17,12 @@
                         <span class="nav-text">اساتید</span>
                     </a>
                 </li>
+                <li class="nav-item" data-tab="semesters">
+                    <a href="#">
+                        <span class="nav-icon">📅</span>
+                        <span class="nav-text">ترم‌ها</span>
+                    </a>
+                </li>
                 <!-- future items -->
             </ul>
         </nav>
@@ -44,6 +50,20 @@
             <div class="content-inner">
                 <div id="teachers-list">
                     <!-- Teachers will be loaded here dynamically -->
+                    <div class="loading">در حال بارگذاری...</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="semesters-content" class="tab-content">
+            <div class="content-header">
+                <h1>مدیریت ترم ها</h1>
+                <button id="add-semester-btn" class="btn btn-primary">
+                    <span>➕</span> افزودن ترم
+                </button>
+            </div>
+            <div class="content-inner">
+                <div id="semesters-list">
                     <div class="loading">در حال بارگذاری...</div>
                 </div>
             </div>
@@ -89,6 +109,32 @@
             <div class="modal-buttons">
                 <button type="button" class="btn btn-cancel" id="modal-cancel">لغو</button>
                 <button type="submit" class="btn btn-save">ذخیره تغییرات</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Semester Modal -->
+<div id="semester-modal" class="modal" style="display:none;" dir="rtl">
+    <div class="modal-content">
+        <span class="modal-close semester-close">&times;</span>
+        <h2 id="semester-modal-title">افزودن ترم جدید</h2>
+        <form id="semester-form">
+            <input type="hidden" id="semester-id" value="0">
+            <div class="form-group">
+                <label>سال</label>
+                <input type="number" id="semester-year" class="form-control" required min="1380" max="1430" value="1400">
+            </div>
+            <div class="form-group">
+                <label>فصل</label>
+                <select id="semester-season" class="form-control" required>
+                    <option value="spring">بهار</option>
+                    <option value="autumn">پاییز</option>
+                </select>
+            </div>
+            <div class="modal-buttons">
+                <button type="submit" class="btn btn-save">ذخیره تغییرات</button>
+                <button type="button" class="btn btn-cancel" id="semester-modal-cancel">لغو</button>
             </div>
         </form>
     </div>
