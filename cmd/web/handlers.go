@@ -195,6 +195,21 @@ func (app *application) teachersPost(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
+func (app *application) teacherDelete(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	err = app.teachers.Delete(id)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
 // GET /semesters
 func (app *application) semestersGetAll(w http.ResponseWriter, r *http.Request) {
 	semesters, err := app.semesters.GetAll()
@@ -258,6 +273,21 @@ func (app *application) semesterUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	semester.Id = id
 	if err := app.semesters.Update(semester); err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (app *application) semesterDelete(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	err = app.semesters.Delete(id)
+	if err != nil {
 		app.serverError(w, err)
 		return
 	}

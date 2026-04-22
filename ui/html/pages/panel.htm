@@ -1,6 +1,7 @@
 {{define "title"}} Panel {{end}}
 
 {{define "main-panel"}}
+<script src="/static/js/panell.js"></script>
 <div class="panel-container" dir="rtl">
     <aside class="sidebar">
         <nav class="sidebar-nav">
@@ -72,7 +73,7 @@
 </div>
 
 <!-- Modal (popup) for add/edit teacher -->
-<div id="teacher-modal" class="modal" style="display:none;" dir="rtl">
+<div id="teacher-modal" class="modal" dir="rtl">
     <div class="modal-content">
         <span class="modal-close">&times;</span>
         <h2 id="modal-title">افزودن استاد جدید</h2>
@@ -115,7 +116,7 @@
 </div>
 
 <!-- Semester Modal -->
-<div id="semester-modal" class="modal" style="display:none;" dir="rtl">
+<div id="semester-modal" class="modal" dir="rtl">
     <div class="modal-content">
         <span class="modal-close semester-close">&times;</span>
         <h2 id="semester-modal-title">افزودن ترم جدید</h2>
@@ -140,6 +141,29 @@
     </div>
 </div>
 
-<script src="/static/js/panel.js"></script>
+<div id="delete-modal" class="modal"  dir="rtl">
+    <div class="modal-content" style="max-width: 400px;">
+        <span class="modal-close delete-close">&times;</span>
+        <h2 class="delete-modal-title">حذف استاد</h2>
+        <p id="delete-message">آیا از حذف این استاد اطمینان دارید؟</p>
+        <div class="modal-buttons" style="justify-content: center; gap: 15px;">
+            <button id="cancel-delete-btn" class="btn btn-cancel">انصراف</button>
+            <button id="confirm-delete-btn" class="btn btn-danger">بله، حذف شود</button>
+        </div>
+    </div>
+</div>
+
+<div id="delete-semester-modal" class="modal" dir="rtl">
+    <div class="modal-content" style="max-width: 400px;">
+        <span class="modal-close delete-semester-close">&times;</span>
+        <h2 class="delete-modal-title">حذف ترم</h2>
+        <p id="delete-semester-message">آیا از حذف این ترم اطمینان دارید؟</p>
+        <div class="modal-buttons" style="justify-content: center; gap: 15px;">
+            <button id="cancel-delete-semester-btn" class="btn btn-cancel">انصراف</button>
+            <button id="confirm-delete-semester-btn" class="btn btn-danger">بله، حذف شود</button>
+        </div>
+    </div>
+</div>
+
 <div id="toast" class="toast"></div>
 {{end}}

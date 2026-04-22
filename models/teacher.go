@@ -114,3 +114,8 @@ func (t *TeacherModel) Update(teacher Teacher) error {
 
 	return err
 }
+
+func (t *TeacherModel) Delete(id int) error {
+	_, err := t.DB.Exec("DELETE FROM teachers WHERE id = ?", id)
+	return err
+}

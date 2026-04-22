@@ -80,3 +80,8 @@ func (m *SemesterModel) Update(semester Semester) error {
 	_, err := m.DB.Exec("UPDATE semesters SET season = ?, year = ? WHERE id = ?", semester.SeasonEnglish(), semester.Year, semester.Id)
 	return err
 }
+
+func (m *SemesterModel) Delete(id int) error {
+	_, err := m.DB.Exec("DELETE FROM semesters WHERE id = ?", id)
+	return err
+}

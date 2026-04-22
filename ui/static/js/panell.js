@@ -136,6 +136,7 @@
                             <td>${sem.Season === 'spring' ? 'بهار' : 'پاییز'}</td>
                             <td class="teacher-actions">
                                 <button class="btn btn-edit edit-semester" data-id="${sem.Id}">✏️ ویرایش</button>
+                                <button class="btn btn-delete delete-semester" data-id="${sem.Id}" data-name="${sem.Year} ${sem.Season === 'spring' ? 'بهار' : 'پاییز'}">🗑️ حذف</button>
                             </td>
                         </tr>
                     `).join('')}
@@ -146,6 +147,13 @@
         document.querySelectorAll('.edit-semester').forEach(btn => {
             btn.addEventListener('click', () => openEditSemesterModal(parseInt(btn.dataset.id)));
         });
+        document.querySelectorAll('.delete-semester').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id = parseInt(btn.dataset.id);
+            const name = btn.dataset.name;
+            showSemesterDeleteConfirm(id, name);
+        });
+    });
     }
 
         // Modal handling
@@ -173,6 +181,9 @@
 
         const deleteModal = document.getElementById('delete-modal');
         deleteModal.style.display = 'none';
+
+        const semesterDeleteModal = document.getElementById('delete-semester-modal');
+        semesterDeleteModal.style.display = 'none';
 
 
         function openSemesterModal(isEdit = false, semesterData = null) {
@@ -372,6 +383,45 @@ document.querySelector('.delete-close').addEventListener('click', closeDeleteMod
 window.addEventListener('click', (e) => {
     const modal = document.getElementById('delete-modal');
     if (e.target === modal) closeDeleteModal();
+});
+
+let pendingSemesterDeleteId = null;
+
+function showSemesterDeleteConfirm(id, semesterName) {
+    pendingSemesterDeleteId = id;
+    const messageEl = document.getElementById('delete-semester-message');
+    messageEl.innerHTML = `آیا از حذف ترم <strong>${escapeHtml(semesterName)}</strong> اطمینان دارید؟`;
+    document.getElementById('delete-semester-modal').style.display = 'flex';
+}
+
+function closeSemesterDeleteModal() {
+    document.getElementById('delete-semester-modal').style.display = 'none';
+    pendingSemesterDeleteId = null;
+}
+
+async function confirmSemesterDelete() {
+    if (!pendingSemesterDeleteId) return;
+    try {
+        const response = await fetch(`/semesters/${pendingSemesterDeleteId}`, {
+            method: 'DELETE'
+        });
+        if (!response.ok) throw new Error('Delete failed');
+        showToast('ترم با موفقیت حذف شد', true);
+        closeSemesterDeleteModal();
+        loadSemesters(); // refresh list
+    } catch (err) {
+        showToast('خطا در حذف ترم', false);
+        closeSemesterDeleteModal();
+    }
+}
+
+// Bind semester delete modal events
+document.getElementById('confirm-delete-semester-btn').addEventListener('click', confirmSemesterDelete);
+document.getElementById('cancel-delete-semester-btn').addEventListener('click', closeSemesterDeleteModal);
+document.querySelector('.delete-semester-close').addEventListener('click', closeSemesterDeleteModal);
+window.addEventListener('click', (e) => {
+    const modal = document.getElementById('delete-semester-modal');
+    if (e.target === modal) closeSemesterDeleteModal();
 });
 
 

@@ -220,7 +220,6 @@ body {
     color: #fff;
 }
 
-
 .btn-primary:hover {
     background: #006ba1;
 }
@@ -240,6 +239,36 @@ body {
     background: #ddd;
     color: #333;
 }
+
+.btn-delete {
+    background: none;
+    border: 1px solid #d63638;
+    color: #d63638;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.btn-delete:hover {
+    background: #d63638;
+    color: #fff;
+}
+
+.btn-danger {
+    background: #d63638;
+    color: #fff;
+    border: none;
+}
+
+.btn-danger:hover {
+    background: #b32d2e;
+}
+
 /* Teacher table (list) */
 .teachers-table {
     font-family: 'Vazir';

@@ -166,21 +166,38 @@ body {
     position: fixed;
     bottom: 30px;
     left: 30px;
-    background: rgba(0, 225, 255, 0.8);
-    color: #fff;
-    padding: 12px 24px;
-    border-radius: 8px;
+    min-width: 250px;
+    padding: 12px 20px;
+    border-radius: 4px;
     font-size: 0.9rem;
+    font-weight: 500;
     z-index: 1100;
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255,255,255,0.2);
-    transition: opacity 0.3s, transform 0.3s;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border-right: 4px solid;
+    transition: all 0.2s ease;
     opacity: 0;
     transform: translateY(20px);
     pointer-events: none;
     direction: rtl;
 }
-.toast.show{transform:translateY(0);opacity:1}
+
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast.success {
+    border-right-color: #00a32a;
+    background: #049019;
+    color: #ffffff;
+}
+
+.toast.error {
+    border-right-color: #d63638;
+    background: #fcf0f1;
+    color: #8a2424;
+}
 
 #modal-title {
     margin-bottom: 25px;
@@ -202,6 +219,7 @@ body {
     background: #007cba;
     color: #fff;
 }
+
 .btn-primary:hover {
     background: #006ba1;
 }
@@ -221,6 +239,40 @@ body {
     background: #ddd;
     color: #333;
 }
+
+.btn-delete {
+    background: none;
+    border: 1px solid #d63638;
+    color: #d63638;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.btn-delete:hover {
+    background: #d63638;
+    color: #fff;
+}
+
+.btn-danger {
+    background: #d63638;
+    color: #fff;
+    border: none;
+}
+
+.btn-danger:hover {
+    background: #b32d2e;
+}
+
+.delete-modal-title {
+    margin-bottom: 20px;
+}
+
 /* Teacher table (list) */
 .teachers-table {
     font-family: 'Vazir';
@@ -286,6 +338,7 @@ body {
     text-decoration: underline;
 }
 
+
 .teacher-actions .btn-edit {
     background: none;
     border: 1px solid #ccc;
@@ -294,8 +347,9 @@ body {
     cursor: pointer;
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 7px;
     font-size: 0.85rem;
+    margin: 0px 3px;
 }
 
 .teacher-actions .btn-edit:hover {
@@ -366,7 +420,9 @@ body {
     }
     
     #image-url,
-    #page-url {
+    #page-url,
+    #first-name-en,
+    #last-name-en{
         text-align: left;
     }
 
@@ -399,7 +455,7 @@ body {
             display: none;
         }
         .content {
-            margin-right: 70px;
+            margin-right: 0px;
         }
         .teacher-info {
             flex-wrap: wrap;
