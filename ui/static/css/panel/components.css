@@ -348,6 +348,53 @@ label {
 
 .content-header {
     font-family: 'Vazir';
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    background: #fff;
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.content-header h1 {
+    font-size: 1.2rem;
+    margin: 0;
+    flex: 1;
+    min-width: 200px;
+    word-break: break-word;
+    text-align: center;
+}
+
+.header-buttons {
+    display: flex;
+    
+    gap: 10px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .content-header {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+    }
+    .content-header h1 {
+        font-size: 1.2rem;
+        text-align: center;
+        order: 2;     /* move title between buttons? optional */
+    }
+    .header-buttons {
+        justify-content: center;
+        align-items: center;
+        order: 3;
+    }
+    .content-header button:first-child {
+        order: 3;     /* back button on top */
+        align-self: center;
+    }
 }
 
 .edit-section .section-header {
