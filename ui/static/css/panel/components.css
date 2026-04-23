@@ -365,6 +365,11 @@ label {
     flex: 1;
     min-width: 200px;
     word-break: break-word;
+    text-align: right;
+}
+
+.manage-header h1 {
+    font-size: 1rem;
     text-align: center;
 }
 
@@ -393,7 +398,7 @@ label {
     }
     .content-header button:first-child {
         order: 3;     /* back button on top */
-        align-self: center;
+        align-self: right;
     }
 }
 
@@ -414,4 +419,98 @@ label {
 .edit-section .section-header .btn {
     white-space: nowrap;   /* keeps button text on one line */
     flex-shrink: 0;        /* prevents button from shrinking */
+}
+
+.description-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-top: 15px;
+}
+.desc-col {
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+}
+.desc-col h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+    border-right: 3px solid #007cba;
+    padding-right: 10px;
+}
+
+/* Grade items - responsive */
+.grade-items-container {
+    overflow-x: auto;
+}
+.grade-items-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+@media (max-width: 768px) {
+    .grade-items-table,
+    .grade-items-table thead,
+    .grade-items-table tbody,
+    .grade-items-table tr,
+    .grade-items-table th,
+    .grade-items-table td {
+        display: block;
+    }
+    .grade-items-table thead {
+        display: none;
+    }
+    .grade-items-table tr {
+        margin-bottom: 15px;
+        border: 1px solid #e5e5e5;
+        border-radius: 8px;
+        padding: 10px;
+        background: #fff;
+    }
+    .grade-items-table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border: none;
+        gap: 10px;
+    }
+    .grade-items-table td:before {
+        content: attr(data-label);
+        font-weight: bold;
+        min-width: 80px;
+        color: #555;
+    }
+    .grade-items-table td input,
+    .grade-items-table td button {
+        flex: 1;
+    }
+}
+
+
+.grade-name,
+.grade-percent {
+    font-family: 'Vazir';
+    height: 35px;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+
+.remove-grade-item {
+    font-family: 'Vazir';
+}
+
+#grade-items-list {
+    margin-bottom: 10px;
+}
+
+@media (max-width: 768px) {
+    .description-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
 }

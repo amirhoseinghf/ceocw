@@ -6,6 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initBooks();
     initCourses();
 
+    initCourseDescription();
+
     // Preload dropdowns for courses
     loadSemesterOptions();
     loadTeacherOptions();

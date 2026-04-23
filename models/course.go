@@ -235,8 +235,11 @@ func (c *CourseModel) Get(slug string) (*Course, error) {
 
 	// 3. Books
 	bookRows, err := c.DB.Query(`
-        SELECT title, image_url, download_url FROM books WHERE course_id = ?
-    `, course.Id)
+	    SELECT b.id, b.title, b.image_url, b.download_url
+	    FROM books b
+	    JOIN course_books cb ON b.id = cb.book_id
+	    WHERE cb.course_id = ?
+	`, course.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -245,7 +248,7 @@ func (c *CourseModel) Get(slug string) (*Course, error) {
 	var books []Book
 	for bookRows.Next() {
 		var b Book
-		if err := bookRows.Scan(&b.Title, &b.ImageURL, &b.DownloadURL); err != nil {
+		if err := bookRows.Scan(&b.Id, &b.Title, &b.ImageURL, &b.DownloadURL); err != nil {
 			return nil, err
 		}
 		books = append(books, b)
@@ -440,4 +443,33 @@ func (c *CourseModel) GetByID(id int) (*Course, error) {
 	course.Exams = []Exam{}
 
 	return course, nil
+}
+
+func (c *CourseModel) UpdateSchedule(courseID int, day, start, end, location string) error {
+	_, err := c.DB.Exec(`
+        UPDATE courses 
+        SET class_schedule_day_of_week = ?, class_schedule_start_time = ?,
+            class_schedule_end_time = ?, class_schedule_location = ?
+        WHERE id = ?
+    `, day, start, end, location, courseID)
+	return err
+}
+
+func (c *CourseModel) ReplaceGradeItems(courseID int, items []GradeItem) error {
+	tx, err := c.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	_, err = tx.Exec("DELETE FROM grade_items WHERE course_id = ?", courseID)
+	if err != nil {
+		return err
+	}
+	for _, gi := range items {
+		_, err = tx.Exec("INSERT INTO grade_items (course_id, name, percentage) VALUES (?, ?, ?)", courseID, gi.Name, gi.Percentage)
+		if err != nil {
+			return err
+		}
+	}
+	return tx.Commit()
 }

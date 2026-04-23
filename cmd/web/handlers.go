@@ -635,3 +635,76 @@ func (app *application) attachBookToCourse(w http.ResponseWriter, r *http.Reques
 	}
 	w.WriteHeader(http.StatusOK)
 }
+
+func (app *application) updateCourseSchedule(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	courseID, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	var req struct {
+		Description   string `json:"Description"`
+		ClassSchedule struct {
+			DayOfWeek string `json:"day_of_week"`
+			StartTime string `json:"start_time"`
+			EndTime   string `json:"end_time"`
+			Location  string `json:"location"`
+		} `json:"ClassSchedule"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	err = app.courses.UpdateSchedule(courseID, req.ClassSchedule.DayOfWeek,
+		req.ClassSchedule.StartTime, req.ClassSchedule.EndTime, req.ClassSchedule.Location)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (app *application) updateGradeItems(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	courseID, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	var items []models.GradeItem
+	if err := json.NewDecoder(r.Body).Decode(&items); err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	err = app.courses.ReplaceGradeItems(courseID, items)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (app *application) updateCourseDescription(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	courseID, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	var req struct {
+		Description string `json:"Description"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	// I implemented db logic here I'm honestly exhausted
+	_, err = app.courses.DB.Exec("UPDATE courses SET description = ? WHERE id = ?", req.Description, courseID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}

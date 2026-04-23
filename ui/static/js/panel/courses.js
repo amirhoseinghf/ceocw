@@ -55,6 +55,7 @@ async function showCourseManage(courseId) {
         const response = await fetch(`/courses/${courseId}`);
         if (!response.ok) throw new Error('Failed to fetch course');
         const course = await response.json();
+        console.log(course)
         populateCourseEditForm(course);
     } catch (err) {
         showToast('خطا در دریافت اطلاعات دوره', false);
@@ -77,6 +78,10 @@ function populateCourseEditForm(course) {
     if (course.Teacher && course.Teacher.Id) {
         document.getElementById('course-teacher').value = course.Teacher.Id;
     }
+
+
+
+    loadCourseDescription(course);
     
     if (course.Id) {
         loadBooks(course.Id)
