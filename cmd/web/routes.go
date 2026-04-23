@@ -22,7 +22,12 @@ func (app *application) routes() http.Handler {
 
 	router.HandlerFunc(http.MethodGet, "/", app.home)
 	router.HandlerFunc(http.MethodGet, "/course/:slug", app.courseView)
+	router.HandlerFunc(http.MethodGet, "/courses/:id", app.courseGetByID)
 	router.HandlerFunc(http.MethodPost, "/course/create", app.courseCreatePost)
+	router.HandlerFunc(http.MethodGet, "/courses", app.coursesGetAll)
+
+	router.HandlerFunc(http.MethodGet, "/courses/:id/books", app.getCourseBooks)
+	router.HandlerFunc(http.MethodPost, "/courses/:id/books", app.addBook)
 
 	router.HandlerFunc(http.MethodGet, "/panel", app.panel)
 
@@ -37,6 +42,13 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPost, "/semesters", app.semesterInsert)
 	router.HandlerFunc(http.MethodPut, "/semesters/:id", app.semesterUpdate)
 	router.HandlerFunc(http.MethodDelete, "/semesters/:id", app.semesterDelete)
+
+	router.HandlerFunc(http.MethodGet, "/books", app.getAllBooks)
+	router.HandlerFunc(http.MethodGet, "/books/:id", app.getBook)
+	router.HandlerFunc(http.MethodPut, "/books/:id", app.updateBook)
+	router.HandlerFunc(http.MethodDelete, "/courses/:courseId/books/:bookId", app.detachBook)
+	router.HandlerFunc(http.MethodDelete, "/books/:id", app.deleteBookPermanently)
+	router.HandlerFunc(http.MethodPost, "/courseBook/:courseId/books/:bookId/attach", app.attachBookToCourse)
 
 	standard := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
 

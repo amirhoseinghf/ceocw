@@ -5,8 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"log"
 	"net/http"
+	"os"
 	"strconv"
+	"strings"
 
 	"cearchieve.amirhoseinghf.ir/models"
 	"github.com/julienschmidt/httprouter"
@@ -38,6 +41,38 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+}
+
+func (app *application) courseGetByID(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	course, err := app.courses.GetByID(id)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(course)
+}
+
+func (app *application) coursesGetAll(w http.ResponseWriter, r *http.Request) {
+	courses, err := app.courses.GetAllSummaries()
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(courses)
 }
 
 func (app *application) courseView(w http.ResponseWriter, r *http.Request) {
@@ -110,13 +145,14 @@ func (app *application) courseCreatePost(w http.ResponseWriter, r *http.Request)
 }
 
 func (app *application) panel(w http.ResponseWriter, r *http.Request) {
-	files := []string{
-		"./ui/html/base_panel.htm",
-		"./ui/html/partials/header_panel.htm",
-		"./ui/html/pages/panel.htm",
+	ts, err := template.ParseGlob("./ui/html/pages/panel/*.htm")
+
+	if err != nil {
+		app.errorLog.Print(err.Error())
+		app.serverError(w, err)
 	}
 
-	ts, err := template.ParseFiles(files...)
+	ts, err = ts.ParseGlob("./ui/html/partials/*.htm")
 	if err != nil {
 		app.errorLog.Print(err.Error())
 		app.serverError(w, err)
@@ -287,6 +323,312 @@ func (app *application) semesterDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	err = app.semesters.Delete(id)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (app *application) getCourseBooks(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	courseId, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	books, err := app.books.GetAllCourseBooks(courseId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	json.NewEncoder(w).Encode(books)
+}
+
+func (app *application) getBook(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	bookId, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	book, err := app.books.Get(bookId)
+
+	if err != nil {
+
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+			return
+		} else {
+			app.serverError(w, err)
+		}
+	}
+
+	json.NewEncoder(w).Encode(book)
+
+}
+
+func (app *application) addBook(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	courseID, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		http.Error(w, "Invalid course ID", http.StatusBadRequest)
+		return
+	}
+
+	err = r.ParseMultipartForm(10 << 20)
+	if err != nil && !strings.Contains(err.Error(), "no multipart boundary") {
+		http.Error(w, "Failed to parse form", http.StatusBadRequest)
+		return
+	}
+
+	title := r.FormValue("title")
+	if title == "" {
+		http.Error(w, "Title is required", http.StatusBadRequest)
+		return
+	}
+	downloadURL := r.FormValue("download_url")
+
+	// 1. Create a temporary book with empty URLs
+	book := &models.Book{
+		Title:       title,
+		ImageURL:    "", // will be filled after file save
+		DownloadURL: "", // will be filled after file save
+	}
+
+	// 2. Insert the book to get an ID
+	err = app.books.Insert(courseID, book) // Insert must return the ID in book.Id
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Now book.Id is available
+	// 3. Handle PDF file upload
+	var finalDownloadURL string
+	file, header, err := r.FormFile("book_file")
+	if err == nil {
+		defer file.Close()
+		finalDownloadURL, err = models.SaveBookFile(book.Id, file, header)
+		if err != nil {
+			http.Error(w, "Failed to save PDF", http.StatusInternalServerError)
+			return
+		}
+	} else if downloadURL != "" {
+		finalDownloadURL = downloadURL
+	}
+
+	// 4. Handle thumbnail upload
+	var finalImageURL string
+	thumbFile, thumbHeader, err := r.FormFile("thumbnail")
+	if err == nil {
+		defer thumbFile.Close()
+		finalImageURL, err = models.SaveThumbnail(book.Id, thumbFile, thumbHeader)
+		if err != nil {
+			http.Error(w, "Failed to save thumbnail", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// 5. Update the book with the actual URLs
+	book.DownloadURL = finalDownloadURL
+	book.ImageURL = finalImageURL
+	err = app.books.Update(book) // assumes Update works
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(book)
+}
+
+func (app *application) updateBook(w http.ResponseWriter, r *http.Request) {
+	log.Println("[DEBUG] updateBook started")
+	params := httprouter.ParamsFromContext(r.Context())
+	bookID, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		log.Printf("[ERROR] Invalid book ID: %v", err)
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	log.Printf("[DEBUG] Book ID: %d", bookID)
+
+	err = r.ParseMultipartForm(10 << 20) // 10 MB max
+	if err != nil && !strings.Contains(err.Error(), "no multipart boundary") {
+		log.Printf("[ERROR] ParseMultipartForm failed: %v", err)
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	log.Println("[DEBUG] Multipart form parsed")
+
+	// 1. Fetch existing book to get old file URLs
+	oldBook, err := app.books.Get(bookID)
+	if err != nil {
+		log.Printf("[ERROR] Fetching old book: %v", err)
+		app.notFound(w)
+		return
+	}
+	log.Printf("[DEBUG] Old book: title=%s, ImageURL=%s, DownloadURL=%s",
+		oldBook.Title, oldBook.ImageURL, oldBook.DownloadURL)
+
+	title := r.FormValue("title")
+	if title == "" {
+		title = oldBook.Title
+	}
+	downloadURL := r.FormValue("download_url")
+	log.Printf("[DEBUG] Form values: title=%s, downloadURL=%s", title, downloadURL)
+
+	// 2. Handle PDF file upload
+	var newDownloadURL string
+	file, header, err := r.FormFile("book_file")
+	if err == nil {
+		log.Printf("[DEBUG] Received PDF file: %s, size %d", header.Filename, header.Size)
+		defer file.Close()
+
+		// Delete old PDF file if it exists and is local (BEFORE saving new)
+		if oldBook.DownloadURL != "" && !strings.HasPrefix(oldBook.DownloadURL, "http") {
+			oldPath := "./" + strings.TrimPrefix(oldBook.DownloadURL, "/")
+			log.Printf("[DEBUG] Deleting old PDF: %s", oldPath)
+			_ = os.Remove(oldPath)
+		}
+
+		// Save new PDF
+		newDownloadURL, err = models.SaveBookFile(bookID, file, header)
+		if err != nil {
+			log.Printf("[ERROR] SaveBookFile failed: %v", err)
+			app.serverError(w, err)
+			return
+		}
+		log.Printf("[DEBUG] New PDF URL: %s", newDownloadURL)
+	} else if downloadURL != "" {
+		log.Printf("[DEBUG] Using download URL from form: %s", downloadURL)
+		newDownloadURL = downloadURL
+	} else {
+		log.Printf("[DEBUG] Keeping old download URL: %s", oldBook.DownloadURL)
+		newDownloadURL = oldBook.DownloadURL
+	}
+
+	// 3. Handle thumbnail upload
+	var newThumbURL string
+	thumbFile, thumbHeader, err := r.FormFile("thumbnail")
+	if err == nil {
+		log.Printf("[DEBUG] Received thumbnail file: %s, size %d", thumbHeader.Filename, thumbHeader.Size)
+		defer thumbFile.Close()
+
+		// Delete old thumbnail file if it exists and is local (BEFORE saving new)
+		if oldBook.ImageURL != "" && !strings.HasPrefix(oldBook.ImageURL, "http") {
+			oldPath := "./" + strings.TrimPrefix(oldBook.ImageURL, "/")
+			log.Printf("[DEBUG] Deleting old thumbnail: %s", oldPath)
+			_ = os.Remove(oldPath)
+		}
+
+		// Save new thumbnail
+		newThumbURL, err = models.SaveThumbnail(bookID, thumbFile, thumbHeader)
+		if err != nil {
+			log.Printf("[ERROR] SaveThumbnail failed: %v", err)
+			app.serverError(w, err)
+			return
+		}
+		log.Printf("[DEBUG] New thumbnail URL: %s", newThumbURL)
+	} else {
+		log.Printf("[DEBUG] No new thumbnail uploaded, keeping old: %s", oldBook.ImageURL)
+		newThumbURL = oldBook.ImageURL
+	}
+
+	// 4. Update the database
+	book := &models.Book{
+		Id:          bookID,
+		Title:       title,
+		ImageURL:    newThumbURL,
+		DownloadURL: newDownloadURL,
+	}
+	log.Printf("[DEBUG] Updating DB with: title=%s, ImageURL=%s, DownloadURL=%s",
+		book.Title, book.ImageURL, book.DownloadURL)
+
+	err = app.books.Update(book)
+	if err != nil {
+		log.Printf("[ERROR] DB update failed: %v", err)
+		app.serverError(w, err)
+		return
+	}
+	log.Println("[DEBUG] DB update successful")
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(book); err != nil {
+		log.Printf("[ERROR] JSON encode response: %v", err)
+		app.serverError(w, err)
+		return
+	}
+	log.Println("[DEBUG] updateBook finished")
+}
+
+// Delete book from a specific course (detach)
+func (app *application) detachBook(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	courseID, err := strconv.Atoi(params.ByName("courseId"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	bookID, err := strconv.Atoi(params.ByName("bookId"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	err = app.books.DetachBook(courseID, bookID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+// Permanently delete a book
+func (app *application) deleteBookPermanently(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	bookID, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	err = app.books.DeletePermanently(bookID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (app *application) getAllBooks(w http.ResponseWriter, r *http.Request) {
+	search := r.URL.Query().Get("search")
+	books, err := app.books.GetAllBooks(search)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	if books == nil {
+		books = []models.Book{}
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(books)
+}
+
+func (app *application) attachBookToCourse(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	courseID, err := strconv.Atoi(params.ByName("courseId"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	bookID, err := strconv.Atoi(params.ByName("bookId"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	err = app.books.AttachToCourse(courseID, bookID)
 	if err != nil {
 		app.serverError(w, err)
 		return

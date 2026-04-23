@@ -1,0 +1,22 @@
+
+{{define "title"}} Panel {{end}}
+{{define "main-panel"}}
+<script src="/static/js/panel/utils.js"></script>
+<script src="/static/js/panel/teachers.js"></script>
+<script src="/static/js/panel/semesters.js"></script>
+<script src="/static/js/panel/books.js"></script>
+<script src="/static/js/panel/courses.js"></script>
+<script src="/static/js/panel/main.js"></script>
+
+<div class="panel-container" dir="rtl">
+    {{template "sidebar" .}}
+    <main class="content">
+        {{template "dashboard-content" .}}
+        {{template "courses-content" .}}
+        {{template "teachers-content" .}}
+        {{template "semesters-content" .}}
+    </main>
+</div>
+
+{{template "modals" .}}
+{{end}}

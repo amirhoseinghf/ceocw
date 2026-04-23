@@ -27,6 +27,16 @@ type Course struct {
 	BaleLink          string
 }
 
+type CourseSummary struct {
+	Id           int    `json:"Id"`
+	Title        string `json:"Title"`
+	ShortName    string `json:"ShortName"`
+	TeacherId    int    `json:"TeacherId"`
+	TeacherName  string `json:"TeacherName"`
+	SemesterId   int    `json:"SemesterId"`
+	SemesterName string `json:"SemesterName"`
+}
+
 func (c Course) Slug() string {
 	shortName := strings.ToLower(strings.ReplaceAll(c.ShortName, " ", "-"))
 	season := strings.ToLower(strings.ReplaceAll(c.Semester.Season, " ", "-"))
@@ -39,6 +49,48 @@ func (c Course) Slug() string {
 
 type CourseModel struct {
 	DB *sql.DB
+}
+
+func (c *CourseModel) GetAllSummaries() ([]CourseSummary, error) {
+	query := `
+        SELECT 
+            c.id, c.title, c.short_name,
+            t.id, t.first_name, t.last_name,
+            s.id, s.season, s.year
+        FROM courses c
+        JOIN teachers t ON c.teacher_id = t.id
+        JOIN semesters s ON c.semester_id = s.id
+        ORDER BY c.id DESC
+    `
+	rows, err := c.DB.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var summaries []CourseSummary
+	for rows.Next() {
+		var cs CourseSummary
+		var teacherId, semesterId int
+		var firstName, lastName, season string
+		var year int
+		err := rows.Scan(
+			&cs.Id, &cs.Title, &cs.ShortName,
+			&teacherId, &firstName, &lastName,
+			&semesterId, &season, &year,
+		)
+		if err != nil {
+			return nil, err
+		}
+		cs.TeacherId = teacherId
+		cs.TeacherName = firstName + " " + lastName
+		cs.SemesterId = semesterId
+		// Create a temporary Semester to use its SeasonPersian method
+		sem := Semester{Season: season, Year: year}
+		cs.SemesterName = sem.SemesterName()
+		summaries = append(summaries, cs)
+	}
+	return summaries, nil
 }
 
 func (c *CourseModel) Insert(course Course) (int, error) {
@@ -310,6 +362,82 @@ func (c *CourseModel) Get(slug string) (*Course, error) {
 		exams = append(exams, e)
 	}
 	course.Exams = exams
+
+	return course, nil
+}
+
+// GetByID retrieves a course by its ID, including basic fields and associated teacher & semester.
+func (c *CourseModel) GetByID(id int) (*Course, error) {
+	// Main query: course + teacher + semester + class schedule
+	stmt := `
+        SELECT 
+            c.id, c.title, c.short_name, c.image_url, c.telegram_link, c.bale_link,
+            c.active_section, c.description,
+            c.class_schedule_day_of_week, c.class_schedule_start_time,
+            c.class_schedule_end_time, c.class_schedule_location,
+            t.id, t.first_name, t.last_name, t.first_name_english, t.last_name_english,
+            t.image_url, t.page_url,
+            s.id, s.season, s.year
+        FROM courses c
+        JOIN teachers t ON c.teacher_id = t.id
+        JOIN semesters s ON c.semester_id = s.id
+        WHERE c.id = ?
+        LIMIT 1
+    `
+	row := c.DB.QueryRow(stmt, id)
+
+	course := &Course{}
+	teacher := Teacher{}
+	semester := Semester{}
+
+	err := row.Scan(
+		&course.Id, &course.Title, &course.ShortName, &course.ImageUrl,
+		&course.TelegramLink, &course.BaleLink, &course.ActiveSection,
+		&course.CourseDescription.Description,
+		&course.CourseDescription.ClassSchedule.DayOfWeek,
+		&course.CourseDescription.ClassSchedule.StartTime,
+		&course.CourseDescription.ClassSchedule.EndTime,
+		&course.CourseDescription.ClassSchedule.Location,
+		&teacher.Id, &teacher.FirstName, &teacher.LastName,
+		&teacher.FirstNameEnglish, &teacher.LastNameEnglish,
+		&teacher.ImageURL, &teacher.PageURL,
+		&semester.Id, &semester.Season, &semester.Year,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNoRecord
+		}
+		return nil, err
+	}
+
+	course.Teacher = teacher
+	course.Semester = semester
+
+	// Grade items (still needed for CourseDescription)
+	gradeRows, err := c.DB.Query(`SELECT name, percentage FROM grade_items WHERE course_id = ?`, course.Id)
+	if err != nil {
+		return nil, err
+	}
+	defer gradeRows.Close()
+
+	var gradeDist GradeDistribution
+	for gradeRows.Next() {
+		var gi GradeItem
+		if err := gradeRows.Scan(&gi.Name, &gi.Percentage); err != nil {
+			return nil, err
+		}
+		gradeDist = append(gradeDist, gi)
+	}
+	course.CourseDescription.GradeDistribution = gradeDist
+
+	// Do NOT load books, slides, notes, etc. here – they will be fetched by separate endpoints.
+	// Initialize empty slices to avoid nil pointer issues in frontend
+	course.Sources = []Book{}
+	course.Slides = []Slide{}
+	course.Notes = []Note{}
+	course.Assignments = []Assignment{}
+	course.Announcements = []Announcement{}
+	course.Exams = []Exam{}
 
 	return course, nil
 }

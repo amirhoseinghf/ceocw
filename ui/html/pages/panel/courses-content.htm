@@ -1,0 +1,46 @@
+{{define "courses-content"}}
+<div id="courses-content" class="tab-content">
+    <div class="content-header">
+        <h1>مدیریت دوره‌ها</h1>
+        <button id="add-course-btn" class="btn btn-primary"><span class="bright-plus">+</span> افزودن دوره</button>
+    </div>
+    <div class="content-inner">
+        <div id="courses-list"><div class="loading">در حال بارگذاری...</div></div>
+        <!-- Course Edit Panel -->
+        <div id="course-edit-panel" class="hidden">
+            <div class="content-header">
+                <button id="back-to-courses-list" class="btn btn-secondary">بازگشت به لیست دوره‌ها</button>
+                <h1>ویرایش دوره: <span id="course-title-display"></span></h1>
+                <button id="save-course-basic" class="btn btn-primary">ذخیره تغییرات</button>
+            </div>
+            <div class="edit-section">
+                <h2>اطلاعات پایه</h2>
+                <form id="course-basic-form">
+                    <input type="hidden" id="course-id" value="0">
+                    <div class="form-group"><label>عنوان دوره</label><input type="text" id="course-title" class="form-control" required></div>
+                    <div class="form-group"><label>نام کوتاه (Short Name)</label><input type="text" id="course-shortname" class="form-control" required></div>
+                    <div class="form-group"><label>آدرس تصویر</label><input type="text" id="course-image" class="form-control"></div>
+                    <div class="form-row">
+                        <div class="form-group"><label>ترم</label><select id="course-semester" class="form-control" required></select></div>
+                        <div class="form-group"><label>استاد</label><select id="course-teacher" class="form-control" required></select></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>لینک تلگرام</label><input type="url" id="course-telegram" class="form-control"></div>
+                        <div class="form-group"><label>لینک بله</label><input type="url" id="course-bale" class="form-control"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="edit-section">
+                <div class="section-header">
+                    <h2>منابع دوره (کتاب‌ها)</h2>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" id="add-existing-book-btn" class="btn btn-secondary">📚 افزودن از کتاب‌های موجود</button>
+                        <button type="button" id="add-book-btn" class="btn btn-primary">+ افزودن کتاب جدید</button>
+                    </div>
+                </div>
+                <div id="books-list"><div class="loading">در حال بارگذاری...</div></div>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}

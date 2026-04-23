@@ -1,0 +1,142 @@
+{{define "modals"}}
+<!-- Teacher Modal -->
+<div id="teacher-modal" class="modal" dir="rtl">
+    <div class="modal-content">
+        <span class="modal-close">&times;</span>
+        <h2 id="modal-title">افزودن استاد جدید</h2>
+        <form id="teacher-form">
+            <input type="hidden" id="teacher-id" value="0">
+            <div class="form-row">
+                <div class="form-group"><label>نام</label><input type="text" id="first-name" class="form-control" required></div>
+                <div class="form-group"><label>نام خانوادگی</label><input type="text" id="last-name" class="form-control" required></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>نام (انگلیسی)</label><input type="text" id="first-name-en" class="form-control"></div>
+                <div class="form-group"><label>نام خانوادگی (انگلیسی)</label><input type="text" id="last-name-en" class="form-control"></div>
+            </div>
+            <div class="form-group"><label>آدرس تصویر</label><input type="text" id="image-url" class="form-control" placeholder="https://cse.sbu.ac.ir/teacher-img.jpg"></div>
+            <div class="form-group"><label>لینک صفحه</label><input type="text" id="page-url" class="form-control" placeholder="https://cse.sbu.ac.ir/~teacher-id"></div>
+            <div class="modal-buttons">
+                <button type="button" class="btn btn-cancel" id="modal-cancel">لغو</button>
+                <button type="submit" class="btn btn-save">ذخیره تغییرات</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Semester Modal -->
+<div id="semester-modal" class="modal" dir="rtl">
+    <div class="modal-content">
+        <span class="modal-close semester-close">&times;</span>
+        <h2 id="semester-modal-title">افزودن ترم جدید</h2>
+        <form id="semester-form">
+            <input type="hidden" id="semester-id" value="0">
+            <div class="form-group"><label>سال</label><input type="number" id="semester-year" class="form-control" required min="1380" max="1430" value="1400"></div>
+            <div class="form-group"><label>فصل</label><select id="semester-season" class="form-control" required><option value="spring">بهار</option><option value="autumn">پاییز</option></select></div>
+            <div class="modal-buttons">
+                <button type="submit" class="btn btn-save">ذخیره تغییرات</button>
+                <button type="button" class="btn btn-cancel" id="semester-modal-cancel">لغو</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Teacher Delete Modal -->
+<div id="delete-modal" class="modal" dir="rtl">
+    <div class="modal-content" style="max-width: 400px;">
+        <span class="modal-close delete-close">&times;</span>
+        <h2 class="delete-modal-title">حذف استاد</h2>
+        <p id="delete-message">آیا از حذف این استاد اطمینان دارید؟</p>
+        <div class="modal-buttons" style="justify-content: center; gap: 15px;">
+            <button id="cancel-delete-btn" class="btn btn-cancel">انصراف</button>
+            <button id="confirm-delete-btn" class="btn btn-danger">بله، حذف شود</button>
+        </div>
+    </div>
+</div>
+
+<!-- Semester Delete Modal -->
+<div id="delete-semester-modal" class="modal" dir="rtl">
+    <div class="modal-content" style="max-width: 400px;">
+        <span class="modal-close delete-semester-close">&times;</span>
+        <h2 class="delete-modal-title">حذف ترم</h2>
+        <p id="delete-semester-message">آیا از حذف این ترم اطمینان دارید؟</p>
+        <div class="modal-buttons" style="justify-content: center; gap: 15px;">
+            <button id="cancel-delete-semester-btn" class="btn btn-cancel">انصراف</button>
+            <button id="confirm-delete-semester-btn" class="btn btn-danger">بله، حذف شود</button>
+        </div>
+    </div>
+</div>
+
+<!-- Book Modal -->
+<div id="book-modal" class="modal" dir="rtl">
+    <div class="modal-content">
+        <span class="modal-close book-close">&times;</span>
+        <h2 id="book-modal-title">افزودن کتاب جدید</h2>
+        <form id="book-form" enctype="multipart/form-data">
+            <input type="hidden" id="book-id" value="0">
+            <div class="form-group">
+                <label>عنوان کتاب</label>
+                <input type="text" dir="ltr" id="book-title" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>تصویر جلد</label>
+                <input type="file" id="book-thumbnail" class="form-control" accept="image/jpeg,image/png,image/webp">
+                <div class="progress" id="thumb-progress-container" style="display:none;">
+                    <div class="progress-bar" id="thumb-progress-bar" style="width:0%">0%</div>
+                </div>
+                <small class="form-text text-muted">فایل تصویر (JPEG, PNG, WebP) – حداکثر 2MB</small>
+            </div>
+            <div class="form-group">
+                <label>فایل کتاب (PDF)</label>
+                <input type="file" id="book-file" class="form-control" accept=".pdf">
+                <div class="progress" id="pdf-progress-container" style="display:none;">
+                    <div class="progress-bar" id="pdf-progress-bar" style="width:0%">0%</div>
+                </div>
+                <small class="form-text text-muted">می‌توانید فایل PDF را آپلود کنید یا لینک مستقیم وارد کنید</small>
+            </div>
+            <div class="form-group">
+                <label>لینک دانلود مستقیم (اختیاری)</label>
+                <input type="url" dir="ltr" id="book-download-url" class="form-control" placeholder="https://...">
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="btn btn-cancel" id="book-cancel">لغو</button>
+                <button type="submit" class="btn btn-save">ذخیره</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Book Delete Options Modal -->
+<div id="delete-book-modal" class="modal" dir="rtl">
+    <div class="modal-content" style="max-width: 400px;">
+        <span class="modal-close delete-book-close">&times;</span>
+        <h2 class="delete-modal-title">حذف کتاب</h2>
+        <p id="delete-book-message">آیا می‌خواهید کتاب را فقط از این دوره حذف کنید یا به طور کامل؟</p>
+        <div class="modal-buttons" style="justify-content: center; gap: 15px;">
+            <button id="cancel-delete-book-btn" class="btn btn-cancel">انصراف</button>
+            <button id="delete-from-course-btn" class="btn btn-warning">فقط از این دوره</button>
+            <button id="delete-permanently-btn" class="btn btn-danger">حذف کامل</button>
+        </div>
+    </div>
+</div>
+
+<!-- Existing Books Modal -->
+<div id="existing-books-modal" class="modal" dir="rtl">
+    <div class="modal-content" style="max-width: 800px;">
+        <span class="modal-close existing-books-close">&times;</span>
+        <h2 class="delete-modal-title">انتخاب کتاب از کتابخانه</h2>
+        <div class="form-group">
+            <input type="text" id="search-books" class="form-control" placeholder="جستجوی عنوان کتاب...">
+        </div>
+        <div id="existing-books-list" style="max-height: 400px; overflow-y: auto;">
+            <div class="loading">در حال بارگذاری...</div>
+        </div>
+        <div class="modal-buttons">
+            <button type="button" id="cancel-existing-books" class="btn btn-cancel">انصراف</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+{{end}}

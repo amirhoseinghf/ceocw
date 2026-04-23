@@ -1,11 +1,14 @@
  // Tab switching
     document.addEventListener('DOMContentLoaded', () => {
+        loadSemesterOptions();
+        loadTeacherOptions();
         document.getElementById('add-semester-btn').addEventListener('click', () => openSemesterModal(false));
         const navItems = document.querySelectorAll('.nav-item');
         const tabs = {
             dashboard: document.getElementById('dashboard-content'),
             teachers: document.getElementById('teachers-content'),
-            semesters: document.getElementById('semesters-content')
+            semesters: document.getElementById('semesters-content'),
+            courses: document.getElementById('courses-content')
         };
 
         function switchTab(tabId) {
@@ -24,6 +27,7 @@
 
     if (tabId === 'teachers') loadTeachers();
     if (tabId === 'semesters') loadSemesters();
+    if (tabId === 'courses') loadCourses();
 }
 
         navItems.forEach(item => {
@@ -34,20 +38,188 @@
             });
         });
 
-        // Load teachers when the tab becomes active
-        async function loadTeachers() {
-            const container = document.getElementById('teachers-list');
-            container.innerHTML = '<div class="loading">در حال بارگذاری...</div>';
-            try {
-                const response = await fetch('/teachers');
-                if (!response.ok) throw new Error('Failed to fetch');
-                const teachers = await response.json();
-                renderTeachers(teachers);
-            } catch (err) {
-                container.innerHTML = '<div class="loading">خطا در بارگذاری اساتید</div>';
-                console.error(err);
-            }
+
+    function renderBooks(books) {
+        const container = document.getElementById('books-list');
+        if (!books.length) {
+            container.innerHTML = '<div class="loading">هیچ کتابی ثبت نشده است.</div>';
+            return;
         }
+        const html = `
+            <table class="teachers-table">
+                <thead>
+                    <tr><th>عنوان</th><th>جلد</th><th>فایل / لینک</th><th>عملیات</th></tr>
+                </thead>
+                <tbody>
+                    ${books.map(book => `
+                        <tr data-id="${book.Id}">
+                            <td>${escapeHtml(book.Title)}</td>
+                            <td><img src="${book.ImageURL || 'https://via.placeholder.com/50'}" style="width:40px;height:40px;object-fit:cover;"></td>
+                            <td>${book.DownloadURL ? `<a href="${escapeHtml(book.DownloadURL)}" target="_blank">دانلود</a>` : '—'}</td>
+                            <td class="teacher-actions">
+                                <button class="btn btn-edit edit-book" data-id="${book.Id}">✏️ ویرایش</button>
+                                <button class="btn btn-delete delete-book" data-id="${book.Id}">🗑️ حذف</button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+        container.innerHTML = html;
+        // attach events
+        document.querySelectorAll('.edit-book').forEach(btn => {
+            btn.addEventListener('click', () => openBookModal(parseInt(btn.dataset.id)));
+        });
+        document.querySelectorAll('.delete-book').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                if (confirm('آیا از حذف این کتاب اطمینان دارید؟')) {
+                    await deleteBook(parseInt(btn.dataset.id));
+                    loadBooks(document.getElementById('course-id').value);
+                }
+            });
+        });
+    }
+    async function loadCourses() {
+        const container = document.getElementById('courses-list');
+        container.innerHTML = '<div class="loading">در حال بارگذاری...</div>';
+        try {
+            const response = await fetch('/courses');
+            if (!response.ok) throw new Error('Failed to fetch courses');
+            const courses = await response.json();
+            renderCourses(courses);
+        } catch (err) {
+            container.innerHTML = '<div class="loading">خطا در بارگذاری دوره‌ها</div>';
+            console.error(err);
+        }
+    }
+    
+    function renderCourses(courses) {
+        const container = document.getElementById('courses-list');
+        if (!courses.length) {
+            container.innerHTML = '<div class="loading">هیچ دوره‌ای یافت نشد.</div>';
+            return;
+        }
+        const html = `
+            <table class="teachers-table">
+                <thead>
+                    <tr>
+                        <th>عنوان دوره</th>
+                        <th>نام کوتاه</th>
+                        <th>ترم</th>
+                        <th>استاد</th>
+                        <th>عملیات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${courses.map(course => `
+                        <tr data-id="${course.Id}">
+                            <td>${escapeHtml(course.Title)}</td>
+                            <td>${escapeHtml(course.ShortName)}</td>
+                            <td>${escapeHtml(course.SemesterName)}</td>
+                            <td>${escapeHtml(course.TeacherName)}</td>
+                            <td class="teacher-actions">
+                                <button class="btn btn-manage manage-course" data-id="${course.Id}">مدیریت</button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+        container.innerHTML = html;
+        // Attach manage events
+        document.querySelectorAll('.manage-course').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const courseId = parseInt(btn.dataset.id);
+                showCourseManage(courseId); // we'll implement later
+                showToast('مدیریت دوره در حال توسعه است', true); // placeholder
+            });
+        });
+    }
+    
+    // Placeholder for now
+    async function showCourseManage(courseId) {
+        // Hide the courses list and show the edit panel
+        const listDiv = document.getElementById('courses-list');
+        const editDiv = document.getElementById('course-edit-panel');
+        listDiv.classList.add('hidden');
+        editDiv.classList.remove('hidden');
+        
+        // Load course data and populate the form
+        try {
+            const response = await fetch(`/courses/${courseId}`);
+            if (!response.ok) throw new Error('Failed to fetch course');
+            const course = await response.json();
+            populateCourseEditForm(course);
+        } catch (err) {
+            showToast('خطا در دریافت اطلاعات دوره', false);
+            // Go back to list on error
+            document.getElementById('back-to-courses-list').click();
+        }
+    }
+
+     // Load teachers when the tab becomes active
+    async function loadTeachers() {
+        const container = document.getElementById('teachers-list');
+        container.innerHTML = '<div class="loading">در حال بارگذاری...</div>';
+        try {
+            const response = await fetch('/teachers');
+            if (!response.ok) throw new Error('Failed to fetch');
+            const teachers = await response.json();
+            renderTeachers(teachers);
+        } catch (err) {
+            container.innerHTML = '<div class="loading">خطا در بارگذاری اساتید</div>';
+            console.error(err);
+        }
+    }
+
+    function populateCourseEditForm(course) {
+        document.getElementById('course-id').value = course.Id;
+        document.getElementById('course-title').value = course.Title || '';
+        document.getElementById('course-shortname').value = course.ShortName || '';
+        document.getElementById('course-image').value = course.ImageUrl || '';
+        document.getElementById('course-telegram').value = course.TelegramLink || '';
+        document.getElementById('course-bale').value = course.BaleLink || '';
+        document.getElementById('course-title-display').innerText = course.Title || 'بدون عنوان';
+        
+        // Set dropdown selections (assumes options are loaded)
+        if (course.Semester && course.Semester.Id) {
+            document.getElementById('course-semester').value = course.Semester.Id;
+        }
+        if (course.Teacher && course.Teacher.Id) {
+            document.getElementById('course-teacher').value = course.Teacher.Id;
+        }
+        if (course.Sources && Array.isArray(course.Sources)) {
+            renderBooks(course.Sources);
+        } else {
+            renderBooks([]);
+        }
+    }
+
+    async function loadSemesterOptions() {
+        try {
+            const response = await fetch('/semesters');
+            const semesters = await response.json();
+            const select = document.getElementById('course-semester');
+            select.innerHTML = semesters.map(s => 
+                `<option value="${s.Id}">${s.Season === 'spring' ? 'بهار' : 'پاییز'} ${s.Year}</option>`
+            ).join('');
+        } catch (err) {
+            console.error('Error loading semesters:', err);
+        }
+    }
+
+    async function loadTeacherOptions() {
+        try {
+            const response = await fetch('/teachers');
+            const teachers = await response.json();
+            const select = document.getElementById('course-teacher');
+            select.innerHTML = teachers.map(t => 
+                `<option value="${t.Id}">${t.FirstName} ${t.LastName}</option>`
+            ).join('');
+        } catch (err) {
+            console.error('Error loading teachers:', err);
+        }
+    }
 
     async function loadSemesters() {
         const container = document.getElementById('semesters-list');
@@ -136,6 +308,7 @@
                             <td>${sem.Season === 'spring' ? 'بهار' : 'پاییز'}</td>
                             <td class="teacher-actions">
                                 <button class="btn btn-edit edit-semester" data-id="${sem.Id}">✏️ ویرایش</button>
+                                <button class="btn btn-delete delete-semester" data-id="${sem.Id}" data-name="${sem.Year} ${sem.Season === 'spring' ? 'بهار' : 'پاییز'}">🗑️ حذف</button>
                             </td>
                         </tr>
                     `).join('')}
@@ -146,6 +319,13 @@
         document.querySelectorAll('.edit-semester').forEach(btn => {
             btn.addEventListener('click', () => openEditSemesterModal(parseInt(btn.dataset.id)));
         });
+        document.querySelectorAll('.delete-semester').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id = parseInt(btn.dataset.id);
+            const name = btn.dataset.name;
+            showSemesterDeleteConfirm(id, name);
+        });
+    });
     }
 
         // Modal handling
@@ -173,6 +353,9 @@
 
         const deleteModal = document.getElementById('delete-modal');
         deleteModal.style.display = 'none';
+        
+        const deleteSemesterModal = document.getElementById('delete-semester-modal');
+        deleteSemesterModal.style.display = 'none';
 
 
         function openSemesterModal(isEdit = false, semesterData = null) {
@@ -374,5 +557,147 @@ window.addEventListener('click', (e) => {
     if (e.target === modal) closeDeleteModal();
 });
 
+let pendingSemesterDeleteId = null;
+
+function showSemesterDeleteConfirm(id, semesterName) {
+    pendingSemesterDeleteId = id;
+    const messageEl = document.getElementById('delete-semester-message');
+    messageEl.innerHTML = `آیا از حذف ترم <strong>${escapeHtml(semesterName)}</strong> اطمینان دارید؟`;
+    document.getElementById('delete-semester-modal').style.display = 'flex';
+}
+
+function closeSemesterDeleteModal() {
+    document.getElementById('delete-semester-modal').style.display = 'none';
+    pendingSemesterDeleteId = null;
+}
+
+async function confirmSemesterDelete() {
+    if (!pendingSemesterDeleteId) return;
+    try {
+        const response = await fetch(`/semesters/${pendingSemesterDeleteId}`, {
+            method: 'DELETE'
+        });
+        if (!response.ok) throw new Error('Delete failed');
+        showToast('ترم با موفقیت حذف شد', true);
+        closeSemesterDeleteModal();
+        loadSemesters(); // refresh list
+    } catch (err) {
+        showToast('خطا در حذف ترم', false);
+        closeSemesterDeleteModal();
+    }
+}
+
+// Bind semester delete modal events
+document.getElementById('confirm-delete-semester-btn').addEventListener('click', confirmSemesterDelete);
+document.getElementById('cancel-delete-semester-btn').addEventListener('click', closeSemesterDeleteModal);
+document.querySelector('.delete-semester-close').addEventListener('click', closeSemesterDeleteModal);
+window.addEventListener('click', (e) => {
+    const modal = document.getElementById('delete-semester-modal');
+    if (e.target === modal) closeSemesterDeleteModal();
+});
+
+document.getElementById('back-to-courses-list').addEventListener('click', () => {
+    document.getElementById('courses-list').classList.remove('hidden');
+    document.getElementById('course-edit-panel').classList.add('hidden');
+    loadCourses(); // refresh the list in case of changes
+});
+
+document.getElementById('save-course-basic').addEventListener('click', async () => {
+    showToast('ذخیره‌سازی اطلاعات به زودی اضافه می‌شود', true);
+});
+
+let currentBookId = 0;
+
+async function openBookModal(bookId = 0) {
+    currentBookId = bookId;
+    const modal = document.getElementById('book-modal');
+    const form = document.getElementById('book-form');
+    form.reset();
+    document.getElementById('book-id').value = '0';
+    document.getElementById('book-file').value = '';
+    document.getElementById('book-download-url').value = '';
+
+    if (bookId) {
+        // Fetch existing book data
+        try {
+            const response = await fetch(`/api/books/${bookId}`);
+            const book = await response.json();
+            document.getElementById('book-id').value = book.Id;
+            document.getElementById('book-title').value = book.Title;
+            document.getElementById('book-image').value = book.ImageURL || '';
+            document.getElementById('book-download-url').value = book.DownloadURL || '';
+            document.getElementById('book-modal-title').innerText = 'ویرایش کتاب';
+        } catch (err) {
+            showToast('خطا در دریافت اطلاعات کتاب', false);
+            return;
+        }
+    } else {
+        document.getElementById('book-modal-title').innerText = 'افزودن کتاب جدید';
+    }
+    modal.style.display = 'flex';
+}
+
+function closeBookModal() {
+    document.getElementById('book-modal').style.display = 'none';
+    currentBookId = 0;
+}
+
+// Submit handler for book form (supports file upload or URL)
+document.getElementById('book-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const courseId = document.getElementById('course-id').value;
+    const bookId = document.getElementById('book-id').value;
+    const title = document.getElementById('book-title').value;
+    const imageUrl = document.getElementById('book-image').value;
+    const downloadUrl = document.getElementById('book-download-url').value;
+    const fileInput = document.getElementById('book-file');
+    const file = fileInput.files[0];
+
+    const formData = new FormData();
+    formData.append('title', title);
+    if (imageUrl) formData.append('image_url', imageUrl);
+    if (downloadUrl) formData.append('download_url', downloadUrl);
+    if (file) formData.append('book_file', file);
+
+    let url, method;
+    if (bookId && bookId !== '0') {
+        url = `/api/books/${bookId}`;
+        method = 'PUT';
+        formData.append('id', bookId);
+    } else {
+        url = `/api/courses/${courseId}/books`;
+        method = 'POST';
+    }
+
+    try {
+        const response = await fetch(url, {
+            method: method,
+            body: formData
+        });
+        if (!response.ok) throw new Error();
+        showToast(bookId ? 'کتاب ویرایش شد' : 'کتاب اضافه شد', true);
+        closeBookModal();
+        
+    } catch (err) {
+        showToast('خطا در ذخیره کتاب', false);
+    }
+});
+
+async function deleteBook(bookId) {
+    const response = await fetch(`/api/books/${bookId}`, { method: 'DELETE' });
+    if (response.ok) {
+        showToast('کتاب حذف شد', true);
+    } else {
+        showToast('خطا در حذف کتاب', false);
+    }
+}
+
+// Close modal events
+document.querySelector('.book-close').addEventListener('click', closeBookModal);
+document.getElementById('book-cancel').addEventListener('click', closeBookModal);
+window.addEventListener('click', (e) => {
+    const modal = document.getElementById('book-modal');
+    if (e.target === modal) closeBookModal();
+});
 
     });
