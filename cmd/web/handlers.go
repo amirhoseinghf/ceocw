@@ -5,11 +5,15 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"io"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"cearchieve.amirhoseinghf.ir/models"
 	"github.com/julienschmidt/httprouter"
@@ -702,6 +706,358 @@ func (app *application) updateCourseDescription(w http.ResponseWriter, r *http.R
 
 	// I implemented db logic here I'm honestly exhausted
 	_, err = app.courses.DB.Exec("UPDATE courses SET description = ? WHERE id = ?", req.Description, courseID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (app *application) getCourseSlides(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	courseId, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	slides, err := app.slides.GetByCourse(courseId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	if slides == nil {
+		slides = []models.Slide{}
+	}
+	json.NewEncoder(w).Encode(slides)
+}
+
+func (app *application) createSlide(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	courseId, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	err = r.ParseMultipartForm(10 << 20) // 10 MB
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	title := r.FormValue("title")
+	if title == "" {
+		http.Error(w, "Title required", http.StatusBadRequest)
+		return
+	}
+	file, header, err := r.FormFile("slide_file")
+	if err != nil {
+		http.Error(w, "File required", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	// Create directory if not exists
+	dir := fmt.Sprintf("./data/courses/%d/slides", courseId)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		app.serverError(w, err)
+		return
+	}
+	ext := filepath.Ext(header.Filename)
+	if ext == "" {
+		ext = ".pdf"
+	}
+	// Unique filename
+	fileName := fmt.Sprintf("%d_%d%s", time.Now().UnixNano(), rand.Int63n(1000000), ext)
+	filePath := filepath.Join(dir, fileName)
+	dst, err := os.Create(filePath)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	defer dst.Close()
+	if _, err := io.Copy(dst, file); err != nil {
+		app.serverError(w, err)
+		return
+	}
+	publicURL := fmt.Sprintf("/data/courses/%d/slides/%s", courseId, fileName)
+	_, err = app.slides.Insert(courseId, title, publicURL)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]interface{}{"title": title, "file_name": publicURL})
+}
+
+func (app *application) deleteSlide(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	slideId, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	err = app.slides.Delete(slideId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (app *application) getCourseAssignments(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	courseId, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	assignments, err := app.assignments.GetByCourse(courseId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	if assignments == nil {
+		assignments = []models.Assignment{}
+	}
+	json.NewEncoder(w).Encode(assignments)
+}
+
+func (app *application) getAssignment(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	a, err := app.assignments.GetByID(id)
+	if err != nil {
+		app.notFound(w)
+		return
+	}
+	json.NewEncoder(w).Encode(a)
+}
+
+func (app *application) createAssignment(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	courseId, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	err = r.ParseMultipartForm(20 << 20) // 20 MB
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	title := r.FormValue("title")
+	if title == "" {
+		http.Error(w, "Title required", http.StatusBadRequest)
+		return
+	}
+	description := r.FormValue("description")
+	releaseDate, _ := time.Parse("2006-01-02T15:04", r.FormValue("release_date"))
+	deadlineDate, _ := time.Parse("2006-01-02T15:04", r.FormValue("deadline_date"))
+	isExtended := r.FormValue("is_extended") == "true"
+	isProject := r.FormValue("is_project") == "true"
+
+	var assignmentFileURL, solutionFileURL string
+	// Handle assignment file
+	file, header, err := r.FormFile("assignment_file")
+	if err == nil {
+		defer file.Close()
+		dir := fmt.Sprintf("./data/courses/%d/assignments", courseId)
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			app.serverError(w, err)
+			return
+		}
+		ext := filepath.Ext(header.Filename)
+		if ext == "" {
+			ext = ".pdf"
+		}
+		fileName := fmt.Sprintf("%d_%d%s", time.Now().UnixNano(), rand.Int63n(1000000), ext)
+		filePath := filepath.Join(dir, fileName)
+		dst, err := os.Create(filePath)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+		defer dst.Close()
+		if _, err := io.Copy(dst, file); err != nil {
+			app.serverError(w, err)
+			return
+		}
+		assignmentFileURL = fmt.Sprintf("/data/courses/%d/assignments/%s", courseId, fileName)
+	}
+	// Handle solution file
+	solFile, solHeader, err := r.FormFile("solution_file")
+	if err == nil {
+		defer solFile.Close()
+		dir := fmt.Sprintf("./data/courses/%d/solutions", courseId)
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			app.serverError(w, err)
+			return
+		}
+		ext := filepath.Ext(solHeader.Filename)
+		if ext == "" {
+			ext = ".pdf"
+		}
+		fileName := fmt.Sprintf("%d_%d%s", time.Now().UnixNano(), rand.Int63n(1000000), ext)
+		filePath := filepath.Join(dir, fileName)
+		dst, err := os.Create(filePath)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+		defer dst.Close()
+		if _, err := io.Copy(dst, solFile); err != nil {
+			app.serverError(w, err)
+			return
+		}
+		solutionFileURL = fmt.Sprintf("/data/courses/%d/solutions/%s", courseId, fileName)
+	}
+
+	a := &models.Assignment{
+		Title:        title,
+		Description:  description,
+		FileName:     assignmentFileURL,
+		SolutionName: solutionFileURL,
+		ReleaseDate:  releaseDate,
+		DeadlineDate: deadlineDate,
+		IsExtended:   isExtended,
+		IsProject:    isProject,
+	}
+	_, err = app.assignments.Insert(courseId, a)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(a)
+}
+
+func (app *application) updateAssignment(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	old, err := app.assignments.GetByID(id)
+	if err != nil {
+		app.notFound(w)
+		return
+	}
+	err = r.ParseMultipartForm(20 << 20)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	title := r.FormValue("title")
+	if title == "" {
+		title = old.Title
+	}
+	description := r.FormValue("description")
+	releaseDate, _ := time.Parse("2006-01-02T15:04", r.FormValue("release_date"))
+	deadlineDate, _ := time.Parse("2006-01-02T15:04", r.FormValue("deadline_date"))
+	isExtended := r.FormValue("is_extended") == "true"
+	isProject := r.FormValue("is_project") == "true"
+	courseIdStr := r.FormValue("course_id")
+	courseId, err := strconv.Atoi(courseIdStr)
+	if err != nil || courseId == 0 {
+		// Fallback: try to parse from old file path
+		// but for simplicity, require it
+		http.Error(w, "course_id is required", http.StatusBadRequest)
+		return
+	}
+
+	var assignmentFileURL, solutionFileURL string
+	// Handle new assignment file
+	file, header, err := r.FormFile("assignment_file")
+	if err == nil {
+		defer file.Close()
+		// Delete old file if exists
+		if old.FileName != "" && !strings.HasPrefix(old.FileName, "http") {
+			os.Remove("./" + strings.TrimPrefix(old.FileName, "/"))
+		}
+		dir := fmt.Sprintf("./data/courses/%d/assignments", courseId) // need CourseId in struct; adapt accordingly
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			app.serverError(w, err)
+			return
+		}
+		ext := filepath.Ext(header.Filename)
+		if ext == "" {
+			ext = ".pdf"
+		}
+		fileName := fmt.Sprintf("%d_%d%s", time.Now().UnixNano(), rand.Int63n(1000000), ext)
+		filePath := filepath.Join(dir, fileName)
+		dst, err := os.Create(filePath)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+		defer dst.Close()
+		io.Copy(dst, file)
+		assignmentFileURL = fmt.Sprintf("/data/courses/%d/assignments/%s", courseId, fileName)
+	} else {
+		assignmentFileURL = old.FileName
+	}
+	// Handle new solution file
+	solFile, solHeader, err := r.FormFile("solution_file")
+	if err == nil {
+		defer solFile.Close()
+		if old.SolutionName != "" && !strings.HasPrefix(old.SolutionName, "http") {
+			os.Remove("./" + strings.TrimPrefix(old.SolutionName, "/"))
+		}
+		dir := fmt.Sprintf("./data/courses/%d/solutions", courseId)
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			app.serverError(w, err)
+			return
+		}
+		ext := filepath.Ext(solHeader.Filename)
+		if ext == "" {
+			ext = ".pdf"
+		}
+		fileName := fmt.Sprintf("%d_%d%s", time.Now().UnixNano(), rand.Int63n(1000000), ext)
+		filePath := filepath.Join(dir, fileName)
+		dst, err := os.Create(filePath)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+		defer dst.Close()
+		io.Copy(dst, solFile)
+		solutionFileURL = fmt.Sprintf("/data/courses/%d/solutions/%s", courseId, fileName)
+	} else {
+		solutionFileURL = old.SolutionName
+	}
+
+	a := &models.Assignment{
+		Id:           id,
+		Title:        title,
+		Description:  description,
+		FileName:     assignmentFileURL,
+		SolutionName: solutionFileURL,
+		ReleaseDate:  releaseDate,
+		DeadlineDate: deadlineDate,
+		IsExtended:   isExtended,
+		IsProject:    isProject,
+	}
+	err = app.assignments.Update(a)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(a)
+}
+
+func (app *application) deleteAssignment(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	err = app.assignments.Delete(id)
 	if err != nil {
 		app.serverError(w, err)
 		return

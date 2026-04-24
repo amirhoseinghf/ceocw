@@ -19,6 +19,8 @@ type application struct {
 	semesters     *models.SemesterModel
 	teachers      *models.TeacherModel
 	books         *models.BookModel
+	slides        *models.SlideModel
+	assignments   *models.AssignmentModel
 	templateCache map[string]*template.Template
 }
 
@@ -49,6 +51,8 @@ func main() {
 		teachers:      &models.TeacherModel{DB: db},
 		semesters:     &models.SemesterModel{DB: db},
 		books:         &models.BookModel{DB: db},
+		slides:        &models.SlideModel{DB: db},
+		assignments:   &models.AssignmentModel{DB: db},
 		templateCache: templateCache,
 	}
 

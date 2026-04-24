@@ -30,16 +30,16 @@ a {
 }
 
 .university-info h1 {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'SFPro';
     color: white;
-    font-weight: 500;
+    font-weight: 200;
     font-size: 17px;
 }
 
 .university-info p {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'SFPro';
     color: rgb(205, 205, 205);
-    font-weight: 400;
+    font-weight: 200;
     font-size: 14px;
 }
 

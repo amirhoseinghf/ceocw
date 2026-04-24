@@ -1,20 +1,143 @@
 package models
 
 import (
+	"database/sql"
 	"fmt"
+	"os"
+	"strings"
 	"time"
 )
 
 type Assignment struct {
-	Id           int
-	Title        string
-	FileName     string
-	SolutionName string
-	Description  string
-	ReleaseDate  time.Time
-	DeadlineDate time.Time
-	IsExtended   bool
-	IsProject    bool
+	Id           int       `json:"Id"`
+	Title        string    `json:"Title"`
+	FileName     string    `json:"FileName"`
+	SolutionName string    `json:"SolutionName"`
+	Description  string    `json:"Description"`
+	ReleaseDate  time.Time `json:"ReleaseDate"`
+	DeadlineDate time.Time `json:"DeadlineDate"`
+	IsExtended   bool      `json:"IsExtended"`
+	IsProject    bool      `json:"IsProject"`
+}
+
+type AssignmentModel struct {
+	DB *sql.DB
+}
+
+func (m *AssignmentModel) GetByCourse(courseId int) ([]Assignment, error) {
+	rows, err := m.DB.Query(`
+        SELECT id, title, file_name, solution_name, description,
+               release_date, deadline_date, is_extended, is_project
+        FROM assignments WHERE course_id = ? ORDER BY deadline_date ASC`, courseId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var assignments []Assignment
+	for rows.Next() {
+		var a Assignment
+		var releaseDate, deadlineDate sql.NullTime
+		err := rows.Scan(&a.Id, &a.Title, &a.FileName, &a.SolutionName, &a.Description,
+			&releaseDate, &deadlineDate, &a.IsExtended, &a.IsProject)
+		if err != nil {
+			return nil, err
+		}
+		if releaseDate.Valid {
+			a.ReleaseDate = releaseDate.Time
+		}
+		if deadlineDate.Valid {
+			a.DeadlineDate = deadlineDate.Time
+		}
+		assignments = append(assignments, a)
+	}
+	return assignments, nil
+}
+
+func (m *AssignmentModel) GetByID(id int) (*Assignment, error) {
+	var a Assignment
+	var releaseDate, deadlineDate sql.NullTime
+	err := m.DB.QueryRow(`
+        SELECT id, title, file_name, solution_name, description,
+               release_date, deadline_date, is_extended, is_project
+        FROM assignments WHERE id = ?`, id).Scan(
+		&a.Id, &a.Title, &a.FileName, &a.SolutionName, &a.Description,
+		&releaseDate, &deadlineDate, &a.IsExtended, &a.IsProject)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	if releaseDate.Valid {
+		a.ReleaseDate = releaseDate.Time
+	}
+	if deadlineDate.Valid {
+		a.DeadlineDate = deadlineDate.Time
+	}
+	return &a, nil
+}
+
+func (m *AssignmentModel) Insert(courseId int, a *Assignment) (int, error) {
+	// Convert zero time to nil for DB (so that NULL is stored)
+	var releasePtr, deadlinePtr interface{}
+	if !a.ReleaseDate.IsZero() {
+		releasePtr = a.ReleaseDate
+	} else {
+		releasePtr = nil
+	}
+	if !a.DeadlineDate.IsZero() {
+		deadlinePtr = a.DeadlineDate
+	} else {
+		deadlinePtr = nil
+	}
+	res, err := m.DB.Exec(`
+        INSERT INTO assignments (course_id, title, file_name, solution_name, description,
+                                 release_date, deadline_date, is_extended, is_project)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		courseId, a.Title, a.FileName, a.SolutionName, a.Description,
+		releasePtr, deadlinePtr, a.IsExtended, a.IsProject)
+	if err != nil {
+		return 0, err
+	}
+	id, _ := res.LastInsertId()
+	return int(id), nil
+}
+
+func (m *AssignmentModel) Update(a *Assignment) error {
+	var releasePtr, deadlinePtr interface{}
+	if !a.ReleaseDate.IsZero() {
+		releasePtr = a.ReleaseDate
+	} else {
+		releasePtr = nil
+	}
+	if !a.DeadlineDate.IsZero() {
+		deadlinePtr = a.DeadlineDate
+	} else {
+		deadlinePtr = nil
+	}
+	_, err := m.DB.Exec(`
+        UPDATE assignments SET title=?, file_name=?, solution_name=?, description=?,
+            release_date=?, deadline_date=?, is_extended=?, is_project=?
+        WHERE id=?`,
+		a.Title, a.FileName, a.SolutionName, a.Description,
+		releasePtr, deadlinePtr, a.IsExtended, a.IsProject, a.Id)
+	return err
+}
+
+func (m *AssignmentModel) Delete(id int) error {
+	var fileName, solutionName string
+	err := m.DB.QueryRow("SELECT file_name, solution_name FROM assignments WHERE id = ?", id).Scan(&fileName, &solutionName)
+	if err != nil {
+		return err
+	}
+	if fileName != "" && !strings.HasPrefix(fileName, "http") {
+		_ = os.Remove("./" + strings.TrimPrefix(fileName, "/"))
+	}
+	if solutionName != "" && !strings.HasPrefix(solutionName, "http") {
+		_ = os.Remove("./" + strings.TrimPrefix(solutionName, "/"))
+	}
+	_, err = m.DB.Exec("DELETE FROM assignments WHERE id = ?", id)
+	return err
 }
 
 // Jalali date structure

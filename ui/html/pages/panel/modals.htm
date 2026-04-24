@@ -137,6 +137,90 @@
     </div>
 </div>
 
+<!-- Slide Modal -->
+<div id="slide-modal" class="modal" dir="rtl">
+    <div class="modal-content">
+        <span class="modal-close slide-close">&times;</span>
+        <h2 id="slide-modal-title">افزودن اسلاید جدید</h2>
+        <form id="slide-form" enctype="multipart/form-data">
+            <input type="hidden" id="slide-id" value="0">
+            <div class="form-group">
+                <label>عنوان اسلاید</label>
+                <input type="text" id="slide-title" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label>فایل اسلاید (PDF)</label>
+                <input type="file" id="slide-file" class="form-control" accept=".pdf" required>
+                <div class="progress" id="slide-progress-container" style="display:none;">
+                    <div class="progress-bar" id="slide-progress-bar" style="width:0%">0%</div>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="btn btn-cancel" id="slide-cancel">لغو</button>
+                <button type="submit" class="btn btn-save">ذخیره</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Assignment Modal (Add/Edit) -->
+<div id="assignment-modal" class="modal" dir="rtl">
+    <div class="modal-content" style="max-width: 700px;">
+        <span class="modal-close assignment-close">&times;</span>
+        <h2 id="assignment-modal-title">افزودن تکلیف جدید</h2>
+        <form id="assignment-form" enctype="multipart/form-data">
+            <input type="hidden" id="assignment-id" value="0">
+            <div class="form-group">
+                <label>عنوان تکلیف</label>
+                <input type="text" id="assignment-title" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label>توضیحات (اختیاری)</label>
+                <textarea id="assignment-description" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>تاریخ انتشار</label>
+                    <input type="datetime-local" id="assignment-release-date" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>تاریخ ددلاین</label>
+                    <input type="datetime-local" id="assignment-deadline-date" class="form-control">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>فایل تکلیف (PDF)</label>
+                    <input type="file" id="assignment-file" class="form-control" accept=".pdf">
+                    <div class="progress" id="assignment-progress-container" style="display:none;">
+                        <div class="progress-bar" id="assignment-progress-bar" style="width:0%">0%</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>فایل حل (PDF) - اختیاری</label>
+                    <input type="file" id="assignment-solution" class="form-control" accept=".pdf">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="assignment-is-extended"> تمدید شده
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="assignment-is-project"> پروژه
+                    </label>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="btn btn-cancel" id="assignment-cancel">لغو</button>
+                <button type="submit" class="btn btn-save">ذخیره</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Toast -->
 <div id="toast" class="toast"></div>
 {{end}}

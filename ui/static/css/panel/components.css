@@ -227,7 +227,8 @@
     color: #666;
 }
 .delete-modal-title,
-#book-modal-title {
+#book-modal-title,
+#assignment-modal-title {
     margin-bottom: 20px;
 }
 
@@ -242,6 +243,11 @@
     object-fit: cover;
     border-radius: 4px;
     background-color: #f0f0f1;
+}
+
+#slide-progress-container,
+#assignment-progress-container {
+    display: none;
 }
 
 /* Progress bar */
@@ -562,4 +568,22 @@ label {
 .grade-items-table input {
     width: 100%;
     box-sizing: border-box;
+}
+
+/* Slides - reuse teacher table styles */
+.slides-table {
+    width: 100%;
+}
+.slide-title {
+    font-weight: 500;
+}
+.slide-actions{
+    background: none;
+}
+
+.assignment-description {
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }

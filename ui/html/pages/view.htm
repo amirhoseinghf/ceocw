@@ -221,18 +221,22 @@ rel="noopener noreferrer">
                     </td>
                     <td class="actions-cell">
                         <div class="action-buttons">
-                            <a href="/data/courses/{{$.Id}}/assignments/{{.FileName}}" class="download-btn" target="_blank">
+                            {{if .FileName}}
+                            <a href="/data/courses/{{$.Course.Id}}/assignments/{{.FileName}}" class="download-btn" target="_blank">
+                            
                             {{if .IsProject}}
                                 دانلود
                             {{else}}
                                 دانلود تمرین
                             {{end}}
-                            
                             </a>
+                            {{end}}
                             {{if .SolutionName}}
-                                <a href="/data/courses/{{$.Id}}/solutions/{{.SolutionName}}" class="download-btn solution-btn" target="_blank">
+                                <a href="/data/courses/{{$.Course.Id}}/solutions/{{.SolutionName}}" class="download-btn solution-btn" target="_blank">
                             دانلود سلوشن
                             </a>
+                            {{else}}
+                             <p>-</p>
                             {{end}}
                         </div>
                         
@@ -257,7 +261,7 @@ rel="noopener noreferrer">
                 {{end}}
             </div>
             <div class="mobile-assignment-actions">
-                <a href="/data/courses/{{$.Id}}/assignments/{{.FileName}}" class="download-btn" target="_blank">
+                <a href="/data/courses/{{$.Course.Id}}/assignments/{{.FileName}}" class="download-btn" target="_blank">
                     {{if .IsProject}}
                         دانلود
                     {{else}}
@@ -265,7 +269,7 @@ rel="noopener noreferrer">
                     {{end}}
                 </a>
                 {{if .SolutionName}}
-                <a href="/data/courses/{{$.Id}}/solutions/{{.SolutionName}}" class="download-btn solution-btn" target="_blank">
+                <a href="/data/courses/{{$.Course.Id}}/solutions/{{.SolutionName}}" class="download-btn solution-btn" target="_blank">
                    دانلود سلوشن
                 </a>
                 {{end}}
@@ -307,7 +311,7 @@ rel="noopener noreferrer">
                     </td>
                     <td class="actions-cell">
                         <div class="action-buttons">
-                            <a href="/data/courses/{{$.Id}}/slides/{{$slide.FileName}}" class="download-btn" target="_blank">
+                            <a href="/data/courses/{{$.Course.Id}}/slides/{{$slide.FileName}}" class="download-btn" target="_blank">
                             دانلود
                             </a>
                         </div>
@@ -326,7 +330,7 @@ rel="noopener noreferrer">
                 {{$slide.Title}}
             </div>
             <div class="mobile-assignment-actions">
-                <a href="/data/courses/{{$.Id}}/slides/{{$slide.FileName}}" class="download-btn" target="_blank">
+                <a href="/data/courses/{{$.Course.Id}}/slides/{{$slide.FileName}}" class="download-btn" target="_blank">
                    دانلود اسلاید
                 </a>
             </div>
@@ -365,7 +369,7 @@ rel="noopener noreferrer">
                     </td>
                     <td class="actions-cell">
                         <div class="action-buttons">
-                            <a href="/data/courses/{{$.Id}}/notes/{{.FileName}}" class="download-btn" target="_blank">
+                            <a href="/data/courses/{{$.Course.Id}}/notes/{{.FileName}}" class="download-btn" target="_blank">
                             دانلود
                             </a>
                         </div>
@@ -387,7 +391,7 @@ rel="noopener noreferrer">
                 {{end}}
             </div>
             <div class="mobile-assignment-actions">
-                <a href="/data/courses/{{$.Id}}/notes/{{.FileName}}" class="download-btn" target="_blank">
+                <a href="/data/courses/{{$.Course.Id}}/notes/{{.FileName}}" class="download-btn" target="_blank">
                    دانلود
                 </a>
             </div>
@@ -434,7 +438,7 @@ rel="noopener noreferrer">
                     </td>
                     <td class="actions-cell">
                         <div class="action-buttons">
-                            <a href="/data/courses/{{$.Id}}/exams/{{.FileName}}" class="download-btn" target="_blank">
+                            <a href="/data/courses/{{$.Course.Id}}/exams/{{.FileName}}" class="download-btn" target="_blank">
                             دانلود
                             </a>
                         </div>
@@ -465,7 +469,7 @@ rel="noopener noreferrer">
             </div>
             
             <div class="mobile-assignment-actions">
-                <a href="/data/courses/{{$.Id}}/exams/{{.FileName}}" class="download-btn" target="_blank">
+                <a href="/data/courses/{{$.Course.Id}}/exams/{{.FileName}}" class="download-btn" target="_blank">
                    دانلود
                 </a>
             </div>

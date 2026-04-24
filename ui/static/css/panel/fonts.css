@@ -1,8 +1,8 @@
 /* Medium Weight (Normal) */
 @font-face {
   font-family: "Vazir";
-  src: url("../fonts/Vazir/Vazir-Medium-FD-WOL.woff2") format("woff2"),
-       url("../fonts/Vazir/Vazir-Medium-FD-WOL.woff") format("woff");
+  src: url("/static/fonts/Vazir/Vazir-Medium-FD-WOL.woff2") format("woff2"),
+       url("/static/fonts/Vazir/Vazir-Medium-FD-WOL.woff") format("woff");
   font-weight: 500;
   font-style: normal;
   font-display: swap;
@@ -11,8 +11,8 @@
 /* Thin Weight */
 @font-face {
   font-family: "Vazir";
-  src: url("../fonts/Vazir/Vazir-Thin-FD-WOL.woff2") format("woff2"),
-       url("../fonts/Vazir/Vazir-Thin-FD-WOL.woff") format("woff");
+  src: url("/static/fonts/Vazir/Vazir-Thin-FD-WOL.woff2") format("woff2"),
+       url("/static/fonts/Vazir/Vazir-Thin-FD-WOL.woff") format("woff");
   font-weight: 200;
   font-style: normal;
   font-display: swap;
@@ -21,8 +21,8 @@
 /* Light Weight */
 @font-face {
   font-family: "Vazir";
-  src: url("../fonts/Vazir/Vazir-Light-FD-WOL.woff2") format("woff2"),
-       url("../fonts/Vazir/Vazir-Light-FD-WOL.woff") format("woff");
+  src: url("/static/fonts/Vazir/Vazir-Light-FD-WOL.woff2") format("woff2"),
+       url("/static/fonts/Vazir/Vazir-Light-FD-WOL.woff") format("woff");
   font-weight: 300;
   font-style: normal;
   font-display: swap;
@@ -31,9 +31,101 @@
 /* Bold Weight */
 @font-face {
   font-family: "Vazir";
-  src: url("../fonts/Vazir/Vazir-Bold-FD-WOL.woff2") format("woff2"),
-       url("../fonts/Vazir/Vazir-Bold-FD-WOL.woff") format("woff");
+  src: url("/static/fonts/Vazir/Vazir-Bold-FD-WOL.woff2") format("woff2"),
+       url("/static/fonts/Vazir/Vazir-Bold-FD-WOL.woff") format("woff");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
+}
+
+/* sf-pro.css - SF Pro Font Family */
+
+/* Regular (400) */
+@font-face {
+    font-family: 'SFPro';
+    src: url('/static/fonts/SFPro/SF-Pro-Text-Regular.otf') format('opentype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Regular Italic */
+@font-face {
+    font-family: 'SFPro';
+    src: url('/static/fonts/SFPro/SF-Pro-Text-RegularItalic.otf') format('opentype');
+    font-weight: 400;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Medium (500) */
+@font-face {
+    font-family: 'SFPro';
+    src: url('/static/fonts/SFPro/SF-Pro-Text-Medium.otf') format('opentype');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Medium Italic */
+@font-face {
+    font-family: 'SFPro';
+    src: url('/static/fonts/SFPro/SF-Pro-Text-MediumItalic.otf') format('opentype');
+    font-weight: 500;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Semibold (600) */
+@font-face {
+    font-family: 'SFPro';
+    src: url('/static/fonts/SFPro/SF-Pro-Text-Semibold.otf') format('opentype');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Semibold Italic */
+@font-face {
+    font-family: 'SFPro';
+    src: url('/static/fonts/SFPro/SF-Pro-Text-SemiboldItalic.otf') format('opentype');
+    font-weight: 600;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Bold (700) */
+@font-face {
+    font-family: 'SFPro';
+    src: url('/static/fonts/SFPro/SF-Pro-Text-Bold.otf') format('opentype');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Bold Italic */
+@font-face {
+    font-family: 'SFPro';
+    src: url('/static/fonts/SFPro/SF-Pro-Text-BoldItalic.otf') format('opentype');
+    font-weight: 700;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Light (300) */
+@font-face {
+    font-family: 'SFPro';
+    src: url('/static/fonts/SFPro/SF-Pro-Text-Light.otf') format('opentype');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Thin (200) */
+@font-face {
+    font-family: 'SFPro';
+    src: url('/static/fonts/SFPro/SF-Pro-Text-Thin.otf') format('opentype');
+    font-weight: 200;
+    font-style: normal;
+    font-display: swap;
 }
