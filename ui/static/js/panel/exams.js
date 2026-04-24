@@ -25,7 +25,7 @@ function renderExams(exams) {
         container.innerHTML = '<div class="loading">هیچ امتحانی ثبت نشده است.</div>';
         return;
     }
-    console.log(exams)
+    
     const html = `
         <table class="teachers-table">
             <thead>
@@ -162,9 +162,8 @@ function initExams() {
         const fileInput = document.getElementById('exam-file');
         const file = fileInput.files[0];
 
-        console.log(examId);
+        
         if (!examType) {
-            console.log("SDFSFSDF");
             showToast('نوع امتحان الزامی است', false);
             return;
         }

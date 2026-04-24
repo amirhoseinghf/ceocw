@@ -55,7 +55,6 @@ async function showCourseManage(courseId) {
         const response = await fetch(`/courses/${courseId}`);
         if (!response.ok) throw new Error('Failed to fetch course');
         const course = await response.json();
-        console.log(course)
         populateCourseEditForm(course);
     } catch (err) {
         showToast('خطا در دریافت اطلاعات دوره', false);
