@@ -252,6 +252,45 @@
     </div>
 </div>
 
+<!-- Exam Modal -->
+<div id="exam-modal" class="modal" dir="rtl">
+    <div class="modal-content">
+        <span class="modal-close exam-close">&times;</span>
+        <h2 id="exam-modal-title">افزودن امتحان جدید</h2>
+        <form id="exam-form" enctype="multipart/form-data">
+            <input type="hidden" id="exam-id" value="0">
+            <div class="form-group">
+                <label>ترم</label>
+                <select id="exam-semester" class="form-control"></select>
+            </div>
+            <div class="form-group">
+                <label>نوع امتحان</label>
+                <select id="exam-type" class="form-control">
+                    <option value="Midterm">میان‌ترم</option>
+                    <option value="Final">پایان‌ترم</option>
+                    <option value="Quiz">کوییز</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>فایل امتحان (PDF)</label>
+                <input type="file" id="exam-file" class="form-control" accept=".pdf">
+                <div class="progress" id="exam-progress-container" style="display:none;">
+                    <div class="progress-bar" id="exam-progress-bar" style="width:0%">0%</div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="exam-this-semester"> مربوط به این ترم
+                </label>
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="btn btn-cancel" id="exam-cancel">لغو</button>
+                <button type="submit" class="btn btn-save">ذخیره</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Toast -->
 <div id="toast" class="toast"></div>
 {{end}}

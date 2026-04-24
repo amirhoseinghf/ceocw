@@ -22,6 +22,7 @@ type application struct {
 	slides        *models.SlideModel
 	assignments   *models.AssignmentModel
 	notes         *models.NoteModel
+	exams         *models.ExamModel
 	templateCache map[string]*template.Template
 }
 
@@ -55,6 +56,7 @@ func main() {
 		slides:        &models.SlideModel{DB: db},
 		assignments:   &models.AssignmentModel{DB: db},
 		notes:         &models.NoteModel{DB: db},
+		exams:         &models.ExamModel{DB: db},
 		templateCache: templateCache,
 	}
 

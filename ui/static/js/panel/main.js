@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initBooks();
     initCourses();
     initNotes();
+    initExams();
 
     initCourseDescription();
     initSlides();

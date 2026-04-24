@@ -1252,3 +1252,186 @@ func (app *application) updateNote(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]interface{}{"id": id, "title": title, "is_updated": isUpdated, "file_name": newFileName})
 }
+
+func (app *application) getCourseExams(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	courseId, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	exams, err := app.exams.GetByCourse(courseId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	if exams == nil {
+		exams = []models.Exam{}
+	}
+	json.NewEncoder(w).Encode(exams)
+}
+
+func (app *application) getExam(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	exam, err := app.exams.Get(id)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	if exam == nil {
+		app.notFound(w)
+		return
+	}
+	json.NewEncoder(w).Encode(exam)
+}
+
+func (app *application) createExam(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	courseId, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	err = r.ParseMultipartForm(10 << 20)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	examType := r.FormValue("exam_type")
+	if examType == "" {
+		http.Error(w, "Exam type required", http.StatusBadRequest)
+		return
+	}
+	thisSemester := r.FormValue("this_semester") == "true"
+	semesterId, _ := strconv.Atoi(r.FormValue("semester_id"))
+	file, header, err := r.FormFile("exam_file")
+	if err != nil {
+		http.Error(w, "File required", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	dir := fmt.Sprintf("./data/courses/%d/exams", courseId)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		app.serverError(w, err)
+		return
+	}
+	ext := filepath.Ext(header.Filename)
+	if ext == "" {
+		ext = ".pdf"
+	}
+	fileName := fmt.Sprintf("%d_%d%s", time.Now().UnixNano(), rand.Int63n(1000000), ext)
+	filePath := filepath.Join(dir, fileName)
+	dst, err := os.Create(filePath)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	defer dst.Close()
+	if _, err := io.Copy(dst, file); err != nil {
+		app.serverError(w, err)
+		return
+	}
+	publicURL := fmt.Sprintf("/data/courses/%d/exams/%s", courseId, fileName)
+	_, err = app.exams.Insert(courseId, semesterId, examType, publicURL, thisSemester)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]interface{}{"exam_type": examType, "file_name": publicURL})
+}
+
+func (app *application) updateExam(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	oldExam, err := app.exams.Get(id)
+	if err != nil || oldExam == nil {
+		app.notFound(w)
+		return
+	}
+	err = r.ParseMultipartForm(10 << 20)
+	if err != nil && !strings.Contains(err.Error(), "no multipart boundary") {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	examType := r.FormValue("exam_type")
+	if examType == "" {
+		examType = oldExam.ExamType
+	}
+	thisSemester := r.FormValue("this_semester") == "true"
+	semesterId, _ := strconv.Atoi(r.FormValue("semester_id"))
+	courseIdStr := r.FormValue("course_id")
+	courseId, _ := strconv.Atoi(courseIdStr)
+
+	var newFileName string
+	file, header, err := r.FormFile("exam_file")
+	if err == nil {
+		defer file.Close()
+		// Delete old file
+		if oldExam.FileName != "" && !strings.HasPrefix(oldExam.FileName, "http") {
+			_ = os.Remove("./" + strings.TrimPrefix(oldExam.FileName, "/"))
+		}
+		// Derive course ID from old file path or use form value
+		if courseId == 0 {
+			parts := strings.Split(oldExam.FileName, "/")
+			if len(parts) >= 4 {
+				courseId, _ = strconv.Atoi(parts[3])
+			}
+		}
+		if courseId == 0 {
+			http.Error(w, "Unable to determine course ID", http.StatusBadRequest)
+			return
+		}
+		dir := fmt.Sprintf("./data/courses/%d/exams", courseId)
+		os.MkdirAll(dir, 0755)
+		ext := filepath.Ext(header.Filename)
+		if ext == "" {
+			ext = ".pdf"
+		}
+		fileName := fmt.Sprintf("%d_%d%s", time.Now().UnixNano(), rand.Int63n(1000000), ext)
+		filePath := filepath.Join(dir, fileName)
+		dst, err := os.Create(filePath)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+		defer dst.Close()
+		io.Copy(dst, file)
+		newFileName = fmt.Sprintf("/data/courses/%d/exams/%s", courseId, fileName)
+	} else {
+		newFileName = oldExam.FileName
+	}
+
+	err = app.exams.Update(id, semesterId, examType, newFileName, thisSemester)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]interface{}{"id": id, "exam_type": examType, "file_name": newFileName})
+}
+
+func (app *application) deleteExam(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	err = app.exams.Delete(id)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}

@@ -434,7 +434,7 @@ rel="noopener noreferrer">
                         </div>
                     </td>
                     <td class="actions-cell">
-                        {{.ExamType}}
+                        {{.ExamTypeToPersian}}
                     </td>
                     <td class="actions-cell">
                         <div class="action-buttons">
@@ -454,8 +454,8 @@ rel="noopener noreferrer">
         {{range .Course.Exams}}
         <div class="mobile-assignment-item">
             <div class="mobile-assignment-title">
-                {{if ne .Course.Semester.Id 0}}
-                    {{.Course.Semester.SemesterName}}
+                {{if .Semester.Id }}
+                    {{.Semester.SemesterName}}
                 {{else}}
                     نامشخص
                 {{end}}
