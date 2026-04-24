@@ -129,3 +129,54 @@
     font-style: normal;
     font-display: swap;
 }
+
+/* SF Pro Rounded */
+@font-face {
+    font-family: 'SFProRounded';
+    src: url('/static/fonts/SFPro/SF-Pro-Rounded-Regular.otf') format('opentype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'SFProRounded';
+    src: url('/static/fonts/SFPro/SF-Pro-Rounded-Medium.otf') format('opentype');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'SFProRounded';
+    src: url('/static/fonts/SFPro/SF-Pro-Rounded-Semibold.otf') format('opentype');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'SFProRounded';
+    src: url('/static/fonts/SFPro/SF-Pro-Rounded-Bold.otf') format('opentype');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'SFProRounded';
+    src: url('/static/fonts/SFPro/SF-Pro-Rounded-Light.otf') format('opentype');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'SFProRounded';
+    src: url('/static/fonts/SFPro/SF-Pro-Rounded-Thin.otf') format('opentype');
+    font-weight: 200;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'SFProRounded';
+    src: url('/static/fonts/SFPro/SF-Pro-Rounded-Black.otf') format('opentype');
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}

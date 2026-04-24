@@ -230,13 +230,13 @@ rel="noopener noreferrer">
                                 دانلود تمرین
                             {{end}}
                             </a>
+                            {{else}}
+                             <p>-</p>
                             {{end}}
                             {{if .SolutionName}}
                                 <a href="/data/courses/{{$.Course.Id}}/solutions/{{.SolutionName}}" class="download-btn solution-btn" target="_blank">
                             دانلود سلوشن
                             </a>
-                            {{else}}
-                             <p>-</p>
                             {{end}}
                         </div>
                         
