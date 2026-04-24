@@ -346,6 +346,17 @@ label {
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
+.edit-section h2 {
+    font-size: 1.3rem;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid rgb(229, 229, 229);
+}
+
+.books-h2 {
+    border-bottom: none !important;
+}
+
 .content-header {
     font-family: 'Vazir';
     flex-wrap: wrap;
@@ -398,7 +409,7 @@ label {
     }
     .content-header button:first-child {
         order: 3;     /* back button on top */
-        align-self: right;
+        align-self: center;
     }
 }
 
@@ -499,13 +510,21 @@ label {
     font-size: 0.9rem;
 }
 
+#add-course-btn {
+    justify-content: center;
+    order: 2;
+    align-self: center;
+}
+
 
 .remove-grade-item {
     font-family: 'Vazir';
+    justify-content: center;
 }
 
 #grade-items-list {
     margin-bottom: 10px;
+
 }
 
 @media (max-width: 768px) {
@@ -513,4 +532,34 @@ label {
         grid-template-columns: 1fr;
         gap: 20px;
     }
+    
+    .books-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    #add-book-btn,
+    #add-existing-book-btn {
+        align-self: center;
+    }
+}
+
+/* Constrain the grade distribution column */
+.desc-col:last-child {
+    width: 100%;
+}
+/* Enable horizontal scroll for the grade items table */
+.grade-items-container {
+    overflow-x: auto;
+}
+/* Ensure table fits within scroll area */
+.grade-items-table {
+    width: 100%;
+    min-width: 250px;
+}
+/* Make inputs respect container width */
+.grade-items-table input {
+    width: 100%;
+    box-sizing: border-box;
 }
