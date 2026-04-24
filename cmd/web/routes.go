@@ -64,6 +64,12 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPut, "/assignments/:id", app.updateAssignment)
 	router.HandlerFunc(http.MethodDelete, "/assignments/:id", app.deleteAssignment)
 
+	router.HandlerFunc(http.MethodGet, "/courses/:id/notes", app.getCourseNotes)
+	router.HandlerFunc(http.MethodPost, "/courses/:id/notes", app.createNote)
+	router.HandlerFunc(http.MethodDelete, "/notes/:id", app.deleteNote)
+	router.HandlerFunc(http.MethodGet, "/notes/:id", app.getNote)
+	router.HandlerFunc(http.MethodPut, "/notes/:id", app.updateNote)
+
 	standard := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
 
 	return standard.Then(router)

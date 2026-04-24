@@ -1064,3 +1064,191 @@ func (app *application) deleteAssignment(w http.ResponseWriter, r *http.Request)
 	}
 	w.WriteHeader(http.StatusOK)
 }
+
+func (app *application) getCourseNotes(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	courseId, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	notes, err := app.notes.GetByCourse(courseId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	if notes == nil {
+		notes = []models.Note{}
+	}
+	json.NewEncoder(w).Encode(notes)
+}
+
+func (app *application) createNote(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	courseId, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	err = r.ParseMultipartForm(10 << 20) // 10 MB
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	title := r.FormValue("title")
+	if title == "" {
+		http.Error(w, "Title required", http.StatusBadRequest)
+		return
+	}
+	isUpdated := r.FormValue("is_updated") == "true"
+	file, header, err := r.FormFile("note_file")
+	if err != nil {
+		http.Error(w, "File required", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	dir := fmt.Sprintf("./data/courses/%d/notes", courseId)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		app.serverError(w, err)
+		return
+	}
+	ext := filepath.Ext(header.Filename)
+	if ext == "" {
+		ext = ".pdf"
+	}
+	fileName := fmt.Sprintf("%d_%d%s", time.Now().UnixNano(), rand.Int63n(1000000), ext)
+	filePath := filepath.Join(dir, fileName)
+	dst, err := os.Create(filePath)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	defer dst.Close()
+	if _, err := io.Copy(dst, file); err != nil {
+		app.serverError(w, err)
+		return
+	}
+	publicURL := fmt.Sprintf("/data/courses/%d/notes/%s", courseId, fileName)
+	_, err = app.notes.Insert(courseId, title, publicURL, isUpdated)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]interface{}{"title": title, "file_name": publicURL, "is_updated": isUpdated})
+}
+
+func (app *application) deleteNote(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	noteId, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	err = app.notes.Delete(noteId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (app *application) getNote(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	note, err := app.notes.Get(id)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	if note == nil {
+		app.notFound(w)
+		return
+	}
+	json.NewEncoder(w).Encode(note)
+}
+
+func (app *application) updateNote(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	// Fetch existing note to get old file name and course ID
+	oldNote, err := app.notes.Get(id)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	if oldNote == nil {
+		app.notFound(w)
+		return
+	}
+	err = r.ParseMultipartForm(10 << 20)
+	if err != nil && !strings.Contains(err.Error(), "no multipart boundary") {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	title := r.FormValue("title")
+	if title == "" {
+		title = oldNote.Title
+	}
+	isUpdated := r.FormValue("is_updated") == "true"
+	courseIdStr := r.FormValue("course_id")
+	courseId, _ := strconv.Atoi(courseIdStr)
+
+	var newFileName string
+	file, header, err := r.FormFile("note_file")
+	if err == nil {
+		defer file.Close()
+		// Delete old file
+		if oldNote.FileName != "" && !strings.HasPrefix(oldNote.FileName, "http") {
+			_ = os.Remove("./" + strings.TrimPrefix(oldNote.FileName, "/"))
+		}
+		// Use course ID from form or derive from old file path (fallback)
+		if courseId == 0 {
+			// Extract course ID from old file path e.g., /data/courses/123/notes/file.pdf
+			parts := strings.Split(oldNote.FileName, "/")
+			if len(parts) >= 4 {
+				courseId, _ = strconv.Atoi(parts[3])
+			}
+		}
+		if courseId == 0 {
+			http.Error(w, "Unable to determine course ID", http.StatusBadRequest)
+			return
+		}
+		dir := fmt.Sprintf("./data/courses/%d/notes", courseId)
+		os.MkdirAll(dir, 0755)
+		ext := filepath.Ext(header.Filename)
+		if ext == "" {
+			ext = ".pdf"
+		}
+		fileName := fmt.Sprintf("%d_%d%s", time.Now().UnixNano(), rand.Int63n(1000000), ext)
+		filePath := filepath.Join(dir, fileName)
+		dst, err := os.Create(filePath)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+		defer dst.Close()
+		io.Copy(dst, file)
+		newFileName = fmt.Sprintf("/data/courses/%d/notes/%s", courseId, fileName)
+		// Update with new file name
+		err = app.notes.UpdateWithFile(id, title, isUpdated, newFileName)
+	} else {
+		// No new file, update only title and is_updated
+		err = app.notes.Update(&models.Note{Id: id, Title: title, IsUpdated: isUpdated, FileName: oldNote.FileName})
+	}
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]interface{}{"id": id, "title": title, "is_updated": isUpdated, "file_name": newFileName})
+}

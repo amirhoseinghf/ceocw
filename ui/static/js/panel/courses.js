@@ -84,6 +84,7 @@ function populateCourseEditForm(course) {
     loadCourseDescription(course);
     loadSlides(course.Id);
     loadAssignments(course.Id);
+    loadNotes(course.Id);
     
     if (course.Id) {
         loadBooks(course.Id)

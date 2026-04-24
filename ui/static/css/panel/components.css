@@ -228,7 +228,8 @@
 }
 .delete-modal-title,
 #book-modal-title,
-#assignment-modal-title {
+#assignment-modal-title,
+#note-modal-title {
     margin-bottom: 20px;
 }
 
@@ -246,7 +247,8 @@
 }
 
 #slide-progress-container,
-#assignment-progress-container {
+#assignment-progress-container,
+#note-progress-container {
     display: none;
 }
 

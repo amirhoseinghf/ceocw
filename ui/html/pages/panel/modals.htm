@@ -221,6 +221,37 @@
     </div>
 </div>
 
+<!-- Note Modal -->
+<div id="note-modal" class="modal" dir="rtl">
+    <div class="modal-content">
+        <span class="modal-close note-close">&times;</span>
+        <h2 id="note-modal-title">افزودن جزوه جدید</h2>
+        <form id="note-form" enctype="multipart/form-data">
+            <input type="hidden" id="note-id" value="0">
+            <div class="form-group">
+                <label>عنوان جزوه</label>
+                <input type="text" id="note-title" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>فایل جزوه (PDF)</label>
+                <input type="file" id="note-file" class="form-control" accept=".pdf">
+                <div class="progress" id="note-progress-container" style="display:none;">
+                    <div class="progress-bar" id="note-progress-bar" style="width:0%">0%</div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="note-is-updated"> بروزرسانی شده
+                </label>
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="btn btn-cancel" id="note-cancel">لغو</button>
+                <button type="submit" class="btn btn-save">ذخیره</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Toast -->
 <div id="toast" class="toast"></div>
 {{end}}
