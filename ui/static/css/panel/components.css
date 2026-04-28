@@ -230,7 +230,8 @@
 #book-modal-title,
 #assignment-modal-title,
 #note-modal-title,
-#exam-modal-title {
+#exam-modal-title,
+#ta-modal-title {
     margin-bottom: 20px;
 }
 
@@ -250,7 +251,8 @@
 #slide-progress-container,
 #assignment-progress-container,
 #note-progress-container,
-#exam-progress-container {
+#exam-progress-container,
+#ta-progress-container {
     display: none;
 }
 
@@ -354,6 +356,38 @@ label {
     padding: 20px;
     margin-bottom: 20px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.ta-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+.ta-social-links a {
+    margin: 0 4px;
+    text-decoration: none;
+    font-size: 0.8rem;
+}
+
+.ta-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    transition: background 0.2s;
+}
+.ta-item:hover {
+    background: #f5f5f5;
+}
+.ta-name {
+    flex: 1;
+    font-weight: 500;
+}
+.ta-attached {
+    color: #28a745;
+    font-size: 0.8rem;
 }
 
 .edit-section h2 {
@@ -589,4 +623,56 @@ label {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+/* Make existing TA modal wider like books modal */
+#existing-tas-modal .modal-content {
+    max-width: 550px;
+}
+
+/* TA items in modal - ensure image is rounded and sized correctly */
+#existing-tas-modal .ta-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+#existing-tas-modal .ta-item:hover {
+    background: #f5f5f5;
+}
+#existing-tas-modal .ta-item img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+#existing-tas-modal .ta-name {
+    flex: 1;
+    font-weight: 500;
+}
+#existing-tas-modal .ta-attached {
+    color: #28a745;
+    font-size: 0.8rem;
+}
+
+/* Search input within modal */
+#existing-tas-modal #search-tas {
+    margin-bottom: 15px;
+}
+
+.ta-social-links {
+    display: flex;
+    gap: 1px;
+    align-items: center;
+    justify-content: center;
+}
+.social-icon {
+    width: 19px;
+    height: 19px;
+    transition: opacity 0.2s;
+}
+.social-icon:hover {
+    opacity: 0.7;
 }

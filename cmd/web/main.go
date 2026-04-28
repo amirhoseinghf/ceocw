@@ -23,6 +23,7 @@ type application struct {
 	assignments   *models.AssignmentModel
 	notes         *models.NoteModel
 	exams         *models.ExamModel
+	tas           *models.TAModel
 	templateCache map[string]*template.Template
 }
 
@@ -57,6 +58,7 @@ func main() {
 		assignments:   &models.AssignmentModel{DB: db},
 		notes:         &models.NoteModel{DB: db},
 		exams:         &models.ExamModel{DB: db},
+		tas:           &models.TAModel{DB: db},
 		templateCache: templateCache,
 	}
 

@@ -291,6 +291,89 @@
     </div>
 </div>
 
+<!-- TA Modal (Add/Edit) -->
+<div id="ta-modal" class="modal" dir="rtl">
+    <div class="modal-content" style="max-width: 600px;">
+        <span class="modal-close ta-close">&times;</span>
+        <h2 id="ta-modal-title">افزودن TA جدید</h2>
+        <form id="ta-form" enctype="multipart/form-data">
+            <input type="hidden" id="ta-id" value="0">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>نام</label>
+                    <input type="text" id="ta-first-name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>نام خانوادگی</label>
+                    <input type="text" id="ta-last-name" class="form-control" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>تصویر پروفایل (اختیاری)</label>
+                <input type="file" id="ta-image" class="form-control" accept="image/*">
+                <div class="progress" id="ta-progress-container" style="display:none;">
+                    <div class="progress-bar" id="ta-progress-bar" style="width:0%">0%</div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>لینک LinkedIn</label>
+                <input type="url" dir="ltr" id="ta-linkedin" class="form-control" placeholder="https://linkedin.com/in/...">
+            </div>
+            <div class="form-group">
+                <label>لینک تلگرام</label>
+                <input type="url" dir="ltr" id="ta-telegram" class="form-control" placeholder="https://t.me/...">
+            </div>
+            <div class="form-group">
+                <label>لینک اینستاگرام</label>
+                <input type="url" dir="ltr" id="ta-instagram" class="form-control" placeholder="https://instagram.com/...">
+            </div>
+            <div class="form-group">
+                <label>وب‌سایت شخصی</label>
+                <input type="url" dir="ltr" id="ta-website" class="form-control" placeholder="https://...">
+            </div>
+            <div class="form-group">
+                <label>لینک GitHub</label>
+                <input type="url" dir="ltr" id="ta-github" class="form-control" placeholder="https://github.com/username">
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="btn btn-cancel" id="ta-cancel">لغو</button>
+                <button type="submit" class="btn btn-save">ذخیره</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- TA Delete Modal -->
+<div id="delete-ta-modal" class="modal" dir="rtl">
+    <div class="modal-content" style="max-width: 400px;">
+        <span class="modal-close delete-ta-close">&times;</span>
+        <h2 class="delete-modal-title">حذف TA</h2>
+        <p id="delete-ta-message">آیا می‌خواهید TA را فقط از این دوره حذف کنید یا به طور کامل؟</p>
+        <div class="modal-buttons" style="justify-content: center; gap: 15px;">
+            <button id="cancel-delete-ta-btn" class="btn btn-cancel">انصراف</button>
+            <button id="detach-ta-btn" class="btn btn-warning">فقط از این دوره</button>
+            <button id="delete-permanently-ta-btn" class="btn btn-danger">حذف کامل</button>
+        </div>
+    </div>
+</div>
+
+<!-- Existing TAs Modal -->
+<div id="existing-tas-modal" class="modal" dir="rtl">
+    <div class="modal-content" style="max-width: 800px;">
+        <span class="modal-close existing-tas-close">&times;</span>
+        <h2 class="delete-modal-title">انتخاب TA از مخزن</h2>
+        <div class="form-group">
+            <input type="text" id="search-tas" class="form-control" placeholder="جستجوی نام TA...">
+        </div>
+        <div id="existing-tas-list" style="max-height: 400px; overflow-y: auto;">
+            <div class="loading">در حال بارگذاری...</div>
+        </div>
+        <div class="modal-buttons">
+            <button type="button" id="cancel-existing-tas" class="btn btn-cancel">انصراف</button>
+        </div>
+    </div>
+</div>
+
 <!-- Toast -->
 <div id="toast" class="toast"></div>
 {{end}}

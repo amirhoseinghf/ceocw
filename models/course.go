@@ -473,3 +473,13 @@ func (c *CourseModel) ReplaceGradeItems(courseID int, items []GradeItem) error {
 	}
 	return tx.Commit()
 }
+
+func (c *CourseModel) UpdateBasic(id int, title, shortName, imageUrl, telegramLink, baleLink string, teacherId, semesterId int) error {
+	_, err := c.DB.Exec(`
+        UPDATE courses 
+        SET title = ?, short_name = ?, image_url = ?, telegram_link = ?, bale_link = ?,
+            teacher_id = ?, semester_id = ?
+        WHERE id = ?
+    `, title, shortName, imageUrl, telegramLink, baleLink, teacherId, semesterId, id)
+	return err
+}

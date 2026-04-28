@@ -25,6 +25,7 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, "/courses/:id", app.courseGetByID)
 	router.HandlerFunc(http.MethodPost, "/course/create", app.courseCreatePost)
 	router.HandlerFunc(http.MethodGet, "/courses", app.coursesGetAll)
+	router.HandlerFunc(http.MethodPut, "/courses/:id/basic", app.updateCourseBasic)
 
 	router.HandlerFunc(http.MethodGet, "/courses/:id/books", app.getCourseBooks)
 	router.HandlerFunc(http.MethodPost, "/courses/:id/books", app.addBook)
@@ -46,7 +47,7 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, "/books", app.getAllBooks)
 	router.HandlerFunc(http.MethodGet, "/books/:id", app.getBook)
 	router.HandlerFunc(http.MethodPut, "/books/:id", app.updateBook)
-	router.HandlerFunc(http.MethodDelete, "/courses/:courseId/books/:bookId", app.detachBook)
+	router.HandlerFunc(http.MethodDelete, "/courses/:id/books/:bookId", app.detachBook)
 	router.HandlerFunc(http.MethodDelete, "/books/:id", app.deleteBookPermanently)
 	router.HandlerFunc(http.MethodPost, "/courseBook/:courseId/books/:bookId/attach", app.attachBookToCourse)
 
@@ -75,6 +76,18 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPost, "/courses/:id/exams", app.createExam)
 	router.HandlerFunc(http.MethodPut, "/exams/:id", app.updateExam)
 	router.HandlerFunc(http.MethodDelete, "/exams/:id", app.deleteExam)
+
+	// TA routes – use :id for course, :taId for TA ID
+	router.HandlerFunc(http.MethodGet, "/courses/:id/tas", app.getCourseTAs)
+	router.HandlerFunc(http.MethodPost, "/courses/:id/tas", app.createTA)
+	router.HandlerFunc(http.MethodPost, "/courses/:id/tas/:taId/attach", app.attachTA)
+	router.HandlerFunc(http.MethodDelete, "/courses/:id/tas/:taId", app.detachTA)
+
+	// Global TA routes
+	router.HandlerFunc(http.MethodGet, "/tas", app.getAllTAs)
+	router.HandlerFunc(http.MethodGet, "/tas/:id", app.getTA)
+	router.HandlerFunc(http.MethodPut, "/tas/:id", app.updateTA)
+	router.HandlerFunc(http.MethodDelete, "/tas/:id", app.deleteTA)
 
 	standard := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
 

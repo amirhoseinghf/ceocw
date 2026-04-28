@@ -85,6 +85,7 @@ function populateCourseEditForm(course) {
     loadAssignments(course.Id);
     loadNotes(course.Id);
     loadExams(course.Id);
+    loadTAs(course.Id);
     
     if (course.Id) {
         loadBooks(course.Id)
@@ -126,6 +127,38 @@ function initCourses() {
         loadCourses();
     });
     document.getElementById('save-course-basic').addEventListener('click', async () => {
-        showToast('ذخیره‌سازی اطلاعات به زودی اضافه می‌شود', true);
-    });
+    const courseId = document.getElementById('course-id').value;
+    if (!courseId || courseId === '0') {
+        showToast('شناسه دوره معتبر نیست', false);
+        return;
+    }
+    const basicData = {
+        title: document.getElementById('course-title').value,
+        shortName: document.getElementById('course-shortname').value,
+        imageUrl: document.getElementById('course-image').value,
+        telegramLink: document.getElementById('course-telegram').value,
+        baleLink: document.getElementById('course-bale').value,
+        teacherId: parseInt(document.getElementById('course-teacher').value),
+        semesterId: parseInt(document.getElementById('course-semester').value)
+    };
+    // Simple validation
+    if (!basicData.title || !basicData.shortName) {
+        showToast('عنوان و نام کوتاه دوره الزامی است', false);
+        return;
+    }
+    try {
+        const response = await fetch(`/courses/${courseId}/basic`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(basicData)
+        });
+        if (!response.ok) throw new Error();
+        showToast('اطلاعات پایه دوره ذخیره شد', true);
+        // Update the displayed title in the header
+        document.getElementById('course-title-display').innerText = basicData.title;
+        // Optionally reload the course list later when returning to list
+    } catch (err) {
+        showToast('خطا در ذخیره اطلاعات پایه', false);
+    }
+});
 }

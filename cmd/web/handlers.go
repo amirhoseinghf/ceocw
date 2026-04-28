@@ -572,7 +572,7 @@ func (app *application) updateBook(w http.ResponseWriter, r *http.Request) {
 // Delete book from a specific course (detach)
 func (app *application) detachBook(w http.ResponseWriter, r *http.Request) {
 	params := httprouter.ParamsFromContext(r.Context())
-	courseID, err := strconv.Atoi(params.ByName("courseId"))
+	courseID, err := strconv.Atoi(params.ByName("id"))
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
@@ -1430,6 +1430,294 @@ func (app *application) deleteExam(w http.ResponseWriter, r *http.Request) {
 	}
 	err = app.exams.Delete(id)
 	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (app *application) updateCourseBasic(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	// Parse JSON request body
+	var req struct {
+		Title        string `json:"title"`
+		ShortName    string `json:"shortName"`
+		ImageUrl     string `json:"imageUrl"`
+		TelegramLink string `json:"telegramLink"`
+		BaleLink     string `json:"baleLink"`
+		TeacherId    int    `json:"teacherId"`
+		SemesterId   int    `json:"semesterId"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	// Basic validation
+	if req.Title == "" || req.ShortName == "" {
+		http.Error(w, "Title and short name are required", http.StatusBadRequest)
+		return
+	}
+
+	err = app.courses.UpdateBasic(id, req.Title, req.ShortName, req.ImageUrl, req.TelegramLink, req.BaleLink, req.TeacherId, req.SemesterId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "basic info updated"})
+}
+
+func (app *application) getCourseTAs(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	courseId, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	tas, err := app.tas.GetByCourse(courseId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	if tas == nil {
+		tas = []models.TeachingAssistant{}
+	}
+	json.NewEncoder(w).Encode(tas)
+}
+
+func (app *application) getAllTAs(w http.ResponseWriter, r *http.Request) {
+	tas, err := app.tas.GetAll()
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	if tas == nil {
+		tas = []models.TeachingAssistant{}
+	}
+	json.NewEncoder(w).Encode(tas)
+}
+
+func (app *application) getTA(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	ta, err := app.tas.Get(id)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	if ta == nil {
+		app.notFound(w)
+		return
+	}
+	json.NewEncoder(w).Encode(ta)
+}
+
+func (app *application) createTA(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	courseId, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	// Parse multipart form (for optional image)
+	err = r.ParseMultipartForm(5 << 20) // 5 MB
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	firstName := r.FormValue("first_name")
+	lastName := r.FormValue("last_name")
+	if firstName == "" || lastName == "" {
+		http.Error(w, "First and last name are required", http.StatusBadRequest)
+		return
+	}
+	linkedin := r.FormValue("linkedin")
+	telegram := r.FormValue("telegram")
+	instagram := r.FormValue("instagram")
+	website := r.FormValue("website")
+	github := r.FormValue("github")
+
+	var imageURL string
+	file, header, err := r.FormFile("ta_image")
+	if err == nil {
+		defer file.Close()
+		// Save image to ./data/ta_images/
+		dir := "./data/ta_images"
+		os.MkdirAll(dir, 0755)
+		ext := filepath.Ext(header.Filename)
+		if ext == "" {
+			ext = ".jpg"
+		}
+		fileName := fmt.Sprintf("%d_%d%s", time.Now().UnixNano(), rand.Int63n(1000000), ext)
+		filePath := filepath.Join(dir, fileName)
+		dst, err := os.Create(filePath)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+		defer dst.Close()
+		io.Copy(dst, file)
+		imageURL = fmt.Sprintf("/data/ta_images/%s", fileName)
+	}
+
+	ta := &models.TeachingAssistant{
+		FirstName: firstName,
+		LastName:  lastName,
+		ImageURL:  imageURL,
+		LinkedIn:  linkedin,
+		Telegram:  telegram,
+		Instagram: instagram,
+		Website:   website,
+		GitHub:    github,
+	}
+	taId, err := app.tas.Insert(ta)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	// Attach to the current course
+	if err := app.tas.AttachToCourse(courseId, taId); err != nil {
+		app.serverError(w, err)
+		return
+	}
+	ta.Id = taId
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(ta)
+}
+
+func (app *application) updateTA(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	// Get existing TA to possibly delete old image
+	oldTA, err := app.tas.Get(id)
+	if err != nil || oldTA == nil {
+		app.notFound(w)
+		return
+	}
+	err = r.ParseMultipartForm(5 << 20)
+	if err != nil && !strings.Contains(err.Error(), "no multipart boundary") {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	firstName := r.FormValue("first_name")
+	lastName := r.FormValue("last_name")
+	if firstName == "" || lastName == "" {
+		http.Error(w, "First and last name required", http.StatusBadRequest)
+		return
+	}
+	linkedin := r.FormValue("linkedin")
+	telegram := r.FormValue("telegram")
+	instagram := r.FormValue("instagram")
+	website := r.FormValue("website")
+	github := r.FormValue("github")
+
+	imageURL := oldTA.ImageURL
+	file, header, err := r.FormFile("ta_image")
+	if err == nil {
+		defer file.Close()
+		// Delete old image if exists
+		if oldTA.ImageURL != "" && !strings.HasPrefix(oldTA.ImageURL, "http") {
+			os.Remove("./" + strings.TrimPrefix(oldTA.ImageURL, "/"))
+		}
+		dir := "./data/ta_images"
+		os.MkdirAll(dir, 0755)
+		ext := filepath.Ext(header.Filename)
+		if ext == "" {
+			ext = ".jpg"
+		}
+		fileName := fmt.Sprintf("%d_%d%s", time.Now().UnixNano(), rand.Int63n(1000000), ext)
+		filePath := filepath.Join(dir, fileName)
+		dst, err := os.Create(filePath)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+		defer dst.Close()
+		io.Copy(dst, file)
+		imageURL = fmt.Sprintf("/data/ta_images/%s", fileName)
+	}
+
+	ta := &models.TeachingAssistant{
+		Id:        id,
+		FirstName: firstName,
+		LastName:  lastName,
+		ImageURL:  imageURL,
+		LinkedIn:  linkedin,
+		Telegram:  telegram,
+		Instagram: instagram,
+		Website:   website,
+		GitHub:    github,
+	}
+	if err := app.tas.Update(ta); err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(ta)
+}
+
+func (app *application) deleteTA(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	if err := app.tas.Delete(id); err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (app *application) attachTA(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	courseId, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	taId, err := strconv.Atoi(params.ByName("taId"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	if err := app.tas.AttachToCourse(courseId, taId); err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (app *application) detachTA(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	courseId, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	taId, err := strconv.Atoi(params.ByName("taId"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	if err := app.tas.DetachFromCourse(courseId, taId); err != nil {
 		app.serverError(w, err)
 		return
 	}
