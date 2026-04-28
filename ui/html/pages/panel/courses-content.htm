@@ -18,7 +18,14 @@
                     <input type="hidden" id="course-id" value="0">
                     <div class="form-group"><label>عنوان دوره</label><input type="text" id="course-title" class="form-control" required></div>
                     <div class="form-group"><label>نام کوتاه (Short Name)</label><input type="text" id="course-shortname" class="form-control" required></div>
-                    <div class="form-group"><label>آدرس تصویر</label><input type="text" id="course-image" class="form-control"></div>
+                    <div class="form-group">
+                        <label>تصویر دوره</label>
+                        <input type="file" id="course-image-file" class="form-control" accept="image/jpeg,image/png,image/webp">
+                        <div class="progress" id="course-edit-image-progress" style="display:none;">
+                            <div class="progress-bar" id="course-edit-image-progress-bar" style="width:0%">0%</div>
+                        </div>
+                        <small class="form-text text-muted">تصویر فعلی: <span id="current-course-image"></span></small>
+                    </div>
                     <div class="form-row">
                         <div class="form-group"><label>ترم</label><select id="course-semester" class="form-control" required></select></div>
                         <div class="form-group"><label>استاد</label><select id="course-teacher" class="form-control" required></select></div>
@@ -26,6 +33,8 @@
                     <div class="form-row">
                         <div class="form-group"><label>لینک تلگرام</label><input type="url" id="course-telegram" class="form-control"></div>
                         <div class="form-group"><label>لینک بله</label><input type="url" id="course-bale" class="form-control"></div>
+                        <div class="form-group"><label>لینک کوئرا</label><input type="url" id="course-quera" class="form-control">
+                        </div>
                     </div>
                     <div class="form-group">
                 <button type="button" id="save-course-basic" class="btn btn-primary">ذخیره اطلاعات پایه</button>
@@ -135,13 +144,18 @@
                 <div class="section-header">
                     <h2 class="books-h2">دستیاران آموزشی (TA)</h2>
                     <div style="display: flex; gap: 10px;">
-                        <button type="button" id="add-ta-btn" class="btn btn-primary">+ افزودن TA جدید</button>
                         <button type="button" id="add-existing-ta-btn" class="btn btn-secondary">👥 افزودن از TAهای موجود</button>
+                        <button type="button" id="add-ta-btn" class="btn btn-primary">+ افزودن TA جدید</button>
                     </div>
                 </div>
                 <div id="tas-list">
                     <div class="loading">در حال بارگذاری...</div>
                 </div>
+            </div>
+
+            <!-- Delete Course Section -->
+            <div class="delete-course-section">
+                <button type="button" id="delete-course-btn" class="btn btn-delete btn-block">حذف دوره</button>
             </div>
             
         </div>

@@ -19,12 +19,13 @@ type Course struct {
 	Slides            []Slide
 	Notes             []Note
 	Assignments       []Assignment
-	Announcements     []Announcement    // New section for announcements
-	CourseDescription CourseDescription // New field for course description
-	Exams             []Exam            // New section for exams
+	Announcements     []Announcement
+	CourseDescription CourseDescription
+	Exams             []Exam
 	ActiveSection     string
 	TelegramLink      string
 	BaleLink          string
+	QueraLink         string `json:"queraLink"`
 }
 
 type CourseSummary struct {
@@ -37,13 +38,40 @@ type CourseSummary struct {
 	SemesterName string `json:"SemesterName"`
 }
 
+type InsertCourseRequest struct {
+	Title        string `json:"title"`
+	ShortName    string `json:"shortName"`
+	ImageUrl     string `json:"imageUrl"`
+	TelegramLink string `json:"telegramLink"`
+	BaleLink     string `json:"baleLink"`
+	QueraLink    string `json:"queraLink"`
+	TeacherId    int    `json:"teacherId"`
+	SemesterId   int    `json:"semesterId"`
+}
+
+func (c *CourseModel) InsertBasic(req InsertCourseRequest) (int, error) {
+	res, err := c.DB.Exec(`
+        INSERT INTO courses (title, short_name, image_url, telegram_link, bale_link, quera_link,
+                             teacher_id, semester_id, active_section)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, req.Title, req.ShortName, req.ImageUrl, req.TelegramLink, req.BaleLink, req.QueraLink,
+		req.TeacherId, req.SemesterId, "")
+	if err != nil {
+		return 0, err
+	}
+	id, err := res.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+	return int(id), nil
+}
+
 func (c Course) Slug() string {
 	shortName := strings.ToLower(strings.ReplaceAll(c.ShortName, " ", "-"))
 	season := strings.ToLower(strings.ReplaceAll(c.Semester.Season, " ", "-"))
 	year := c.Semester.Year
 	teacherFirst := strings.ToLower(strings.ReplaceAll(c.Teacher.FirstNameEnglish, " ", "-"))
 	teacherLast := strings.ToLower(strings.ReplaceAll(c.Teacher.LastNameEnglish, " ", "-"))
-
 	return fmt.Sprintf("%s-%s-%d-%s-%s", shortName, season, year, teacherFirst, teacherLast)
 }
 
@@ -85,7 +113,6 @@ func (c *CourseModel) GetAllSummaries() ([]CourseSummary, error) {
 		cs.TeacherId = teacherId
 		cs.TeacherName = firstName + " " + lastName
 		cs.SemesterId = semesterId
-		// Create a temporary Semester to use its SeasonPersian method
 		sem := Semester{Season: season, Year: year}
 		cs.SemesterName = sem.SemesterName()
 		summaries = append(summaries, cs)
@@ -94,34 +121,20 @@ func (c *CourseModel) GetAllSummaries() ([]CourseSummary, error) {
 }
 
 func (c *CourseModel) Insert(course Course) (int, error) {
-
 	stmt := `
-	INSERT INTO courses (title, short_name, image_url, telegram_link, bale_link, active_section,
+	INSERT INTO courses (title, short_name, image_url, telegram_link, bale_link, quera_link, active_section,
                      teacher_id, semester_id, description,
                      class_schedule_day_of_week, class_schedule_start_time,
                      class_schedule_end_time, class_schedule_location)
-	VALUES (
-	        ?,
-	        ?,
-	        ?,
-	        ?,
-	        ?,
-	        ?,
-	        ?,
-			?,
-	        ?,
-	        ?,
-			?,
-			?,
-			?);
+	VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
-
 	result, err := c.DB.Exec(stmt,
 		course.Title,
 		course.ShortName,
 		course.ImageUrl,
 		course.TelegramLink,
 		course.BaleLink,
+		course.QueraLink,
 		course.ActiveSection,
 		course.Teacher.Id,
 		course.Semester.Id,
@@ -134,18 +147,14 @@ func (c *CourseModel) Insert(course Course) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-
 	id, err := result.LastInsertId()
 	if err != nil {
 		return 0, err
 	}
-
 	return int(id), nil
 }
 
 func (c *CourseModel) Get(slug string) (*Course, error) {
-
-	// Split slug into components
 	parts := strings.Split(slug, "-")
 	if len(parts) < 5 {
 		return nil, ErrNoRecord
@@ -155,7 +164,6 @@ func (c *CourseModel) Get(slug string) (*Course, error) {
 	season := parts[1]
 	yearStr := parts[2]
 	firstName := parts[3]
-	// The rest forms the last name (may contain hyphens)
 	lastNamePart := strings.Join(parts[4:], "-")
 
 	year, err := strconv.Atoi(yearStr)
@@ -163,10 +171,9 @@ func (c *CourseModel) Get(slug string) (*Course, error) {
 		return nil, ErrNoRecord
 	}
 
-	// 1. Main query: course + teacher + semester + class schedule (embedded)
 	stmt := `
         SELECT 
-            c.id, c.title, c.short_name, c.image_url, c.telegram_link, c.bale_link,
+            c.id, c.title, c.short_name, c.image_url, c.telegram_link, c.bale_link, c.quera_link,
             c.active_section, c.description,
             c.class_schedule_day_of_week, c.class_schedule_start_time,
             c.class_schedule_end_time, c.class_schedule_location,
@@ -183,41 +190,51 @@ func (c *CourseModel) Get(slug string) (*Course, error) {
           AND LOWER(REPLACE(t.last_name_english, ' ', '-')) = LOWER(?)
         LIMIT 1
     `
-
 	row := c.DB.QueryRow(stmt, shortName, season, year, firstName, lastNamePart)
 
 	course := &Course{}
 	teacher := Teacher{}
 	semester := Semester{}
 
+	var imageUrl, telegramLink, baleLink, queraLink, activeSection sql.NullString
+	var description, classDay, classStart, classEnd, classLocation sql.NullString
+	var teacherImageURL, teacherPageURL sql.NullString
+
 	err = row.Scan(
-		&course.Id, &course.Title, &course.ShortName, &course.ImageUrl,
-		&course.TelegramLink, &course.BaleLink, &course.ActiveSection,
-		&course.CourseDescription.Description,
-		&course.CourseDescription.ClassSchedule.DayOfWeek,
-		&course.CourseDescription.ClassSchedule.StartTime,
-		&course.CourseDescription.ClassSchedule.EndTime,
-		&course.CourseDescription.ClassSchedule.Location,
+		&course.Id, &course.Title, &course.ShortName, &imageUrl,
+		&telegramLink, &baleLink, &queraLink, &activeSection,
+		&description,
+		&classDay, &classStart, &classEnd, &classLocation,
 		&teacher.Id, &teacher.FirstName, &teacher.LastName,
 		&teacher.FirstNameEnglish, &teacher.LastNameEnglish,
-		&teacher.ImageURL, &teacher.PageURL,
+		&teacherImageURL, &teacherPageURL,
 		&semester.Id, &semester.Season, &semester.Year,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrNoRecord
-		} else {
-			return nil, err
 		}
+		return nil, err
 	}
+
+	course.ImageUrl = imageUrl.String
+	course.TelegramLink = telegramLink.String
+	course.BaleLink = baleLink.String
+	course.QueraLink = queraLink.String
+	course.ActiveSection = activeSection.String
+	course.CourseDescription.Description = description.String
+	course.CourseDescription.ClassSchedule.DayOfWeek = classDay.String
+	course.CourseDescription.ClassSchedule.StartTime = classStart.String
+	course.CourseDescription.ClassSchedule.EndTime = classEnd.String
+	course.CourseDescription.ClassSchedule.Location = classLocation.String
+	teacher.ImageURL = teacherImageURL.String
+	teacher.PageURL = teacherPageURL.String
 
 	course.Teacher = teacher
 	course.Semester = semester
 
-	// 2. Grade items → GradeDistribution
-	gradeRows, err := c.DB.Query(`
-        SELECT name, percentage FROM grade_items WHERE course_id = ?
-    `, course.Id)
+	// Grade items
+	gradeRows, err := c.DB.Query(`SELECT name, percentage FROM grade_items WHERE course_id = ?`, course.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -233,13 +250,13 @@ func (c *CourseModel) Get(slug string) (*Course, error) {
 	}
 	course.CourseDescription.GradeDistribution = gradeDist
 
-	// 3. Books
+	// Books
 	bookRows, err := c.DB.Query(`
-	    SELECT b.id, b.title, b.image_url, b.download_url
-	    FROM books b
-	    JOIN course_books cb ON b.id = cb.book_id
-	    WHERE cb.course_id = ?
-	`, course.Id)
+        SELECT b.id, b.title, b.image_url, b.download_url
+        FROM books b
+        JOIN course_books cb ON b.id = cb.book_id
+        WHERE cb.course_id = ?
+    `, course.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -255,10 +272,8 @@ func (c *CourseModel) Get(slug string) (*Course, error) {
 	}
 	course.Sources = books
 
-	// 4. Slides
-	slideRows, err := c.DB.Query(`
-        SELECT title, file_name FROM slides WHERE course_id = ?
-    `, course.Id)
+	// Slides
+	slideRows, err := c.DB.Query(`SELECT title, file_name FROM slides WHERE course_id = ?`, course.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -274,10 +289,8 @@ func (c *CourseModel) Get(slug string) (*Course, error) {
 	}
 	course.Slides = slides
 
-	// 5. Notes
-	noteRows, err := c.DB.Query(`
-        SELECT title, file_name, is_updated FROM notes WHERE course_id = ?
-    `, course.Id)
+	// Notes
+	noteRows, err := c.DB.Query(`SELECT title, file_name, is_updated FROM notes WHERE course_id = ?`, course.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -293,7 +306,7 @@ func (c *CourseModel) Get(slug string) (*Course, error) {
 	}
 	course.Notes = notes
 
-	// 6. Assignments
+	// Assignments
 	assignRows, err := c.DB.Query(`
         SELECT id, title, file_name, solution_name, description,
                release_date, deadline_date, is_extended, is_project
@@ -325,7 +338,7 @@ func (c *CourseModel) Get(slug string) (*Course, error) {
 	}
 	course.Assignments = assignments
 
-	// 7. Announcements
+	// Announcements
 	annRows, err := c.DB.Query(`
         SELECT id, title, content, created_at, updated_at
         FROM announcements WHERE course_id = ?
@@ -346,7 +359,7 @@ func (c *CourseModel) Get(slug string) (*Course, error) {
 	}
 	course.Announcements = announcements
 
-	// 8. Exams
+	// Exams
 	examRows, err := c.DB.Query(`
         SELECT id, exam_type, file_name, this_semester
         FROM exams WHERE course_id = ?
@@ -371,10 +384,9 @@ func (c *CourseModel) Get(slug string) (*Course, error) {
 
 // GetByID retrieves a course by its ID, including basic fields and associated teacher & semester.
 func (c *CourseModel) GetByID(id int) (*Course, error) {
-	// Main query: course + teacher + semester + class schedule
 	stmt := `
         SELECT 
-            c.id, c.title, c.short_name, c.image_url, c.telegram_link, c.bale_link,
+            c.id, c.title, c.short_name, c.image_url, c.telegram_link, c.bale_link, c.quera_link,
             c.active_section, c.description,
             c.class_schedule_day_of_week, c.class_schedule_start_time,
             c.class_schedule_end_time, c.class_schedule_location,
@@ -393,17 +405,18 @@ func (c *CourseModel) GetByID(id int) (*Course, error) {
 	teacher := Teacher{}
 	semester := Semester{}
 
+	var imageUrl, telegramLink, baleLink, queraLink, activeSection sql.NullString
+	var description, classDay, classStart, classEnd, classLocation sql.NullString
+	var teacherImageURL, teacherPageURL sql.NullString
+
 	err := row.Scan(
-		&course.Id, &course.Title, &course.ShortName, &course.ImageUrl,
-		&course.TelegramLink, &course.BaleLink, &course.ActiveSection,
-		&course.CourseDescription.Description,
-		&course.CourseDescription.ClassSchedule.DayOfWeek,
-		&course.CourseDescription.ClassSchedule.StartTime,
-		&course.CourseDescription.ClassSchedule.EndTime,
-		&course.CourseDescription.ClassSchedule.Location,
+		&course.Id, &course.Title, &course.ShortName, &imageUrl,
+		&telegramLink, &baleLink, &queraLink, &activeSection,
+		&description,
+		&classDay, &classStart, &classEnd, &classLocation,
 		&teacher.Id, &teacher.FirstName, &teacher.LastName,
 		&teacher.FirstNameEnglish, &teacher.LastNameEnglish,
-		&teacher.ImageURL, &teacher.PageURL,
+		&teacherImageURL, &teacherPageURL,
 		&semester.Id, &semester.Season, &semester.Year,
 	)
 	if err != nil {
@@ -413,10 +426,24 @@ func (c *CourseModel) GetByID(id int) (*Course, error) {
 		return nil, err
 	}
 
+	// Assign nullable fields
+	course.ImageUrl = imageUrl.String
+	course.TelegramLink = telegramLink.String
+	course.BaleLink = baleLink.String
+	course.QueraLink = queraLink.String
+	course.ActiveSection = activeSection.String
+	course.CourseDescription.Description = description.String
+	course.CourseDescription.ClassSchedule.DayOfWeek = classDay.String
+	course.CourseDescription.ClassSchedule.StartTime = classStart.String
+	course.CourseDescription.ClassSchedule.EndTime = classEnd.String
+	course.CourseDescription.ClassSchedule.Location = classLocation.String
+	teacher.ImageURL = teacherImageURL.String
+	teacher.PageURL = teacherPageURL.String
+
 	course.Teacher = teacher
 	course.Semester = semester
 
-	// Grade items (still needed for CourseDescription)
+	// Grade items
 	gradeRows, err := c.DB.Query(`SELECT name, percentage FROM grade_items WHERE course_id = ?`, course.Id)
 	if err != nil {
 		return nil, err
@@ -433,8 +460,7 @@ func (c *CourseModel) GetByID(id int) (*Course, error) {
 	}
 	course.CourseDescription.GradeDistribution = gradeDist
 
-	// Do NOT load books, slides, notes, etc. here – they will be fetched by separate endpoints.
-	// Initialize empty slices to avoid nil pointer issues in frontend
+	// Initialize empty slices for associations (loaded separately)
 	course.Sources = []Book{}
 	course.Slides = []Slide{}
 	course.Notes = []Note{}
@@ -474,12 +500,17 @@ func (c *CourseModel) ReplaceGradeItems(courseID int, items []GradeItem) error {
 	return tx.Commit()
 }
 
-func (c *CourseModel) UpdateBasic(id int, title, shortName, imageUrl, telegramLink, baleLink string, teacherId, semesterId int) error {
+func (c *CourseModel) UpdateBasic(id int, title, shortName, imageUrl, telegramLink, baleLink, queraLink string, teacherId, semesterId int) error {
 	_, err := c.DB.Exec(`
         UPDATE courses 
-        SET title = ?, short_name = ?, image_url = ?, telegram_link = ?, bale_link = ?,
+        SET title = ?, short_name = ?, image_url = ?, telegram_link = ?, bale_link = ?, quera_link = ?,
             teacher_id = ?, semester_id = ?
         WHERE id = ?
-    `, title, shortName, imageUrl, telegramLink, baleLink, teacherId, semesterId, id)
+    `, title, shortName, imageUrl, telegramLink, baleLink, queraLink, teacherId, semesterId, id)
+	return err
+}
+
+func (c *CourseModel) Delete(id int) error {
+	_, err := c.DB.Exec("DELETE FROM courses WHERE id = ?", id)
 	return err
 }

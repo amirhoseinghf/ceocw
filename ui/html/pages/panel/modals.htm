@@ -374,6 +374,73 @@
     </div>
 </div>
 
+<!-- Add/Edit Course Modal (for create) -->
+<div id="course-modal" class="modal" dir="rtl">
+    <div class="modal-content">
+        <span class="modal-close course-modal-close">&times;</span>
+        <h2 id="course-modal-title">افزودن دوره جدید</h2>
+        <form id="course-modal-form">
+            <input type="hidden" id="course-modal-id" value="0">
+            <div class="form-group">
+                <label>عنوان دوره</label>
+                <input type="text" id="course-modal-title-input" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label>نام کوتاه (Short Name)</label>
+                <input type="text" id="course-modal-shortname" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label>تصویر دوره (اختیاری)</label>
+                <input type="file" id="course-modal-image" class="form-control" accept="image/jpeg,image/png,image/webp">
+                <div class="progress" id="course-image-progress" style="display:none;">
+                <div class="progress-bar" id="course-image-progress-bar" style="width:0%">0%</div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>ترم</label>
+                    <select id="course-modal-semester" class="form-control" required></select>
+                </div>
+                <div class="form-group">
+                    <label>استاد</label>
+                    <select id="course-modal-teacher" class="form-control" required></select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>لینک تلگرام</label>
+                    <input type="url" id="course-modal-telegram" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>لینک بله</label>
+                    <input type="url" id="course-modal-bale" class="form-control">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>لینک کوئرا</label>
+                <input type="url" id="course-modal-quera" class="form-control">
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="btn btn-cancel" id="course-modal-cancel">لغو</button>
+                <button type="submit" class="btn btn-save">ذخیره دوره</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Course Confirmation Modal -->
+<div id="delete-course-modal" class="modal" dir="rtl">
+    <div class="modal-content" style="max-width: 400px;">
+        <span class="modal-close delete-course-close">&times;</span>
+        <h2 class="delete-modal-title">حذف دوره</h2>
+        <p id="delete-course-message">آیا از حذف این دوره اطمینان دارید؟ این عملیات غیرقابل بازگشت است و تمام اطلاعات مرتبط (کتاب‌ها، اسلایدها، تکالیف، جزوه‌ها، امتحانات و TAها) حذف خواهند شد.</p>
+        <div class="modal-buttons" style="justify-content: center; gap: 15px;">
+            <button id="cancel-delete-course-btn" class="btn btn-cancel">انصراف</button>
+            <button id="confirm-delete-course-btn" class="btn btn-danger">بله، حذف شود</button>
+        </div>
+    </div>
+</div>
+
 <!-- Toast -->
 <div id="toast" class="toast"></div>
 {{end}}

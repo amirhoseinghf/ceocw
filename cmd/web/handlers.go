@@ -1444,31 +1444,70 @@ func (app *application) updateCourseBasic(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// Parse JSON request body
-	var req struct {
-		Title        string `json:"title"`
-		ShortName    string `json:"shortName"`
-		ImageUrl     string `json:"imageUrl"`
-		TelegramLink string `json:"telegramLink"`
-		BaleLink     string `json:"baleLink"`
-		TeacherId    int    `json:"teacherId"`
-		SemesterId   int    `json:"semesterId"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	err = r.ParseMultipartForm(5 << 20) // 5 MB max image size
+	if err != nil && !strings.Contains(err.Error(), "no multipart boundary") {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
 
-	// Basic validation
-	if req.Title == "" || req.ShortName == "" {
+	title := r.FormValue("title")
+	shortName := r.FormValue("shortName")
+	telegramLink := r.FormValue("telegramLink")
+	baleLink := r.FormValue("baleLink")
+	queraLink := r.FormValue("queraLink")
+	teacherId, _ := strconv.Atoi(r.FormValue("teacherId"))
+	semesterId, _ := strconv.Atoi(r.FormValue("semesterId"))
+
+	if title == "" || shortName == "" {
 		http.Error(w, "Title and short name are required", http.StatusBadRequest)
 		return
 	}
 
-	err = app.courses.UpdateBasic(id, req.Title, req.ShortName, req.ImageUrl, req.TelegramLink, req.BaleLink, req.TeacherId, req.SemesterId)
+	// Update basic info (without image)
+	err = app.courses.UpdateBasic(id, title, shortName, "", telegramLink, baleLink, queraLink, teacherId, semesterId)
 	if err != nil {
 		app.serverError(w, err)
 		return
+	}
+
+	// Handle image upload if present
+	file, header, err := r.FormFile("course_image")
+	if err == nil {
+		defer file.Close()
+		// Delete old image if exists
+		oldCourse, _ := app.courses.GetByID(id)
+		if oldCourse != nil && oldCourse.ImageUrl != "" && !strings.HasPrefix(oldCourse.ImageUrl, "http") {
+			_ = os.Remove("./" + strings.TrimPrefix(oldCourse.ImageUrl, "/"))
+		}
+		// Save new image
+		dir := fmt.Sprintf("./data/courses/%d", id)
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			app.serverError(w, err)
+			return
+		}
+		ext := filepath.Ext(header.Filename)
+		if ext == "" {
+			ext = ".jpg"
+		}
+		fileName := "image_thumbnail" + ext
+		filePath := filepath.Join(dir, fileName)
+		dst, err := os.Create(filePath)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+		defer dst.Close()
+		if _, err := io.Copy(dst, file); err != nil {
+			app.serverError(w, err)
+			return
+		}
+		imageURL := fmt.Sprintf("/data/courses/%d/%s", id, fileName)
+		// Update the image URL in the database
+		_, err = app.courses.DB.Exec("UPDATE courses SET image_url = ? WHERE id = ?", imageURL, id)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -1718,6 +1757,95 @@ func (app *application) detachTA(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := app.tas.DetachFromCourse(courseId, taId); err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (app *application) createCourse(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseMultipartForm(5 << 20) // 5 MB
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	title := r.FormValue("title")
+	shortName := r.FormValue("shortName")
+	telegramLink := r.FormValue("telegramLink")
+	baleLink := r.FormValue("baleLink")
+	queraLink := r.FormValue("queraLink")
+	teacherId, _ := strconv.Atoi(r.FormValue("teacherId"))
+	semesterId, _ := strconv.Atoi(r.FormValue("semesterId"))
+
+	if title == "" || shortName == "" || teacherId == 0 || semesterId == 0 {
+		http.Error(w, "Missing required fields", http.StatusBadRequest)
+		return
+	}
+
+	// 1. Insert course without image
+	req := models.InsertCourseRequest{
+		Title:        title,
+		ShortName:    shortName,
+		TelegramLink: telegramLink,
+		BaleLink:     baleLink,
+		QueraLink:    queraLink,
+		TeacherId:    teacherId,
+		SemesterId:   semesterId,
+	}
+	courseId, err := app.courses.InsertBasic(req)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	// 2. Handle image file if uploaded
+	file, header, err := r.FormFile("course_image")
+	if err == nil {
+		defer file.Close()
+		dir := fmt.Sprintf("./data/courses/%d", courseId)
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			app.serverError(w, err)
+			return
+		}
+		ext := filepath.Ext(header.Filename)
+		if ext == "" {
+			ext = ".jpg"
+		}
+		fileName := "image_thumbnail" + ext
+		filePath := filepath.Join(dir, fileName)
+		dst, err := os.Create(filePath)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+		defer dst.Close()
+		if _, err := io.Copy(dst, file); err != nil {
+			app.serverError(w, err)
+			return
+		}
+		imageURL := fmt.Sprintf("/data/courses/%d/%s", courseId, fileName)
+		// Update course with image URL
+		_, err = app.courses.DB.Exec("UPDATE courses SET image_url = ? WHERE id = ?", imageURL, courseId)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]int{"id": courseId})
+}
+
+func (app *application) deleteCourse(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	err = app.courses.Delete(id)
+	if err != nil {
 		app.serverError(w, err)
 		return
 	}

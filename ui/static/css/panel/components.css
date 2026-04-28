@@ -38,7 +38,8 @@
     font-size: 0.8rem;
 }
 
-#add-existing-book-btn {
+#add-existing-book-btn,
+#add-existing-ta-btn {
     margin-left: 2px;
 }
 
@@ -231,7 +232,8 @@
 #assignment-modal-title,
 #note-modal-title,
 #exam-modal-title,
-#ta-modal-title {
+#ta-modal-title,
+#course-modal-title {
     margin-bottom: 20px;
 }
 
@@ -248,11 +250,21 @@
     background-color: #f0f0f1;
 }
 
+.btn-block {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+    margin-top: 20px;
+}
+
 #slide-progress-container,
 #assignment-progress-container,
 #note-progress-container,
 #exam-progress-container,
-#ta-progress-container {
+#ta-progress-container,
+#course-image-progress,
+#course-edit-image-progress {
     display: none;
 }
 

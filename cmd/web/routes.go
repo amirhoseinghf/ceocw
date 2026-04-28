@@ -26,6 +26,8 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPost, "/course/create", app.courseCreatePost)
 	router.HandlerFunc(http.MethodGet, "/courses", app.coursesGetAll)
 	router.HandlerFunc(http.MethodPut, "/courses/:id/basic", app.updateCourseBasic)
+	router.HandlerFunc(http.MethodPost, "/courses", app.createCourse)
+	router.HandlerFunc(http.MethodDelete, "/courses/:id", app.deleteCourse)
 
 	router.HandlerFunc(http.MethodGet, "/courses/:id/books", app.getCourseBooks)
 	router.HandlerFunc(http.MethodPost, "/courses/:id/books", app.addBook)

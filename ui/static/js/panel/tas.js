@@ -90,7 +90,6 @@ function openTADeleteModal(taId) {
 function closeTADeleteModal() {
     document.getElementById('delete-ta-modal').style.display = 'none';
     pendingDeleteTaId = null;
-    pendingDeleteTACourseId = null;
 }
 
 async function detachTA() {
