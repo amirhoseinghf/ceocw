@@ -16,29 +16,57 @@
                 <h2>اطلاعات پایه</h2>
                 <form id="course-basic-form">
                     <input type="hidden" id="course-id" value="0">
-                    <div class="form-group"><label>عنوان دوره</label><input type="text" id="course-title" class="form-control" required></div>
-                    <div class="form-group"><label>نام کوتاه (Short Name)</label><input type="text" id="course-shortname" class="form-control" required></div>
-                    <div class="form-group">
-                        <label>تصویر دوره</label>
-                        <input type="file" id="course-image-file" class="form-control" accept="image/jpeg,image/png,image/webp">
-                        <div class="progress" id="course-edit-image-progress" style="display:none;">
-                            <div class="progress-bar" id="course-edit-image-progress-bar" style="width:0%">0%</div>
+                
+                    <div class="basic-info-header">
+                        <div class="basic-info-image">
+                            <img id="course-image-preview" src="/static/img/course-placeholder.jpg" alt="تصویر دوره" class="course-edit-thumbnail">
+                            <div class="image-upload-field">
+                                <input type="file" id="course-image-file" accept="image/jpeg,image/png,image/webp">
+                                <div class="progress" id="course-edit-image-progress" style="display:none;">
+                                    <div class="progress-bar" id="course-edit-image-progress-bar" style="width:0%">0%</div>
+                                </div>
+                                <small class="form-text text-muted">حداکثر 2MB (JPEG, PNG, WebP)</small>
+                            </div>
                         </div>
-                        <small class="form-text text-muted">تصویر فعلی: <span id="current-course-image"></span></small>
+                        <div class="basic-info-title-fields">
+                            <div class="form-group">
+                                <label>عنوان دوره</label>
+                                <input type="text" id="course-title" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label>نام کوتاه (Short Name)</label>
+                                <input type="text" id="course-shortname" class="form-control" required>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>ترم</label>
+                            <select id="course-semester" class="form-control" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label>استاد</label>
+                            <select id="course-teacher" class="form-control" required></select>
+                        </div>
                     </div>
                     <div class="form-row">
-                        <div class="form-group"><label>ترم</label><select id="course-semester" class="form-control" required></select></div>
-                        <div class="form-group"><label>استاد</label><select id="course-teacher" class="form-control" required></select></div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group"><label>لینک تلگرام</label><input type="url" id="course-telegram" class="form-control"></div>
-                        <div class="form-group"><label>لینک بله</label><input type="url" id="course-bale" class="form-control"></div>
-                        <div class="form-group"><label>لینک کوئرا</label><input type="url" id="course-quera" class="form-control">
+                        <div class="form-group">
+                            <label>لینک تلگرام</label>
+                            <input type="url" id="course-telegram" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>لینک بله</label>
+                            <input type="url" id="course-bale" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>لینک کوئرا</label>
+                            <input type="url" id="course-quera" class="form-control">
                         </div>
                     </div>
                     <div class="form-group">
-                <button type="button" id="save-course-basic" class="btn btn-primary">ذخیره اطلاعات پایه</button>
-            </div>
+                        <button type="button" id="save-course-basic" class="btn btn-primary">ذخیره اطلاعات پایه</button>
+                    </div>
                 </form>
             </div>
             <div class="edit-section">

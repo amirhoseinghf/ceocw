@@ -9,7 +9,7 @@ func secureHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		w.Header().Set("Content-Security-Policy",
-			"default-src 'self' cse.sbu.ac.ir; style-src 'self'; font-src 'self'")
+			"default-src 'self' cse.sbu.ac.ir; img-src 'self' data: cse.sbu.ac.ir;")
 		w.Header().Set("Referrer-Policy", "origin-when-cross-origin")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("X-Frame-Options", "deny")

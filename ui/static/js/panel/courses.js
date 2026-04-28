@@ -50,6 +50,7 @@ function renderCourses(courses) {
 async function showCourseManage(courseId) {
     const listDiv = document.getElementById('courses-list');
     const editDiv = document.getElementById('course-edit-panel');
+    if (!listDiv || !editDiv) return;
     listDiv.classList.add('hidden');
     editDiv.classList.remove('hidden');
     try {
@@ -58,38 +59,60 @@ async function showCourseManage(courseId) {
         const course = await response.json();
         populateCourseEditForm(course);
     } catch (err) {
+        console.log(err);
         showToast('خطا در دریافت اطلاعات دوره', false);
-        document.getElementById('back-to-courses-list').click();
+        const backBtn = document.getElementById('back-to-courses-list');
+        if (backBtn) backBtn.click();
     }
 }
 
 function populateCourseEditForm(course) {
-    document.getElementById('course-id').value = course.Id;
-    document.getElementById('course-title').value = course.Title || '';
-    document.getElementById('course-shortname').value = course.ShortName || '';
-    document.getElementById('current-course-image').innerText = course.ImageUrl || 'بدون تصویر';
-    document.getElementById('course-telegram').value = course.TelegramLink || '';
-    document.getElementById('course-bale').value = course.BaleLink || '';
-    document.getElementById('course-title-display').innerText = course.Title || 'بدون عنوان';
-    document.getElementById('course-quera').value = course.QueraLink || '';
+    // Basic fields
+    const courseIdField = document.getElementById('course-id');
+    if (courseIdField) courseIdField.value = course.Id;
+    const titleField = document.getElementById('course-title');
+    if (titleField) titleField.value = course.Title || '';
+    const shortNameField = document.getElementById('course-shortname');
+    if (shortNameField) shortNameField.value = course.ShortName || '';
+    const telegramField = document.getElementById('course-telegram');
+    if (telegramField) telegramField.value = course.TelegramLink || '';
+    const baleField = document.getElementById('course-bale');
+    if (baleField) baleField.value = course.BaleLink || '';
+    const queraField = document.getElementById('course-quera');
+    if (queraField) queraField.value = course.QueraLink || '';
+    const titleDisplay = document.getElementById('course-title-display');
+    if (titleDisplay) titleDisplay.innerText = course.Title || 'بدون عنوان';
 
-    if (course.Semester && course.Semester.Id) {
-        document.getElementById('course-semester').value = course.Semester.Id;
+    // Semester and teacher dropdowns
+    const semesterSelect = document.getElementById('course-semester');
+    if (semesterSelect && course.Semester && course.Semester.Id) {
+        semesterSelect.value = course.Semester.Id;
     }
-    if (course.Teacher && course.Teacher.Id) {
-        document.getElementById('course-teacher').value = course.Teacher.Id;
+    const teacherSelect = document.getElementById('course-teacher');
+    if (teacherSelect && course.Teacher && course.Teacher.Id) {
+        teacherSelect.value = course.Teacher.Id;
     }
 
-    loadCourseDescription(course);
-    loadSlides(course.Id);
-    loadAssignments(course.Id);
-    loadNotes(course.Id);
-    loadExams(course.Id);
-    loadTAs(course.Id);
-    
-    if (course.Id) {
-        loadBooks(course.Id)
-    } else {
+    // Image preview with cache‑buster
+    const previewImg = document.getElementById('course-image-preview');
+    if (previewImg) {
+        let imgUrl = (course.ImageUrl && course.ImageUrl !== '') ? course.ImageUrl : '/static/img/course-placeholder.jpg';
+        // Add cache‑busting parameter to force fresh image from server
+        const cacheBuster = Date.now();
+        imgUrl = imgUrl + (imgUrl.includes('?') ? '&' : '?') + '_=' + cacheBuster;
+        previewImg.src = imgUrl;
+    }
+
+    // Load other modules
+    if (typeof loadCourseDescription === 'function') loadCourseDescription(course);
+    if (typeof loadSlides === 'function') loadSlides(course.Id);
+    if (typeof loadAssignments === 'function') loadAssignments(course.Id);
+    if (typeof loadNotes === 'function') loadNotes(course.Id);
+    if (typeof loadExams === 'function') loadExams(course.Id);
+    if (typeof loadTAs === 'function') loadTAs(course.Id);
+    if (course.Id && typeof loadBooks === 'function') {
+        loadBooks(course.Id);
+    } else if (typeof renderBooks === 'function') {
         renderBooks([]);
     }
 }
@@ -99,6 +122,7 @@ async function loadSemesterOptions() {
         const response = await fetch('/semesters');
         const semesters = await response.json();
         const select = document.getElementById('course-semester');
+        if (!select) return;
         select.innerHTML = semesters.map(s => 
             `<option value="${s.Id}">${s.Season === 'spring' ? 'بهار' : 'پاییز'} ${s.Year}</option>`
         ).join('');
@@ -112,6 +136,7 @@ async function loadTeacherOptions() {
         const response = await fetch('/teachers');
         const teachers = await response.json();
         const select = document.getElementById('course-teacher');
+        if (!select) return;
         select.innerHTML = teachers.map(t => 
             `<option value="${t.Id}">${t.FirstName} ${t.LastName}</option>`
         ).join('');
@@ -142,8 +167,8 @@ async function confirmDeleteCourse() {
         if (!response.ok) throw new Error();
         showToast('دوره با موفقیت حذف شد', true);
         closeDeleteCourseModal();
-        // Go back to list and refresh
-        document.getElementById('back-to-courses-list').click();
+        const backBtn = document.getElementById('back-to-courses-list');
+        if (backBtn) backBtn.click();
     } catch (err) {
         showToast('خطا در حذف دوره', false);
         closeDeleteCourseModal();
@@ -153,17 +178,21 @@ async function confirmDeleteCourse() {
 // ----- Add Course Modal -----
 function openAddCourseModal() {
     const modal = document.getElementById('course-modal');
+    if (!modal) return;
     const form = document.getElementById('course-modal-form');
-    form.reset();
-    document.getElementById('course-modal-id').value = '0';
-    document.getElementById('course-modal-title').innerText = 'افزودن دوره جدید';
+    if (form) form.reset();
+    const modalId = document.getElementById('course-modal-id');
+    if (modalId) modalId.value = '0';
+    const modalTitle = document.getElementById('course-modal-title');
+    if (modalTitle) modalTitle.innerText = 'افزودن دوره جدید';
     loadCourseModalSemesterOptions();
     loadCourseModalTeacherOptions();
     modal.style.display = 'flex';
 }
 
 function closeCourseModal() {
-    document.getElementById('course-modal').style.display = 'none';
+    const modal = document.getElementById('course-modal');
+    if (modal) modal.style.display = 'none';
 }
 
 async function loadCourseModalSemesterOptions() {
@@ -171,6 +200,7 @@ async function loadCourseModalSemesterOptions() {
         const response = await fetch('/semesters');
         const semesters = await response.json();
         const select = document.getElementById('course-modal-semester');
+        if (!select) return;
         select.innerHTML = semesters.map(s => 
             `<option value="${s.Id}">${s.Season === 'spring' ? 'بهار' : 'پاییز'} ${s.Year}</option>`
         ).join('');
@@ -184,6 +214,7 @@ async function loadCourseModalTeacherOptions() {
         const response = await fetch('/teachers');
         const teachers = await response.json();
         const select = document.getElementById('course-modal-teacher');
+        if (!select) return;
         select.innerHTML = teachers.map(t => 
             `<option value="${t.Id}">${t.FirstName} ${t.LastName}</option>`
         ).join('');
@@ -192,106 +223,141 @@ async function loadCourseModalTeacherOptions() {
     }
 }
 
+// ----- Live image preview on file selection -----
+function initImagePreview() {
+    const fileInput = document.getElementById('course-image-file');
+    const previewImg = document.getElementById('course-image-preview');
+    if (!fileInput || !previewImg) return;
+    if (fileInput.hasAttribute('data-preview-listener')) return;
+    fileInput.setAttribute('data-preview-listener', 'true');
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                previewImg.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        } else {
+            // revert to stored image (with cache‑buster)
+            const courseId = document.getElementById('course-id')?.value;
+            if (courseId) {
+                fetch(`/courses/${courseId}`)
+                    .then(res => res.json())
+                    .then(course => {
+                        let imgUrl = (course.ImageUrl && course.ImageUrl !== '') ? course.ImageUrl : '/static/img/course-placeholder.jpg';
+                        const cacheBuster = Date.now();
+                        imgUrl = imgUrl + (imgUrl.includes('?') ? '&' : '?') + '_=' + cacheBuster;
+                        previewImg.src = imgUrl;
+                    })
+                    .catch(() => {
+                        previewImg.src = '/static/img/course-placeholder.jpg';
+                    });
+            } else {
+                previewImg.src = '/static/img/course-placeholder.jpg';
+            }
+        }
+    });
+}
+
 // ----- Initialization -----
 function initCourses() {
     // Back button
     const backBtn = document.getElementById('back-to-courses-list');
     if (backBtn) {
         backBtn.addEventListener('click', () => {
-            document.getElementById('courses-list').classList.remove('hidden');
-            document.getElementById('course-edit-panel').classList.add('hidden');
+            const listDiv = document.getElementById('courses-list');
+            const editDiv = document.getElementById('course-edit-panel');
+            if (listDiv) listDiv.classList.remove('hidden');
+            if (editDiv) editDiv.classList.add('hidden');
             loadCourses();
         });
     }
 
-    // Save basic info (already implemented)
-        document.getElementById('save-course-basic').addEventListener('click', async () => {
-        const courseId = document.getElementById('course-id').value;
-        if (!courseId || courseId === '0') {
-            showToast('شناسه دوره معتبر نیست', false);
-            return;
-        }
+    // Save basic info – do NOT reload course data (preserves blob preview)
+    const saveBtn = document.getElementById('save-course-basic');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', async () => {
+            const courseId = document.getElementById('course-id')?.value;
+            if (!courseId || courseId === '0') {
+                showToast('شناسه دوره معتبر نیست', false);
+                return;
+            }
+            const title = document.getElementById('course-title')?.value || '';
+            const shortName = document.getElementById('course-shortname')?.value || '';
+            const telegramLink = document.getElementById('course-telegram')?.value || '';
+            const baleLink = document.getElementById('course-bale')?.value || '';
+            const queraLink = document.getElementById('course-quera')?.value || '';
+            const teacherId = parseInt(document.getElementById('course-teacher')?.value || '0');
+            const semesterId = parseInt(document.getElementById('course-semester')?.value || '0');
+            const imageFile = document.getElementById('course-image-file')?.files[0];
 
-        const title = document.getElementById('course-title').value;
-        const shortName = document.getElementById('course-shortname').value;
-        const telegramLink = document.getElementById('course-telegram').value;
-        const baleLink = document.getElementById('course-bale').value;
-        const queraLink = document.getElementById('course-quera').value;
-        const teacherId = parseInt(document.getElementById('course-teacher').value);
-        const semesterId = parseInt(document.getElementById('course-semester').value);
-        const imageFile = document.getElementById('course-image-file').files[0];
+            if (!title || !shortName) {
+                showToast('عنوان و نام کوتاه دوره الزامی است', false);
+                return;
+            }
 
-        if (!title || !shortName) {
-            showToast('عنوان و نام کوتاه دوره الزامی است', false);
-            return;
-        }
+            const formData = new FormData();
+            formData.append('title', title);
+            formData.append('shortName', shortName);
+            if (telegramLink) formData.append('telegramLink', telegramLink);
+            if (baleLink) formData.append('baleLink', baleLink);
+            if (queraLink) formData.append('queraLink', queraLink);
+            formData.append('teacherId', teacherId);
+            formData.append('semesterId', semesterId);
+            if (imageFile) formData.append('course_image', imageFile);
 
-        const formData = new FormData();
-        formData.append('title', title);
-        formData.append('shortName', shortName);
-        if (telegramLink) formData.append('telegramLink', telegramLink);
-        if (baleLink) formData.append('baleLink', baleLink);
-        if (queraLink) formData.append('queraLink', queraLink);
-        formData.append('teacherId', teacherId);
-        formData.append('semesterId', semesterId);
-        if (imageFile) formData.append('course_image', imageFile);
+            const progressContainer = document.getElementById('course-edit-image-progress');
+            const progressBar = document.getElementById('course-edit-image-progress-bar');
 
-        const progressContainer = document.getElementById('course-edit-image-progress');
-        const progressBar = document.getElementById('course-edit-image-progress-bar');
+            const xhr = new XMLHttpRequest();
+            xhr.open('PUT', `/courses/${courseId}/basic`, true);
+            if (imageFile && progressContainer) {
+                progressContainer.style.display = 'block';
+                if (progressBar) progressBar.style.width = '0%';
+                if (progressBar) progressBar.textContent = '0%';
+                xhr.upload.addEventListener('progress', (ev) => {
+                    if (ev.lengthComputable) {
+                        const percent = (ev.loaded / ev.total) * 100;
+                        if (progressBar) progressBar.style.width = percent + '%';
+                        if (progressBar) progressBar.textContent = Math.round(percent) + '%';
+                    }
+                });
+            }
+            xhr.onload = () => {
+                if (progressContainer) progressContainer.style.display = 'none';
+                if (xhr.status === 200) {
+                    showToast('اطلاعات پایه دوره ذخیره شد', true);
+                    const titleDisplay = document.getElementById('course-title-display');
+                    if (titleDisplay) titleDisplay.innerText = title;
+                } else {
+                    showToast('خطا در ذخیره اطلاعات پایه', false);
+                }
+            };
+            xhr.onerror = () => {
+                if (progressContainer) progressContainer.style.display = 'none';
+                showToast('خطا در شبکه', false);
+            };
+            xhr.send(formData);
+        });
+    }
 
-        const xhr = new XMLHttpRequest();
-        xhr.open('PUT', `/courses/${courseId}/basic`, true);
-        if (imageFile) {
-            progressContainer.style.display = 'block';
-            progressBar.style.width = '0%';
-            progressBar.textContent = '0%';
-            xhr.upload.addEventListener('progress', (ev) => {
-                if (ev.lengthComputable) {
-                    const percent = (ev.loaded / ev.total) * 100;
-                    progressBar.style.width = percent + '%';
-                    progressBar.textContent = Math.round(percent) + '%';
+    // Delete course button (attach after edit panel appears)
+    const attachDeleteButton = () => {
+        const btn = document.getElementById('delete-course-btn');
+        if (btn && !btn.hasAttribute('data-listener')) {
+            btn.setAttribute('data-listener', 'true');
+            btn.addEventListener('click', () => {
+                const courseId = document.getElementById('course-id')?.value;
+                if (courseId && courseId !== '0') {
+                    openDeleteCourseModal(courseId);
                 }
             });
         }
-        xhr.onload = () => {
-            if (progressContainer) progressContainer.style.display = 'none';
-            if (xhr.status === 200) {
-                showToast('اطلاعات پایه دوره ذخیره شد', true);
-                document.getElementById('course-title-display').innerText = title;
-                // Optionally update the displayed current image text
-                if (imageFile) {
-                    // After successful upload, we could fetch the new image URL, but we'll just show a placeholder.
-                    document.getElementById('current-course-image').innerText = 'تصویر جدید آپلود شد';
-                }
-            } else {
-                showToast('خطا در ذخیره اطلاعات پایه', false);
-            }
-        };
-        xhr.onerror = () => {
-            if (progressContainer) progressContainer.style.display = 'none';
-            showToast('خطا در شبکه', false);
-        };
-        xhr.send(formData);
-    });
+    };
+    attachDeleteButton();
 
-    // Delete course button (inside edit panel, may not exist initially – use event delegation or attach later)
-    // We'll attach when the edit panel becomes visible? Instead, we can attach listener once and check existence each time.
-    // Better: use event delegation or attach inside showCourseManage. But easiest: attach globally but check if element exists.
-    const deleteBtn = document.getElementById('delete-course-btn');
-    if (deleteBtn) {
-        deleteBtn.addEventListener('click', () => {
-            const courseId = document.getElementById('course-id').value;
-            if (courseId && courseId !== '0') {
-                openDeleteCourseModal(courseId);
-            }
-        });
-    } else {
-        // If button not present yet (e.g., DOM loaded but edit panel hidden), we can attach later when edit panel is shown.
-        // We'll use MutationObserver or simply re-attach inside showCourseManage. Simpler: attach in showCourseManage after panel appears.
-        // For robustness, we'll also check inside showCourseManage after populating.
-    }
-
-    // Delete modal confirm/cancel events
+    // Delete modal events
     const confirmBtn = document.getElementById('confirm-delete-course-btn');
     if (confirmBtn) confirmBtn.addEventListener('click', confirmDeleteCourse);
     const cancelBtn = document.getElementById('cancel-delete-course-btn');
@@ -315,26 +381,26 @@ function initCourses() {
         if (e.target === modal) closeCourseModal();
     });
 
-    // Course create form
+    // Course create form (add new course)
     const courseCreateForm = document.getElementById('course-modal-form');
     if (courseCreateForm && !courseCreateForm.hasAttribute('data-listener')) {
         courseCreateForm.setAttribute('data-listener', 'true');
         courseCreateForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const title = document.getElementById('course-modal-title-input').value;
-            const shortName = document.getElementById('course-modal-shortname').value;
-            const telegramLink = document.getElementById('course-modal-telegram').value;
-            const baleLink = document.getElementById('course-modal-bale').value;
-            const queraLink = document.getElementById('course-modal-quera').value;
-            const teacherId = parseInt(document.getElementById('course-modal-teacher').value);
-            const semesterId = parseInt(document.getElementById('course-modal-semester').value);
-            const imageFile = document.getElementById('course-modal-image').files[0];
-        
+            const title = document.getElementById('course-modal-title-input')?.value || '';
+            const shortName = document.getElementById('course-modal-shortname')?.value || '';
+            const telegramLink = document.getElementById('course-modal-telegram')?.value || '';
+            const baleLink = document.getElementById('course-modal-bale')?.value || '';
+            const queraLink = document.getElementById('course-modal-quera')?.value || '';
+            const teacherId = parseInt(document.getElementById('course-modal-teacher')?.value || '0');
+            const semesterId = parseInt(document.getElementById('course-modal-semester')?.value || '0');
+            const imageFile = document.getElementById('course-modal-image')?.files[0];
+
             if (!title || !shortName) {
                 showToast('عنوان و نام کوتاه الزامی است', false);
                 return;
             }
-        
+
             const formData = new FormData();
             formData.append('title', title);
             formData.append('shortName', shortName);
@@ -344,21 +410,21 @@ function initCourses() {
             formData.append('teacherId', teacherId);
             formData.append('semesterId', semesterId);
             if (imageFile) formData.append('course_image', imageFile);
-        
+
             const progressContainer = document.getElementById('course-image-progress');
             const progressBar = document.getElementById('course-image-progress-bar');
-        
+
             const xhr = new XMLHttpRequest();
             xhr.open('POST', '/courses', true);
-            if (imageFile) {
+            if (imageFile && progressContainer) {
                 progressContainer.style.display = 'block';
-                progressBar.style.width = '0%';
-                progressBar.textContent = '0%';
+                if (progressBar) progressBar.style.width = '0%';
+                if (progressBar) progressBar.textContent = '0%';
                 xhr.upload.addEventListener('progress', (ev) => {
                     if (ev.lengthComputable) {
                         const percent = (ev.loaded / ev.total) * 100;
-                        progressBar.style.width = percent + '%';
-                        progressBar.textContent = Math.round(percent) + '%';
+                        if (progressBar) progressBar.style.width = percent + '%';
+                        if (progressBar) progressBar.textContent = Math.round(percent) + '%';
                     }
                 });
             }
@@ -380,30 +446,7 @@ function initCourses() {
         });
     }
 
-    // Re-attach delete button listener if not already attached (in case it was added later)
-    const attachDeleteButton = () => {
-        const btn = document.getElementById('delete-course-btn');
-        if (btn && !btn.hasAttribute('data-listener')) {
-            btn.setAttribute('data-listener', 'true');
-            btn.addEventListener('click', () => {
-                const courseId = document.getElementById('course-id').value;
-                if (courseId && courseId !== '0') {
-                    openDeleteCourseModal(courseId);
-                }
-            });
-        }
-    };
-    // Run now and also after load (e.g., when edit panel becomes visible)
-    attachDeleteButton();
-    // Observe if edit panel becomes visible (optional: call again when showCourseManage finishes)
-    // We'll simply call it again inside showCourseManage after populating.
-    // Override showCourseManage to attach after showing.
-    const originalShow = showCourseManage;
-    window.showCourseManage = async function(courseId) {
-        await originalShow(courseId);
-        attachDeleteButton();
-    };
-    // Also ensure that when edit panel is shown, we reattach.
+    // Re-attach delete button when edit panel becomes visible
     const observer = new MutationObserver(() => {
         const editPanel = document.getElementById('course-edit-panel');
         if (editPanel && !editPanel.classList.contains('hidden')) {
@@ -411,4 +454,7 @@ function initCourses() {
         }
     });
     observer.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class'] });
+
+    // Initialize live image preview
+    initImagePreview();
 }
