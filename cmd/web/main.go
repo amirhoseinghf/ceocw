@@ -7,24 +7,28 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"cearchieve.amirhoseinghf.ir/models"
+	"github.com/alexedwards/scs/v2"
 	_ "github.com/go-sql-driver/mysql"
 )
 
 type application struct {
-	errorLog      *log.Logger
-	infoLog       *log.Logger
-	courses       *models.CourseModel
-	semesters     *models.SemesterModel
-	teachers      *models.TeacherModel
-	books         *models.BookModel
-	slides        *models.SlideModel
-	assignments   *models.AssignmentModel
-	notes         *models.NoteModel
-	exams         *models.ExamModel
-	tas           *models.TAModel
-	templateCache map[string]*template.Template
+	errorLog       *log.Logger
+	infoLog        *log.Logger
+	courses        *models.CourseModel
+	semesters      *models.SemesterModel
+	teachers       *models.TeacherModel
+	books          *models.BookModel
+	slides         *models.SlideModel
+	assignments    *models.AssignmentModel
+	notes          *models.NoteModel
+	exams          *models.ExamModel
+	tas            *models.TAModel
+	users          *models.UserModel
+	sessionManager *scs.SessionManager
+	templateCache  map[string]*template.Template
 }
 
 func main() {
@@ -47,19 +51,26 @@ func main() {
 		errLog.Fatal(err)
 	}
 
+	sessionManager := scs.New()
+	sessionManager.Lifetime = 12 * time.Hour
+	sessionManager.Cookie.Persist = true
+	sessionManager.Cookie.SameSite = http.SameSiteLaxMode
+
 	app := &application{
-		errorLog:      errLog,
-		infoLog:       infoLog,
-		courses:       &models.CourseModel{DB: db},
-		teachers:      &models.TeacherModel{DB: db},
-		semesters:     &models.SemesterModel{DB: db},
-		books:         &models.BookModel{DB: db},
-		slides:        &models.SlideModel{DB: db},
-		assignments:   &models.AssignmentModel{DB: db},
-		notes:         &models.NoteModel{DB: db},
-		exams:         &models.ExamModel{DB: db},
-		tas:           &models.TAModel{DB: db},
-		templateCache: templateCache,
+		errorLog:       errLog,
+		infoLog:        infoLog,
+		courses:        &models.CourseModel{DB: db},
+		teachers:       &models.TeacherModel{DB: db},
+		semesters:      &models.SemesterModel{DB: db},
+		books:          &models.BookModel{DB: db},
+		slides:         &models.SlideModel{DB: db},
+		assignments:    &models.AssignmentModel{DB: db},
+		notes:          &models.NoteModel{DB: db},
+		exams:          &models.ExamModel{DB: db},
+		tas:            &models.TAModel{DB: db},
+		users:          &models.UserModel{DB: db},
+		sessionManager: sessionManager,
+		templateCache:  templateCache,
 	}
 
 	srv := &http.Server{

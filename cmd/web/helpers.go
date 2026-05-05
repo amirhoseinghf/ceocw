@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
+	"regexp"
 	"runtime/debug"
 )
 
@@ -40,4 +41,19 @@ func (app *application) render(w http.ResponseWriter, status int, page string, d
 	w.WriteHeader(status)
 
 	buf.WriteTo(w)
+}
+
+func isValidEmail(email string) bool {
+	re := regexp.MustCompile(`^[^\s@]+@([^\s@.,]+\.)+[^\s@.,]{2,}$`)
+	return re.MatchString(email)
+}
+
+func isPersianText(s string) bool {
+	// Persian/Arabic Unicode range (U+0600 to U+06FF) plus spaces
+	re := regexp.MustCompile(`^[\x{0600}-\x{06FF}\s]+$`)
+	return re.MatchString(s)
+}
+
+func (app *application) isAuthenticated(r *http.Request) bool {
+	return app.sessionManager.Exists(r.Context(), "userID")
 }

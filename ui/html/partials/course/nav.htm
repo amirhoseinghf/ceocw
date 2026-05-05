@@ -1,0 +1,25 @@
+{{define "course-nav"}}
+<div class="nav-section" dir="rtl">
+  <div class="nav-dropdown-header">
+    <span id="dropdown-selected">بخش فعلی</span>
+    <span class="arrow">▼</span>
+  </div>
+  <div class="nav-bar" id="nav-dropdown">
+    <div class="nav-item{{if eq $.Course.ActiveSection "announcements"}} active{{end}}" id="announcements-nav">
+      اطلاعیه‌ها
+    </div>
+    <div class="nav-item{{if eq $.Course.ActiveSection "slides"}} active{{end}}" id="slides-nav">
+      اسلایدها
+    </div>
+    <div class="nav-item{{if eq $.Course.ActiveSection "assignments"}} active{{end}}" id="assignments-nav">
+      تمرین‌ها
+    </div>
+    <div class="nav-item{{if eq $.Course.ActiveSection "notes"}} active{{end}}" id="notes-nav">
+      جزوه‌ها
+    </div>
+    <div class="nav-item{{if eq $.Course.ActiveSection "exams"}} active{{end}}" id="exams-nav">
+      امتحانات
+    </div>
+  </div>
+</div>
+{{end}}

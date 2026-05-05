@@ -1,0 +1,34 @@
+{{define "title"}}ورود به حساب{{end}}
+
+{{define "extra-head"}}
+<link rel="stylesheet" href="/static/css/auth.css">
+{{end}}
+
+{{define "main"}}
+<div class="auth-container">
+    <div class="auth-card">
+        {{if .Error}}
+        <div class="error-message">{{.Error}}</div>
+        {{end}}
+        <h1 class="auth-title">ورود</h1>
+        <form action="/user/login" method="POST" class="auth-form" novalidate>
+            <div class="form-group">
+                <label for="email">ایمیل</label>
+                <input type="email" id="email" name="email" required autofocus>
+            </div>
+            <div class="form-group">
+                <label for="password">رمز عبور</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit" class="btn-primary">ورود</button>
+        </form>
+        <div class="auth-footer">
+            حساب کاربری ندارید؟ <a href="/user/signup">ثبت‌نام کنید</a>
+        </div>
+    </div>
+</div>
+<div id="toast" class="toast"></div>
+<script src="/static/js/utils.js"></script>
+<script src="/static/js/login.js"></script>
+
+{{end}}

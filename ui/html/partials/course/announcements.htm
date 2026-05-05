@@ -1,0 +1,21 @@
+{{define "announcements-content"}}
+<div class="announcements-section" id="announcements-content">
+  {{if .Course.Announcements}}
+    {{range .Course.Announcements}}
+    <div class="announcement-item">
+      <div class="announcement-author">
+        <div class="author-image"></div>
+        <div class="author-name">استاد محمدی</div>
+      </div>
+      <p class="announcement-text">
+        {{.Content}}
+      </p>
+    </div>
+    {{end}}
+  {{else}}
+  <div class="no-content-message">
+    اطلاعیه ای موجود نیست
+  </div>
+  {{end}}
+</div>
+{{end}}

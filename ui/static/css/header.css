@@ -7,20 +7,83 @@
 .header {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     padding: 10px 40px;
     background-color: #242424;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.home-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    gap: 15px;
 }
 
 a {
     text-decoration: none;
 }
 
+.auth-buttons {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+
+/* Sign in button */
+.signin-button,
+.logout-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 18px;
+    background-color: transparent;
+    border: 1.5px solid #ffffff;
+    border-radius: 40px;        
+    color: white;
+    font-family: 'SFPro', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.signin-button-text,
+.logout-button-text {
+    font-family: 'Vazir';
+}
+
+.signin-button:hover,
+.logout-button:hover {
+    background-color: #ffffff;
+    color: #242424;
+    border-color: #ffffff;
+}
+
+.logout-button:hover {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: white;
+}
+
+.user-icon,
+.logout-icon {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+}
+
+
+
+
 .logo {
     background-size: cover;
     width: 45px;
     height: 45px;
-    margin-right: 20px;
+    /* margin-right: 20px; */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -30,35 +93,53 @@ a {
 }
 
 .university-info h1 {
-    font-family: 'SFPro';
+    font-family: 'SFPro' sans-serif;
     color: white;
     font-weight: 200;
     font-size: 17px;
 }
 
 .university-info p {
-    font-family: 'SFPro';
+    font-family: 'SFPro' sans-serif;
     color: rgb(205, 205, 205);
     font-weight: 200;
     font-size: 14px;
 }
 
-/* 768 */ 
+/* Responsive – stack on narrow screens */
 @media (max-width: 400px) {
     .header {
-        flex-direction: column;
-        text-align: center;
-        padding: 15px;
+        padding: 8px 15px;
     }
-    
+
+    .home-link {
+        gap: 8px;  /* smaller gap */
+    }
+
     .logo {
-        margin-right: 0;
-        margin-bottom: 10px;
-        width: 60px;
-        height: 60px;
+        width: 32px;
+        height: 32px;
     }
-    
+
     .university-info h1 {
-        font-size: 20px;
+        font-size: 12px;
+    }
+
+    .university-info p {
+        font-size: 10px;
+    }
+
+    .signin-button,
+    .logout-button {
+        padding: 4px 12px;
+        font-size: 8px;
+        align-self: center;
+    }
+
+    .user-icon,
+    .logout-icon {
+        width: 14px;
+        height: 14px;
     }
 }
+

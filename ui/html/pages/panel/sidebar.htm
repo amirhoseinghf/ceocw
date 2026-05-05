@@ -16,5 +16,37 @@
             </li>
         </ul>
     </nav>
+
+    <div class="sidebar-user-info">
+        <a href="/user/profile" class="user-profile-link">
+            <div class="user-avatar">
+                {{if .User.ImagePath}}
+                    <img src="{{.User.ImagePath}}" alt="تصویر کاربر">
+                {{else}}
+                    <img src="/static/img/teacher-placeholder.jpg" alt="تصویر کاربر">
+                {{end}}
+            </div>
+            <div class="user-details">
+                <span class="user-name">{{.User.FirstName}} {{.User.LastName}}</span>
+                <span class="user-type">
+                    {{if eq .User.UserType "admin"}}مدیر
+                    {{else if eq .User.UserType "head_ta"}}سرپرست TA
+                    {{else if eq .User.UserType "ta"}}TA
+                    {{else}}کاربر عادی{{end}}
+                </span>
+            </div>
+        </a>
+        <form action="/user/logout" method="POST" class="logout-form-sidebar">
+            <button type="submit" class="logout-button-sidebar">
+                <span>خروج</span>
+                <svg class="logout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                
+            </button>
+        </form>
+    </div>
 </aside>
 {{end}}

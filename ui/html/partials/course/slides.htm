@@ -1,0 +1,48 @@
+{{define "slides-content"}}
+<div class="assignments-section" id="slides-content">
+  {{if .Course.Slides}}
+    <div class="table-container">
+      <table class="assignments-table">
+        <thead>
+          <tr>
+            <th>ایندکس</th>
+            <th>عنوان اسلاید</th>
+            <th>عملیات</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{range $i, $slide := .Course.Slides}}
+          <tr>
+            <td>{{$i}}</td>
+            <td><div class="assignment-title-container">{{$slide.Title}}</div></td>
+            <td class="actions-cell">
+              <div class="action-buttons">
+                <a href="/data/courses/{{$.Course.Id}}/slides/{{$slide.FileName}}" class="download-btn" target="_blank">
+                  دانلود
+                </a>
+              </div>
+            </td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+    <div class="mobile-slides-list">
+      {{range $i, $slide := .Course.Slides}}
+      <div class="mobile-assignment-item">
+        <div class="mobile-assignment-title">{{$slide.Title}}</div>
+        <div class="mobile-assignment-actions">
+          <a href="/data/courses/{{$.Course.Id}}/slides/{{$slide.FileName}}" class="download-btn" target="_blank">
+            دانلود اسلاید
+          </a>
+        </div>
+      </div>
+      {{end}}
+    </div>
+  {{else}}
+  <div class="no-content-message">
+    اسلایدی موجود نیست
+  </div>
+  {{end}}
+</div>
+{{end}}

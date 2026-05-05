@@ -1,0 +1,38 @@
+{{define "course-info"}}
+<div class="course-info-section" dir="rtl">
+  <div class="section-title">
+    اطلاعات درس
+  </div>
+  <div class="info-content">
+    {{if .Course.CourseDescription.Description}}
+    <div class="description-container">
+      <h3>توضیحات درس</h3>
+      <p dir="rtl">{{.Course.CourseDescription.Description}}</p>
+    </div>
+    {{end}}
+    {{if .Course.CourseDescription.ClassSchedule.DayOfWeek}}
+    <div class="schedule-container">
+      <h3>زمان‌بندی کلاس</h3>
+      <div class="schedule-details">
+        <p><strong>روز:</strong> {{.Course.CourseDescription.ClassSchedule.DayOfWeek}}</p>
+        <p><strong>زمان:</strong> {{.Course.CourseDescription.ClassSchedule.StartTime}} تا {{.Course.CourseDescription.ClassSchedule.EndTime}}</p>
+        <p><strong>محل:</strong> {{.Course.CourseDescription.ClassSchedule.Location}}</p>
+      </div>
+    </div>
+    {{end}}
+    {{if .Course.CourseDescription.GradeDistribution}}
+    <div class="grade-distribution-container">
+      <h3>توزیع نمرات</h3>
+      <table class="grade-table">
+        {{range .Course.CourseDescription.GradeDistribution}}
+        <tr>
+          <td>{{.Name}}</td>
+          <td>{{.Percentage}} %</td>
+        </tr>
+        {{end}}
+      </table>
+    </div>
+    {{end}}
+  </div>
+</div>
+{{end}}

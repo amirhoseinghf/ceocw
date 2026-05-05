@@ -8,7 +8,11 @@ import (
 )
 
 type templateData struct {
-	Course *models.Course
+	Course          *models.Course
+	Error           string
+	Flash           string
+	IsAuthenticated bool
+	User            *models.User
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {

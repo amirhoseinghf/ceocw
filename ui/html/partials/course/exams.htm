@@ -1,0 +1,57 @@
+{{define "exams-content"}}
+<div class="assignments-section" id="exams-content">
+  {{if .Course.Exams}}
+    <div class="table-container">
+      <table class="assignments-table">
+        <thead>
+          <tr>
+            <th>ترم</th>
+            <th>نوع امتحان</th>
+            <th>عملیات</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{range .Course.Exams}}
+          <tr>
+            <td>
+              <div class="assignment-title-container">
+                {{if ne .Semester.Id 0}}{{.Semester.SemesterName}}{{else}}نامشخص{{end}}
+                {{if .ThisSemester}}<span class="project-badge">این ترم</span>{{end}}
+              </div>
+            </td>
+            <td class="actions-cell">{{.ExamTypeToPersian}}</td>
+            <td class="actions-cell">
+              <div class="action-buttons">
+                <a href="/data/courses/{{$.Course.Id}}/exams/{{.FileName}}" class="download-btn" target="_blank">
+                  دانلود
+                </a>
+              </div>
+            </td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+    <div class="mobile-exams-list">
+      {{range .Course.Exams}}
+      <div class="mobile-assignment-item">
+        <div class="mobile-assignment-title">
+          {{if ne .Semester.Id 0}}{{.Semester.SemesterName}}{{else}}نامشخص{{end}}
+          {{if .ThisSemester}}<span class="project-badge">این ترم</span>{{end}}
+          <span>- {{.ExamType}}</span>
+        </div>
+        <div class="mobile-assignment-actions">
+          <a href="/data/courses/{{$.Course.Id}}/exams/{{.FileName}}" class="download-btn" target="_blank">
+            دانلود
+          </a>
+        </div>
+      </div>
+      {{end}}
+    </div>
+  {{else}}
+  <div class="no-content-message">
+    امتحانی موجود نیست
+  </div>
+  {{end}}
+</div>
+{{end}}

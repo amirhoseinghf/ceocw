@@ -1,6 +1,21 @@
-{{define "title"}} Home {{end}}
+{{define "title"}}Home{{end}}
+
+{{define "extra-head"}}
+<link rel="stylesheet" href="/static/css/home.css">
+{{end}}
 
 {{define "main"}}
-    <h2>Hello</h2>
-
+<div class="home-container">
+    <h1>به سایت ما خوش آمدید</h1>
+    <!-- your existing home content -->
+</div>
+<div id="toast" class="toast"></div>
+<script src="/static/js/utils.js"></script>
+{{if .Flash}}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        showToast({{.Flash}}, true);
+    });
+</script>
+{{end}}
 {{end}}

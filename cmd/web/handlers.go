@@ -20,31 +20,20 @@ import (
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-
 	if r.URL.Path != "/" {
 		app.notFound(w)
 		return
 	}
 
-	files := []string{
-		"./ui/html/base.htm",
-		"./ui/html/pages/home.htm",
-		"./ui/html/partials/header.htm",
+	// Retrieve any flash message from the session (e.g., after logout)
+	flash := app.sessionManager.PopString(r.Context(), "flash")
+
+	data := &templateData{
+		Flash:           flash,
+		IsAuthenticated: app.isAuthenticated(r),
 	}
 
-	ts, err := template.ParseFiles(files...)
-
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-
-	err = ts.ExecuteTemplate(w, "base", nil)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-
+	app.render(w, http.StatusOK, "home.htm", data)
 }
 
 func (app *application) courseGetByID(w http.ResponseWriter, r *http.Request) {
@@ -95,7 +84,8 @@ func (app *application) courseView(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := &templateData{
-		Course: course,
+		Course:          course,
+		IsAuthenticated: app.isAuthenticated(r),
 	}
 
 	app.render(w, http.StatusOK, "view.htm", data)
@@ -149,23 +139,48 @@ func (app *application) courseCreatePost(w http.ResponseWriter, r *http.Request)
 }
 
 func (app *application) panel(w http.ResponseWriter, r *http.Request) {
-	ts, err := template.ParseGlob("./ui/html/pages/panel/*.htm")
-
-	if err != nil {
-		app.errorLog.Print(err.Error())
-		app.serverError(w, err)
+	// Get user ID from session
+	userID, ok := app.sessionManager.Get(r.Context(), "userID").(int)
+	if !ok {
+		// Shouldn't happen because requireAuthentication already checks, but handle gracefully
+		http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+		return
 	}
 
+	// Fetch user from database
+	user, err := app.users.Get(userID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	if user == nil {
+		app.sessionManager.Remove(r.Context(), "userID")
+		http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+		return
+	}
+
+	flash := app.sessionManager.PopString(r.Context(), "flash")
+	data := &templateData{
+		Flash:           flash,
+		IsAuthenticated: true,
+		User:            user,
+	}
+
+	// Parse panel templates (you may already have this logic)
+	ts, err := template.ParseGlob("./ui/html/pages/panel/*.htm")
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
 	ts, err = ts.ParseGlob("./ui/html/partials/*.htm")
 	if err != nil {
-		app.errorLog.Print(err.Error())
 		app.serverError(w, err)
+		return
 	}
-
-	err = ts.ExecuteTemplate(w, "base_panel", nil)
+	err = ts.ExecuteTemplate(w, "base_panel", data)
 	if err != nil {
-		app.errorLog.Print(err.Error())
 		app.serverError(w, err)
+		return
 	}
 }
 
@@ -1850,4 +1865,156 @@ func (app *application) deleteCourse(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
+}
+
+func (app *application) userSignup(w http.ResponseWriter, r *http.Request) {
+	app.render(w, http.StatusOK, "signup.htm", &templateData{
+		IsAuthenticated: false,
+	})
+}
+
+func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
+	// Parse the form data
+	err := r.ParseForm()
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	// Get form values
+	firstName := strings.TrimSpace(r.PostFormValue("first_name"))
+	lastName := strings.TrimSpace(r.PostFormValue("last_name"))
+	email := strings.TrimSpace(r.PostFormValue("email"))
+	password := r.PostFormValue("password")
+
+	// Prepare template data for re‑rendering with error
+	data := &templateData{
+		IsAuthenticated: app.isAuthenticated(r),
+	}
+
+	// Validate input
+	if firstName == "" {
+		data.Error = "نام نمی‌تواند خالی باشد"
+		app.render(w, http.StatusUnprocessableEntity, "signup.htm", data)
+		return
+	}
+	if lastName == "" {
+		data.Error = "نام خانوادگی نمی‌تواند خالی باشد"
+		app.render(w, http.StatusUnprocessableEntity, "signup.htm", data)
+		return
+	}
+	if email == "" {
+		data.Error = "ایمیل نمی‌تواند خالی باشد"
+		app.render(w, http.StatusUnprocessableEntity, "signup.htm", data)
+		return
+	}
+	if !isValidEmail(email) {
+		data.Error = "لطفاً یک ایمیل معتبر وارد کنید"
+		app.render(w, http.StatusUnprocessableEntity, "signup.htm", data)
+		return
+	}
+	if len(password) < 8 {
+		data.Error = "رمز عبور باید حداقل ۸ کاراکتر باشد"
+		app.render(w, http.StatusUnprocessableEntity, "signup.htm", data)
+		return
+	}
+
+	// Check Persian names (optional, but good)
+	if !isPersianText(firstName) || !isPersianText(lastName) {
+		data.Error = "نام و نام خانوادگی باید به فارسی وارد شود"
+		app.render(w, http.StatusUnprocessableEntity, "signup.htm", data)
+		return
+	}
+
+	// Insert user – default user type is "normal", no image for now.
+	userType := "normal"
+	imagePath := ""
+	_, err = app.users.Insert(firstName, lastName, email, password, userType, imagePath)
+	if err != nil {
+		if errors.Is(err, models.ErrDuplicateEmail) {
+			data.Error = "این ایمیل قبلاً ثبت‌نام کرده است"
+			app.render(w, http.StatusUnprocessableEntity, "signup.htm", data)
+			return
+		}
+		// Other database error
+		app.serverError(w, err)
+		return
+	}
+
+	// Success – redirect to login page with a success message (e.g., using a flash message)
+	// For simplicity, we redirect without a message; you can add a query parameter like ?registered=true
+	http.Redirect(w, r, "/user/login?registered=true", http.StatusSeeOther)
+}
+
+func (app *application) userLogin(w http.ResponseWriter, r *http.Request) {
+	app.render(w, http.StatusOK, "login.htm", &templateData{
+		IsAuthenticated: false,
+	})
+}
+
+func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
+	// Parse form
+	err := r.ParseForm()
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	email := strings.TrimSpace(r.PostFormValue("email"))
+	password := r.PostFormValue("password")
+
+	// Prepare template data for re‑rendering
+	data := &templateData{
+		IsAuthenticated: app.isAuthenticated(r),
+	}
+
+	// Validate input
+	if email == "" {
+		data.Error = "ایمیل نمی‌تواند خالی باشد"
+		app.render(w, http.StatusUnprocessableEntity, "login.htm", data)
+		return
+	}
+	if password == "" {
+		data.Error = "رمز عبور نمی‌تواند خالی باشد"
+		app.render(w, http.StatusUnprocessableEntity, "login.htm", data)
+		return
+	}
+
+	// Authenticate
+	userID, err := app.users.Authenticate(email, password)
+	if err != nil {
+		if errors.Is(err, models.ErrInvalidCredentials) {
+			data.Error = "ایمیل یا رمز عبور اشتباه است"
+			app.render(w, http.StatusUnprocessableEntity, "login.htm", data)
+			return
+		}
+		// Other database error
+		app.serverError(w, err)
+		return
+	}
+
+	// Store user ID in session (assuming scs session manager)
+	err = app.sessionManager.RenewToken(r.Context())
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	app.sessionManager.Put(r.Context(), "userID", userID)
+
+	// Redirect to panel
+	app.sessionManager.Put(r.Context(), "flash", "ورود با موفقیت انجام شد")
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
+	// Renew the session token to prevent session fixation attacks.
+	err := app.sessionManager.RenewToken(r.Context())
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	app.sessionManager.Remove(r.Context(), "userID")
+	app.sessionManager.Put(r.Context(), "flash", "شما با موفقیت خارج شدید")
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
