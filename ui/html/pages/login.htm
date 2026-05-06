@@ -7,10 +7,10 @@
 {{define "main"}}
 <div class="auth-container">
     <div class="auth-card">
+        <h1 class="auth-title">ورود</h1>
         {{if .Error}}
         <div class="error-message">{{.Error}}</div>
         {{end}}
-        <h1 class="auth-title">ورود</h1>
         <form action="/user/login" method="POST" class="auth-form" novalidate>
             <div class="form-group">
                 <label for="email">ایمیل</label>

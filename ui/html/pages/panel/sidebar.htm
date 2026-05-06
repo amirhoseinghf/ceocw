@@ -1,5 +1,23 @@
 {{define "sidebar"}}
 <aside class="sidebar">
+    <div class="sidebar-user-card">
+        <div class="sidebar-avatar">
+            {{if .User.ImagePath}}
+                <img src="{{.User.ImagePath}}" alt="تصویر کاربر">
+            {{else}}
+                <img src="/static/img/teacher-placeholder.jpg" alt="تصویر کاربر">
+            {{end}}
+        </div>
+        <div class="sidebar-user-details">
+            <span class="sidebar-user-name">{{.User.FirstName}} {{.User.LastName}}</span>
+            <span class="sidebar-user-type">
+                {{if eq .User.UserType "admin"}}مدیر
+                {{else if eq .User.UserType "head_ta"}}سرپرست TA
+                {{else if eq .User.UserType "ta"}}TA
+                {{else}}کاربر عادی{{end}}
+            </span>
+        </div>
+    </div>
     <nav class="sidebar-nav">
         <ul>
             <li class="nav-item active" data-tab="dashboard">
@@ -14,39 +32,34 @@
             <li class="nav-item" data-tab="semesters">
                 <a href="#"><span class="nav-icon">📅</span><span class="nav-text">ترم‌ها</span></a>
             </li>
+            <li class="nav-item logout-item">
+                <button type="button" class="logout-button-sidebar" onclick="logout()">
+                    <span class="nav-icon">🚪</span>
+                    <span class="nav-text">خروج</span>
+                </button>
+            </li>
         </ul>
     </nav>
-
-    <div class="sidebar-user-info">
-        <a href="/user/profile" class="user-profile-link">
-            <div class="user-avatar">
-                {{if .User.ImagePath}}
-                    <img src="{{.User.ImagePath}}" alt="تصویر کاربر">
-                {{else}}
-                    <img src="/static/img/teacher-placeholder.jpg" alt="تصویر کاربر">
-                {{end}}
-            </div>
-            <div class="user-details">
-                <span class="user-name">{{.User.FirstName}} {{.User.LastName}}</span>
-                <span class="user-type">
-                    {{if eq .User.UserType "admin"}}مدیر
-                    {{else if eq .User.UserType "head_ta"}}سرپرست TA
-                    {{else if eq .User.UserType "ta"}}TA
-                    {{else}}کاربر عادی{{end}}
-                </span>
-            </div>
-        </a>
-        <form action="/user/logout" method="POST" class="logout-form-sidebar">
-            <button type="submit" class="logout-button-sidebar">
-                <span>خروج</span>
-                <svg class="logout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                    <polyline points="16 17 21 12 16 7" />
-                    <line x1="21" y1="12" x2="9" y2="12" />
-                </svg>
-                
-            </button>
-        </form>
-    </div>
 </aside>
+
+<script>
+    function logout() {
+    fetch('/user/logout', {
+        method: 'POST',
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        // If the server redirects (302), follow it
+        if (response.redirected) {
+            window.location.href = response.url;
+        } else {
+            // Fallback: go to home
+            window.location.href = '/';
+        }
+    })
+    .catch(() => {
+        window.location.href = '/';
+    });
+}
+</script>
 {{end}}

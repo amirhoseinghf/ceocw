@@ -20,7 +20,7 @@
     align-items: center;
     text-decoration: none;
     color: inherit;
-    gap: 20px;  /* replaces margin-right on .logo */
+    gap: 15px;  /* replaces margin-right on .logo */
 }
 
 /* Logo styling – no extra margin, because gap handles spacing */
@@ -36,24 +36,26 @@
     flex-shrink: 0;
 }
 
-.logo svg {
+.logo img {
     width: 100%;
     height: 100%;
-    display: block;
+    object-fit: contain;
 }
 
 .university-info h1 {
-    font-family: 'SFPro';
+    font-family: 'SFPro', 'Segoe UI', sans-serif;
     color: white;
     font-weight: 200;
     font-size: 17px;
+    margin: 0;
 }
 
 .university-info p {
-    font-family: 'SFPro';
+    font-family: 'SFPro', 'Segoe UI', sans-serif;
     color: rgb(205, 205, 205);
     font-weight: 200;
     font-size: 14px;
+    margin: 0;
 }
 
 /* Admin panel – pushed to far right */
@@ -77,3 +79,10 @@
     text-decoration: none;
     outline: none;
 }
+
+.logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
