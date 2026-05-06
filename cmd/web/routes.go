@@ -30,9 +30,8 @@ func (app *application) routes() http.Handler {
 	// Public routes (no authentication)
 	router.HandlerFunc(http.MethodGet, "/", app.home)
 	router.HandlerFunc(http.MethodGet, "/course/:slug", app.courseView)
-	router.HandlerFunc(http.MethodGet, "/courses/:id", app.courseGetByID)                  // for public API? Assuming it's public
-	router.HandlerFunc(http.MethodPost, "/course/create", protected(app.courseCreatePost)) // public? keep as is
-	router.HandlerFunc(http.MethodGet, "/courses", app.coursesGetAll)                      // public
+	router.HandlerFunc(http.MethodGet, "/courses/:id", app.courseGetByID)
+	router.HandlerFunc(http.MethodGet, "/courses", app.coursesGetAll)
 
 	// Authentication routes (public)
 	router.HandlerFunc(http.MethodGet, "/user/signup", app.userSignup)
