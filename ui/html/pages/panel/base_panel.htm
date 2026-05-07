@@ -10,7 +10,7 @@
         <link rel="stylesheet" href="/static/css/panel/style.css">
         <link rel="shortcut icon" href="/static/img/favicon.png">
     </head>
-    <body data-user-type="{{.User.UserType}}">
+    <body data-user-type="{{.User.UserType}}" data-user-id="{{.User.Id}}">
         {{template "header-panel" .}}
         {{template "main-panel" .}}
     </body>

@@ -10,11 +10,22 @@
         </div>
     </a>
     <div class="auth-buttons">
+        {{if .IsAuthenticated}}
+        <a href="/user/profile" class="signin-button">
+            <svg class="user-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Z" />
+                <path d="M4 20a8 8 0 0 1 16 0" />
+            </svg>
+            <span class="signin-button-text">پروفایل</span>
+        </a>
+        {{end}}
         <a href=
         {{if not .IsAuthenticated}}
         "/user/login"
-        {{else}}
+        {{else if or (eq .User.UserType "admin") (eq .User.UserType "head_ta") (eq .User.UserType "ta")}}
         "/panel"
+        {{else}}
+        "/user/profile"
         {{end}}
         class="signin-button">
             <svg class="user-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -24,8 +35,10 @@
             <span class="signin-button-text">
             {{if not .IsAuthenticated}}    
                 ورود
-            {{else}}
+            {{else if or (eq .User.UserType "admin") (eq .User.UserType "head_ta") (eq .User.UserType "ta")}}
                 پنل کاربری
+            {{else}}
+                حساب کاربری
             {{end}}
             </span>
         </a>

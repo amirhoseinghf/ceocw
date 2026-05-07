@@ -41,6 +41,8 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, "/user/login", app.userLogin)
 	router.HandlerFunc(http.MethodPost, "/user/login", app.userLoginPost)
 	router.HandlerFunc(http.MethodPost, "/user/logout", app.userLogoutPost)
+	router.HandlerFunc(http.MethodGet, "/user/profile", app.requireAuthentication(http.HandlerFunc(app.userProfile)).ServeHTTP)
+	router.HandlerFunc(http.MethodPut, "/user/profile", app.requireAuthentication(http.HandlerFunc(app.userProfilePut)).ServeHTTP)
 
 	// Courses management
 	router.HandlerFunc(http.MethodPut, "/courses/:id/basic", staff(app.updateCourseBasic))

@@ -6,11 +6,16 @@ import (
 )
 
 type Announcement struct {
-	Id        int
-	Title     string
-	Content   string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	Id              int
+	Title           string
+	Content         string
+	AuthorID        int
+	AuthorFirstName string
+	AuthorLastName  string
+	AuthorUserType  string
+	AuthorImagePath string
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
 }
 
 type AnnouncementModel struct {
@@ -19,10 +24,13 @@ type AnnouncementModel struct {
 
 func (a *AnnouncementModel) GetByCourse(courseID int) ([]Announcement, error) {
 	rows, err := a.DB.Query(`
-        SELECT id, title, content, created_at, updated_at
-        FROM announcements
-        WHERE course_id = ?
-        ORDER BY created_at DESC, id DESC
+        SELECT a.id, a.title, a.content, a.created_at, a.updated_at,
+               COALESCE(u.id, 0), COALESCE(u.first_name, ''), COALESCE(u.last_name, ''),
+               COALESCE(u.user_type, ''), COALESCE(u.image_path, '')
+        FROM announcements a
+        LEFT JOIN users u ON u.id = a.created_by_user_id
+        WHERE a.course_id = ?
+        ORDER BY a.created_at DESC, a.id DESC
     `, courseID)
 	if err != nil {
 		return nil, err
@@ -32,7 +40,11 @@ func (a *AnnouncementModel) GetByCourse(courseID int) ([]Announcement, error) {
 	items := []Announcement{}
 	for rows.Next() {
 		var item Announcement
-		if err := rows.Scan(&item.Id, &item.Title, &item.Content, &item.CreatedAt, &item.UpdatedAt); err != nil {
+		if err := rows.Scan(
+			&item.Id, &item.Title, &item.Content, &item.CreatedAt, &item.UpdatedAt,
+			&item.AuthorID, &item.AuthorFirstName, &item.AuthorLastName,
+			&item.AuthorUserType, &item.AuthorImagePath,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, item)
@@ -40,11 +52,11 @@ func (a *AnnouncementModel) GetByCourse(courseID int) ([]Announcement, error) {
 	return items, rows.Err()
 }
 
-func (a *AnnouncementModel) Insert(courseID int, title string, content string) (int, error) {
+func (a *AnnouncementModel) Insert(courseID int, authorID int, title string, content string) (int, error) {
 	res, err := a.DB.Exec(`
-        INSERT INTO announcements (course_id, title, content)
-        VALUES (?, ?, ?)
-    `, courseID, title, content)
+        INSERT INTO announcements (course_id, created_by_user_id, title, content)
+        VALUES (?, ?, ?, ?)
+    `, courseID, authorID, title, content)
 	if err != nil {
 		return 0, err
 	}
@@ -58,10 +70,17 @@ func (a *AnnouncementModel) Insert(courseID int, title string, content string) (
 func (a *AnnouncementModel) Get(id int) (*Announcement, error) {
 	item := &Announcement{}
 	err := a.DB.QueryRow(`
-        SELECT id, title, content, created_at, updated_at
-        FROM announcements
-        WHERE id = ?
-    `, id).Scan(&item.Id, &item.Title, &item.Content, &item.CreatedAt, &item.UpdatedAt)
+        SELECT a.id, a.title, a.content, a.created_at, a.updated_at,
+               COALESCE(u.id, 0), COALESCE(u.first_name, ''), COALESCE(u.last_name, ''),
+               COALESCE(u.user_type, ''), COALESCE(u.image_path, '')
+        FROM announcements a
+        LEFT JOIN users u ON u.id = a.created_by_user_id
+        WHERE a.id = ?
+    `, id).Scan(
+		&item.Id, &item.Title, &item.Content, &item.CreatedAt, &item.UpdatedAt,
+		&item.AuthorID, &item.AuthorFirstName, &item.AuthorLastName,
+		&item.AuthorUserType, &item.AuthorImagePath,
+	)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil

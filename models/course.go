@@ -400,9 +400,13 @@ func (c *CourseModel) Get(slug string) (*Course, error) {
 
 	// Announcements
 	annRows, err := c.DB.Query(`
-        SELECT id, title, content, created_at, updated_at
-        FROM announcements WHERE course_id = ?
-        ORDER BY created_at DESC
+        SELECT a.id, a.title, a.content, a.created_at, a.updated_at,
+               COALESCE(u.id, 0), COALESCE(u.first_name, ''), COALESCE(u.last_name, ''),
+               COALESCE(u.user_type, ''), COALESCE(u.image_path, '')
+        FROM announcements a
+        LEFT JOIN users u ON u.id = a.created_by_user_id
+        WHERE a.course_id = ?
+        ORDER BY a.created_at DESC, a.id DESC
     `, course.Id)
 	if err != nil {
 		return nil, err
@@ -412,7 +416,11 @@ func (c *CourseModel) Get(slug string) (*Course, error) {
 	var announcements []Announcement
 	for annRows.Next() {
 		var a Announcement
-		if err := annRows.Scan(&a.Id, &a.Title, &a.Content, &a.CreatedAt, &a.UpdatedAt); err != nil {
+		if err := annRows.Scan(
+			&a.Id, &a.Title, &a.Content, &a.CreatedAt, &a.UpdatedAt,
+			&a.AuthorID, &a.AuthorFirstName, &a.AuthorLastName,
+			&a.AuthorUserType, &a.AuthorImagePath,
+		); err != nil {
 			return nil, err
 		}
 		announcements = append(announcements, a)

@@ -24,6 +24,10 @@ function currentUserType() {
     return document.body?.dataset?.userType || 'normal';
 }
 
+function currentUserId() {
+    return Number(document.body?.dataset?.userId || '0');
+}
+
 function isAdminUser() {
     return currentUserType() === 'admin';
 }

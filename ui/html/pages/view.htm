@@ -191,9 +191,12 @@
                     {{range .Course.Announcements}}
                     <div class="announcement-item">
                         <div class="announcement-author">
-                            <div class="author-image"></div>
-                            <div class="author-name">استاد محمدی</div>
+                            <img class="author-image" src="{{if .AuthorImagePath}}{{.AuthorImagePath}}{{else}}/static/img/teacher-placeholder.jpg{{end}}" alt="" onerror="this.src='/static/img/teacher-placeholder.jpg';">
+                            <div class="author-name">
+                                {{if .AuthorFirstName}}{{.AuthorFirstName}} {{.AuthorLastName}}{{else}}ثبت‌کننده نامشخص{{end}}
+                            </div>
                         </div>
+                        {{if .Title}}<h3 class="announcement-title">{{.Title}}</h3>{{end}}
                         <p class="announcement-text">{{.Content}}</p>
                     </div>
                     {{end}}

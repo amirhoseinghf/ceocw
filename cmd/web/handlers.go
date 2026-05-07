@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"math/rand"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -31,6 +32,13 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	data := &templateData{
 		Flash:           flash,
 		IsAuthenticated: app.isAuthenticated(r),
+	}
+	if data.IsAuthenticated {
+		user, ok := app.currentUser(w, r)
+		if !ok {
+			return
+		}
+		data.User = user
 	}
 
 	app.render(w, http.StatusOK, "home.htm", data)
@@ -110,8 +118,80 @@ func (app *application) courseView(w http.ResponseWriter, r *http.Request) {
 		Course:          course,
 		IsAuthenticated: app.isAuthenticated(r),
 	}
+	if data.IsAuthenticated {
+		user, ok := app.currentUser(w, r)
+		if !ok {
+			return
+		}
+		data.User = user
+	}
 
 	app.render(w, http.StatusOK, "view.htm", data)
+}
+
+func (app *application) userProfile(w http.ResponseWriter, r *http.Request) {
+	user, ok := app.currentUser(w, r)
+	if !ok {
+		return
+	}
+
+	data := &templateData{
+		IsAuthenticated: true,
+		User:            user,
+	}
+	app.render(w, http.StatusOK, "profile.htm", data)
+}
+
+func (app *application) userProfilePut(w http.ResponseWriter, r *http.Request) {
+	current, ok := app.currentUser(w, r)
+	if !ok {
+		return
+	}
+
+	payload, err := decodeUserFormPayload(r)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	if payload.FirstName == "" || payload.LastName == "" || payload.Email == "" {
+		http.Error(w, "نام، نام خانوادگی و ایمیل الزامی است.", http.StatusBadRequest)
+		return
+	}
+	if payload.Password != "" && len(payload.Password) < 6 {
+		http.Error(w, "رمز عبور باید حداقل ۶ کاراکتر باشد.", http.StatusBadRequest)
+		return
+	}
+	imagePath, err := app.saveUploadedUserImage(r, current.Id, payload.ImagePath)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	updatedUser := &models.User{
+		Id:        current.Id,
+		FirstName: payload.FirstName,
+		LastName:  payload.LastName,
+		Email:     payload.Email,
+		UserType:  current.UserType,
+		ImagePath: imagePath,
+		IsActive:  true,
+	}
+	if err := app.users.UpdateWithOptionalPassword(updatedUser, payload.Password); err != nil {
+		if errors.Is(err, models.ErrDuplicateEmail) {
+			http.Error(w, "این ایمیل قبلا ثبت شده است.", http.StatusConflict)
+			return
+		}
+		app.serverError(w, err)
+		return
+	}
+
+	refreshedUser, err := app.users.Get(current.Id)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(userToResponse(*refreshedUser))
 }
 
 func (app *application) panel(w http.ResponseWriter, r *http.Request) {
@@ -1681,7 +1761,8 @@ func (app *application) createAnnouncement(w http.ResponseWriter, r *http.Reques
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
-	if _, ok := app.requireCourseContent(w, r, courseID); !ok {
+	user, ok := app.requireCourseContent(w, r, courseID)
+	if !ok {
 		return
 	}
 	var payload struct {
@@ -1698,7 +1779,7 @@ func (app *application) createAnnouncement(w http.ResponseWriter, r *http.Reques
 		http.Error(w, "عنوان و متن اطلاعیه الزامی است.", http.StatusBadRequest)
 		return
 	}
-	id, err := app.announcements.Insert(courseID, payload.Title, payload.Content)
+	id, err := app.announcements.Insert(courseID, user.Id, payload.Title, payload.Content)
 	if err != nil {
 		app.serverError(w, err)
 		return
@@ -2383,6 +2464,97 @@ func userToResponse(user models.User) userResponse {
 	}
 }
 
+type userFormPayload struct {
+	FirstName string
+	LastName  string
+	Email     string
+	Password  string
+	UserType  string
+	ImagePath string
+	IsActive  *bool
+}
+
+func userImagePathForUpload(userID int, header *multipart.FileHeader) string {
+	ext := filepath.Ext(header.Filename)
+	if ext == "" {
+		ext = ".jpg"
+	}
+	return fmt.Sprintf("/data/user_images/%d_%d%s", userID, time.Now().UnixNano(), ext)
+}
+
+func (app *application) saveUploadedUserImage(r *http.Request, userID int, existingImagePath string) (string, error) {
+	if !strings.HasPrefix(r.Header.Get("Content-Type"), "multipart/form-data") {
+		return strings.TrimSpace(existingImagePath), nil
+	}
+
+	file, header, err := r.FormFile("user_image")
+	if err != nil {
+		if errors.Is(err, http.ErrMissingFile) {
+			return strings.TrimSpace(existingImagePath), nil
+		}
+		return "", err
+	}
+	defer file.Close()
+
+	if existingImagePath != "" && !strings.HasPrefix(existingImagePath, "http") {
+		_ = os.Remove("./" + strings.TrimPrefix(existingImagePath, "/"))
+	}
+	if err := os.MkdirAll("./data/user_images", 0755); err != nil {
+		return "", err
+	}
+	imagePath := userImagePathForUpload(userID, header)
+	dst, err := os.Create("./" + strings.TrimPrefix(imagePath, "/"))
+	if err != nil {
+		return "", err
+	}
+	defer dst.Close()
+	if _, err := io.Copy(dst, file); err != nil {
+		return "", err
+	}
+	return imagePath, nil
+}
+
+func decodeUserFormPayload(r *http.Request) (userFormPayload, error) {
+	var payload userFormPayload
+	if strings.HasPrefix(r.Header.Get("Content-Type"), "multipart/form-data") {
+		if err := r.ParseMultipartForm(10 << 20); err != nil {
+			return payload, err
+		}
+		payload.FirstName = strings.TrimSpace(r.FormValue("first_name"))
+		payload.LastName = strings.TrimSpace(r.FormValue("last_name"))
+		payload.Email = strings.TrimSpace(r.FormValue("email"))
+		payload.Password = r.FormValue("password")
+		payload.UserType = strings.TrimSpace(r.FormValue("user_type"))
+		payload.ImagePath = strings.TrimSpace(r.FormValue("image_path"))
+		if isActive := strings.TrimSpace(r.FormValue("is_active")); isActive != "" {
+			parsed := isActive == "1" || strings.EqualFold(isActive, "true")
+			payload.IsActive = &parsed
+		}
+		return payload, nil
+	}
+
+	var jsonPayload struct {
+		FirstName string `json:"firstName"`
+		LastName  string `json:"lastName"`
+		Email     string `json:"email"`
+		Password  string `json:"password"`
+		UserType  string `json:"userType"`
+		ImagePath string `json:"imagePath"`
+		IsActive  *bool  `json:"isActive"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&jsonPayload); err != nil {
+		return payload, err
+	}
+	payload.FirstName = strings.TrimSpace(jsonPayload.FirstName)
+	payload.LastName = strings.TrimSpace(jsonPayload.LastName)
+	payload.Email = strings.TrimSpace(jsonPayload.Email)
+	payload.Password = jsonPayload.Password
+	payload.UserType = strings.TrimSpace(jsonPayload.UserType)
+	payload.ImagePath = strings.TrimSpace(jsonPayload.ImagePath)
+	payload.IsActive = jsonPayload.IsActive
+	return payload, nil
+}
+
 func (app *application) usersGetAll(w http.ResponseWriter, r *http.Request) {
 	users, err := app.users.GetAll()
 	if err != nil {
@@ -2426,24 +2598,11 @@ func (app *application) usersGetTAs(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) usersPost(w http.ResponseWriter, r *http.Request) {
-	var payload struct {
-		FirstName string `json:"firstName"`
-		LastName  string `json:"lastName"`
-		Email     string `json:"email"`
-		Password  string `json:"password"`
-		UserType  string `json:"userType"`
-		ImagePath string `json:"imagePath"`
-		IsActive  *bool  `json:"isActive"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+	payload, err := decodeUserFormPayload(r)
+	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
-
-	payload.FirstName = strings.TrimSpace(payload.FirstName)
-	payload.LastName = strings.TrimSpace(payload.LastName)
-	payload.Email = strings.TrimSpace(payload.Email)
-	payload.UserType = strings.TrimSpace(payload.UserType)
 	if payload.UserType == "" {
 		payload.UserType = "normal"
 	}
@@ -2469,6 +2628,23 @@ func (app *application) usersPost(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 		return
 	}
+	imagePath, err := app.saveUploadedUserImage(r, id, payload.ImagePath)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	if imagePath != payload.ImagePath {
+		createdUser, getErr := app.users.Get(id)
+		if getErr != nil {
+			app.serverError(w, getErr)
+			return
+		}
+		createdUser.ImagePath = imagePath
+		if updateErr := app.users.UpdateWithOptionalPassword(createdUser, ""); updateErr != nil {
+			app.serverError(w, updateErr)
+			return
+		}
+	}
 	isActive := true
 	if payload.IsActive != nil {
 		isActive = *payload.IsActive
@@ -2490,25 +2666,16 @@ func (app *application) usersPut(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
-
-	var payload struct {
-		FirstName string `json:"firstName"`
-		LastName  string `json:"lastName"`
-		Email     string `json:"email"`
-		Password  string `json:"password"`
-		UserType  string `json:"userType"`
-		ImagePath string `json:"imagePath"`
-		IsActive  bool   `json:"isActive"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		app.clientError(w, http.StatusBadRequest)
+	current, ok := app.currentUser(w, r)
+	if !ok {
 		return
 	}
 
-	payload.FirstName = strings.TrimSpace(payload.FirstName)
-	payload.LastName = strings.TrimSpace(payload.LastName)
-	payload.Email = strings.TrimSpace(payload.Email)
-	payload.UserType = strings.TrimSpace(payload.UserType)
+	payload, err := decodeUserFormPayload(r)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
 	if payload.FirstName == "" || payload.LastName == "" || payload.Email == "" {
 		http.Error(w, "نام، نام خانوادگی و ایمیل الزامی است.", http.StatusBadRequest)
 		return
@@ -2521,6 +2688,23 @@ func (app *application) usersPut(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "نوع کاربر معتبر نیست.", http.StatusBadRequest)
 		return
 	}
+	isActive := true
+	if payload.IsActive != nil {
+		isActive = *payload.IsActive
+	}
+	if id == current.Id && payload.UserType != current.UserType {
+		http.Error(w, "نمی‌توانید نقش حساب خودتان را تغییر دهید.", http.StatusForbidden)
+		return
+	}
+	if id == current.Id && !isActive {
+		http.Error(w, "نمی‌توانید حساب خودتان را غیرفعال کنید.", http.StatusForbidden)
+		return
+	}
+	imagePath, err := app.saveUploadedUserImage(r, id, payload.ImagePath)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
 
 	user := &models.User{
 		Id:        id,
@@ -2528,8 +2712,8 @@ func (app *application) usersPut(w http.ResponseWriter, r *http.Request) {
 		LastName:  payload.LastName,
 		Email:     payload.Email,
 		UserType:  payload.UserType,
-		ImagePath: payload.ImagePath,
-		IsActive:  payload.IsActive,
+		ImagePath: imagePath,
+		IsActive:  isActive,
 	}
 	if err := app.users.UpdateWithOptionalPassword(user, payload.Password); err != nil {
 		if errors.Is(err, models.ErrDuplicateEmail) {
@@ -2548,6 +2732,14 @@ func (app *application) userDeactivate(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(params.ByName("id"))
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	current, ok := app.currentUser(w, r)
+	if !ok {
+		return
+	}
+	if id == current.Id {
+		http.Error(w, "نمی‌توانید حساب خودتان را غیرفعال کنید.", http.StatusForbidden)
 		return
 	}
 	if err := app.users.SetActive(id, false); err != nil {

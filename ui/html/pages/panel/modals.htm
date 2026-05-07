@@ -466,7 +466,7 @@
     <div class="modal-content" style="max-width: 520px;">
         <span class="modal-close user-modal-close">&times;</span>
         <h2 id="user-modal-title">افزودن کاربر</h2>
-        <form id="user-form">
+        <form id="user-form" enctype="multipart/form-data">
             <input type="hidden" id="user-id" value="0">
             <div class="form-row">
                 <div class="form-group">
@@ -481,6 +481,15 @@
             <div class="form-group">
                 <label>ایمیل</label>
                 <input type="email" dir="ltr" id="user-email" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label>تصویر کاربر</label>
+                <div id="user-image-preview-wrap" style="display:none; margin-bottom:8px;">
+                    <img id="user-image-preview" src="" alt="تصویر فعلی" style="width:72px;height:72px;object-fit:cover;border-radius:50%;border:2px solid #ddd;">
+                </div>
+                <input type="file" id="user-image-file" class="form-control" accept="image/jpeg,image/png,image/webp">
+                <input type="hidden" id="user-image-path" value="">
+                <small class="form-text text-muted">تصویر جدید آپلود کنید؛ اگر انتخاب نکنید تصویر قبلی حفظ می‌شود.</small>
             </div>
             <div class="form-group">
                 <label>رمز عبور</label>

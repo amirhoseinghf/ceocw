@@ -1,0 +1,59 @@
+{{define "title"}}پروفایل{{end}}
+
+{{define "extra-head"}}
+<link rel="stylesheet" href="/static/css/profile.css">
+{{end}}
+
+{{define "main"}}
+<div class="profile-page" dir="rtl">
+    <section class="profile-card">
+        <h2 class="profile-title">ویرایش پروفایل</h2>
+        <form id="profile-form" class="profile-form" data-user-type="{{.User.UserType}}" enctype="multipart/form-data">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="profile-first-name">نام</label>
+                    <input type="text" id="profile-first-name" class="form-control" value="{{.User.FirstName}}" required>
+                </div>
+                <div class="form-group">
+                    <label for="profile-last-name">نام خانوادگی</label>
+                    <input type="text" id="profile-last-name" class="form-control" value="{{.User.LastName}}" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="profile-email">ایمیل</label>
+                <input type="email" dir="ltr" id="profile-email" class="form-control" value="{{.User.Email}}" required>
+            </div>
+
+            <div class="form-group">
+                <label>تصویر کاربر</label>
+                <div id="profile-image-preview-wrap" style="{{if .User.ImagePath}}display:block;{{else}}display:none;{{end}} margin-bottom:8px;">
+                    <img id="profile-avatar-preview" class="profile-avatar" src="{{if .User.ImagePath}}{{.User.ImagePath}}{{else}}/static/img/teacher-placeholder.jpg{{end}}" alt="تصویر کاربر" onerror="this.src='/static/img/teacher-placeholder.jpg';">
+                </div>
+                <input type="file" id="profile-image-file" class="form-control" accept="image/jpeg,image/png,image/webp">
+                <input type="hidden" id="profile-image-path" value="{{.User.ImagePath}}">
+                <small class="form-text text-muted">تصویر جدید آپلود کنید؛ اگر انتخاب نکنید تصویر فعلی حفظ می‌شود.</small>
+            </div>
+
+            <div class="form-group">
+                <label for="profile-password">رمز عبور جدید</label>
+                <input type="password" dir="ltr" id="profile-password" class="form-control" minlength="6" placeholder="برای حفظ رمز فعلی خالی بگذارید">
+            </div>
+
+            <div class="profile-readonly-row">
+                <span class="profile-role-chip">نقش: {{if eq .User.UserType "admin"}}مدیر{{else if eq .User.UserType "head_ta"}}سرپرست TA{{else if eq .User.UserType "ta"}}TA{{else}}کاربر عادی{{end}}</span>
+            </div>
+
+            <div class="modal-buttons profile-actions">
+                {{if or (eq .User.UserType "admin") (eq .User.UserType "head_ta") (eq .User.UserType "ta")}}
+                <a href="/panel" class="btn btn-cancel profile-back-link">بازگشت به پنل</a>
+                {{end}}
+                <button type="submit" class="btn btn-save">ذخیره تغییرات</button>
+            </div>
+        </form>
+    </section>
+</div>
+<div id="toast" class="toast"></div>
+<script src="/static/js/utils.js"></script>
+<script src="/static/js/profile.js"></script>
+{{end}}

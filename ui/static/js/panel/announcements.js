@@ -35,7 +35,10 @@ function renderAnnouncements(items) {
                 ${items.map(item => `
                     <tr data-id="${item.Id}">
                         <td>${escapeHtml(item.Title || '')}</td>
-                        <td>${escapeHtml(item.Content || '')}</td>
+                        <td>
+                            <div>${escapeHtml(item.Content || '')}</div>
+                            ${item.AuthorFirstName ? `<small class="muted-text">ثبت‌کننده: ${escapeHtml(item.AuthorFirstName)} ${escapeHtml(item.AuthorLastName || '')}</small>` : ''}
+                        </td>
                         <td class="teacher-actions">
                             <button class="btn btn-edit edit-announcement" data-id="${item.Id}">ویرایش</button>
                             <button class="btn btn-delete delete-announcement" data-id="${item.Id}">حذف</button>

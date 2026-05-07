@@ -25,12 +25,24 @@ function userInitials(firstName, lastName) {
     return (f + l) || '?';
 }
 
+function userAvatarMarkup(user) {
+    const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'کاربر';
+    if (user.imagePath) {
+        return `<img class="ta-avatar" src="${escapeHtml(user.imagePath)}" alt="${escapeHtml(fullName)}" onerror="this.outerHTML='<div class=&quot;user-avatar-initials&quot;>${escapeHtml(userInitials(user.firstName, user.lastName))}</div>'">`;
+    }
+    return `<div class="user-avatar-initials">${escapeHtml(userInitials(user.firstName, user.lastName))}</div>`;
+}
+
 // ── Modal helpers ────────────────────────────────────────────────────────────
 function openUserModal(isEdit, user) {
     const modal = document.getElementById('user-modal');
     const title = document.getElementById('user-modal-title');
     const pwdHint = document.getElementById('user-password-hint');
     const pwdInput = document.getElementById('user-password');
+    const userTypeInput = document.getElementById('user-type');
+    const previewWrap = document.getElementById('user-image-preview-wrap');
+    const previewImg = document.getElementById('user-image-preview');
+    const imageFileInput = document.getElementById('user-image-file');
 
     if (isEdit && user) {
         title.textContent = 'ویرایش کاربر';
@@ -38,8 +50,19 @@ function openUserModal(isEdit, user) {
         document.getElementById('user-first-name').value = user.firstName || '';
         document.getElementById('user-last-name').value  = user.lastName  || '';
         document.getElementById('user-email').value      = user.email     || '';
-        document.getElementById('user-type').value       = user.userType  || 'normal';
+        document.getElementById('user-image-path').value = user.imagePath || '';
+        imageFileInput.value = '';
+        if (user.imagePath) {
+            previewImg.src = user.imagePath;
+            previewWrap.style.display = 'block';
+        } else {
+            previewImg.src = '';
+            previewWrap.style.display = 'none';
+        }
+        userTypeInput.value = user.userType || 'normal';
+        userTypeInput.disabled = Number(user.id) === currentUserId();
         document.getElementById('user-is-active').checked = !!user.isActive;
+        document.getElementById('user-is-active').disabled = Number(user.id) === currentUserId();
         pwdInput.value    = '';
         pwdInput.required = false;
         pwdHint.style.display = '';
@@ -47,10 +70,17 @@ function openUserModal(isEdit, user) {
         title.textContent = 'افزودن کاربر جدید';
         document.getElementById('user-form').reset();
         document.getElementById('user-id').value = '0';
+        document.getElementById('user-image-path').value = '';
+        imageFileInput.value = '';
+        previewImg.src = '';
+        previewWrap.style.display = 'none';
+        userTypeInput.disabled = false;
         document.getElementById('user-is-active').checked = true;
+        document.getElementById('user-is-active').disabled = false;
         pwdInput.required = true;
         pwdHint.style.display = 'none';
     }
+    if (typeof refreshFileDropzones === 'function') refreshFileDropzones(modal);
     modal.style.display = 'flex';
 }
 
@@ -77,6 +107,7 @@ async function loadUsers() {
 function renderUsers(users) {
     const container = document.getElementById('users-list');
     if (!container) return;
+    const selfId = currentUserId();
     window._panelUsersById = new Map((users || []).map(u => [Number(u.id), u]));
 
     if (!users || !users.length) {
@@ -88,7 +119,7 @@ function renderUsers(users) {
         <tr data-id="${u.id}">
             <td>
                 <div class="user-avatar-cell">
-                    <div class="user-avatar-initials">${escapeHtml(userInitials(u.firstName, u.lastName))}</div>
+                    ${userAvatarMarkup(u)}
                     <div class="user-name-block">
                         <span class="user-fullname">${escapeHtml(u.firstName || '')} ${escapeHtml(u.lastName || '')}</span>
                         <span class="user-email" dir="ltr">${escapeHtml(u.email || '')}</span>
@@ -99,10 +130,12 @@ function renderUsers(users) {
             <td><span class="status-badge ${u.isActive ? 'status-active' : 'status-inactive'}">${u.isActive ? 'فعال' : 'غیرفعال'}</span></td>
             <td class="teacher-actions">
                 <button class="btn btn-edit edit-user-btn" data-id="${u.id}">✏️ ویرایش</button>
-                <button class="btn ${u.isActive ? 'btn-delete' : 'btn-success'} toggle-user-btn"
-                        data-id="${u.id}" data-active="${u.isActive ? '1' : '0'}">
-                    ${u.isActive ? '🚫 غیرفعال' : '✅ فعال‌سازی'}
-                </button>
+                ${Number(u.id) === selfId
+                    ? '<span class="status-badge status-active">کاربر جاری</span>'
+                    : `<button class="btn ${u.isActive ? 'btn-delete' : 'btn-success'} toggle-user-btn"
+                            data-id="${u.id}" data-active="${u.isActive ? '1' : '0'}">
+                        ${u.isActive ? '🚫 غیرفعال' : '✅ فعال‌سازی'}
+                    </button>`}
             </td>
         </tr>
     `).join('');
@@ -136,6 +169,10 @@ function renderUsers(users) {
 
 // ── Toggle active / inactive ─────────────────────────────────────────────────
 async function toggleUserActive(id, currentlyActive) {
+    if (id === currentUserId()) {
+        showToast('نمی‌توانید حساب خودتان را غیرفعال کنید', false);
+        return;
+    }
     const action = currentlyActive ? 'غیرفعال کردن' : 'فعال‌سازی';
     if (!confirm(`آیا از ${action} این کاربر اطمینان دارید؟`)) return;
     try {
@@ -152,7 +189,32 @@ async function toggleUserActive(id, currentlyActive) {
 function initUsers() {
     if (!isAdminUser()) return;
     const form = document.getElementById('user-form');
+    const imageFileInput = document.getElementById('user-image-file');
+    const previewWrap = document.getElementById('user-image-preview-wrap');
+    const previewImg = document.getElementById('user-image-preview');
     if (!form) return;
+
+    if (typeof bindFileDropzone === 'function' && imageFileInput) bindFileDropzone(imageFileInput);
+    imageFileInput?.addEventListener('change', function() {
+        const file = this.files && this.files[0];
+        if (!file) {
+            const current = document.getElementById('user-image-path').value;
+            if (current) {
+                previewImg.src = current;
+                previewWrap.style.display = 'block';
+            } else {
+                previewImg.src = '';
+                previewWrap.style.display = 'none';
+            }
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewImg.src = e.target.result;
+            previewWrap.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    });
 
     // "Add user" button
     document.getElementById('add-user-btn')?.addEventListener('click', () => openUserModal(false));
@@ -173,9 +235,14 @@ function initUsers() {
             lastName:  document.getElementById('user-last-name').value.trim(),
             email:     document.getElementById('user-email').value.trim(),
             password:  document.getElementById('user-password').value,
+            imagePath: document.getElementById('user-image-path').value.trim(),
             userType:  document.getElementById('user-type').value,
             isActive:  document.getElementById('user-is-active').checked
         };
+        if (id === currentUserId()) {
+            payload.userType = currentUserType();
+            payload.isActive = true;
+        }
         if (!payload.firstName || !payload.lastName || !payload.email) {
             showToast('نام، نام خانوادگی و ایمیل الزامی است', false);
             return;
@@ -185,10 +252,19 @@ function initUsers() {
             return;
         }
         try {
+            const formData = new FormData();
+            formData.append('first_name', payload.firstName);
+            formData.append('last_name', payload.lastName);
+            formData.append('email', payload.email);
+            formData.append('password', payload.password);
+            formData.append('image_path', payload.imagePath);
+            formData.append('user_type', payload.userType);
+            formData.append('is_active', payload.isActive ? 'true' : 'false');
+            const imageFile = imageFileInput?.files?.[0];
+            if (imageFile) formData.append('user_image', imageFile);
             const res = await fetch(id ? `/users/${id}` : '/users', {
                 method: id ? 'PUT' : 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: formData
             });
             if (!res.ok) {
                 const text = await res.text();

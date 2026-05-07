@@ -879,7 +879,15 @@ body[data-user-type="normal"] [data-settings-only] {
 .user-avatar-cell {
     display: flex;
     align-items: center;
-    gap: 10px;
+    justify-content: flex-start;
+    gap: 8px;
+    direction: rtl;
+    width: 100%;
+}
+#users-list .teachers-table th:first-child,
+#users-list .teachers-table td:first-child {
+    text-align: right;
+    padding-right: 8px;
 }
 .user-avatar-initials {
     width: 38px;
@@ -899,6 +907,9 @@ body[data-user-type="normal"] [data-settings-only] {
     display: flex;
     flex-direction: column;
     gap: 2px;
+    text-align: right;
+    align-items: flex-start;
+    min-width: 0;
 }
 .user-fullname {
     font-weight: 600;
@@ -908,6 +919,12 @@ body[data-user-type="normal"] [data-settings-only] {
 .user-email {
     font-size: 0.78rem;
     color: #64748b;
+}
+.muted-text {
+    display: block;
+    margin-top: 4px;
+    color: #64748b;
+    font-size: 0.78rem;
 }
 .role-badge, .status-badge {
     display: inline-block;
