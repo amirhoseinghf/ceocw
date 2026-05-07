@@ -8,7 +8,7 @@ import (
 
 type Semester struct {
 	Id     int
-	Season string // "spring" or "autumn"
+	Season string // "spring" or "fall"
 	Year   int
 }
 
@@ -21,10 +21,14 @@ func (s Semester) SeasonPersian() string {
 
 // Used for api request to create or edit semester
 func (s Semester) SeasonEnglish() string {
-	if s.Season == "بهار" {
+	switch s.Season {
+	case "spring", "بهار":
 		return "spring"
+	case "fall", "autumn", "پاییز":
+		return "fall"
+	default:
+		return "fall"
 	}
-	return "fall"
 }
 
 func (s Semester) SemesterName() string {
@@ -46,7 +50,7 @@ func (m *SemesterModel) GetAll() ([]Semester, error) {
 	}
 	defer rows.Close()
 
-	var semesters []Semester
+	semesters := []Semester{}
 	for rows.Next() {
 		var s Semester
 		if err := rows.Scan(&s.Id, &s.Season, &s.Year); err != nil {

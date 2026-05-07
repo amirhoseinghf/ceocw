@@ -2,7 +2,6 @@ package models
 
 import (
 	"database/sql"
-	"fmt"
 	"time"
 )
 
@@ -39,7 +38,7 @@ func (m *TAModel) GetByCourse(courseId int) ([]TeachingAssistant, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	var tas []TeachingAssistant
+	tas := []TeachingAssistant{}
 	for rows.Next() {
 		var ta TeachingAssistant
 		if err := rows.Scan(&ta.Id, &ta.FirstName, &ta.LastName, &ta.ImageURL,
@@ -65,7 +64,7 @@ func (m *TAModel) GetAll() ([]TeachingAssistant, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	var tas []TeachingAssistant
+	tas := []TeachingAssistant{}
 	for rows.Next() {
 		var ta TeachingAssistant
 		if err := rows.Scan(&ta.Id, &ta.FirstName, &ta.LastName, &ta.ImageURL,
@@ -115,8 +114,6 @@ func (m *TAModel) Insert(ta *TeachingAssistant) (int, error) {
 
 // Update an existing TA
 func (m *TAModel) Update(ta *TeachingAssistant) error {
-	fmt.Printf("Instagram: ", ta.Instagram)
-	fmt.Printf("Github: ", ta.GitHub)
 	_, err := m.DB.Exec(`
         UPDATE teaching_assistants
         SET first_name = ?, last_name = ?, image_url = ?,

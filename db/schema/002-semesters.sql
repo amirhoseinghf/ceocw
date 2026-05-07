@@ -9,6 +9,6 @@ create table semesters
     constraint season
         unique (season, year),
     constraint chk_season
-        check (`season` in (_utf8mb4\'spring\',_utf8mb4\'fall\'))
+        check (`season` in ('spring', 'fall'))
 );
 

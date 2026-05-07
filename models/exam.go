@@ -45,7 +45,7 @@ func (m *ExamModel) GetByCourse(courseId int) ([]Exam, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	var exams []Exam
+	exams := []Exam{}
 	for rows.Next() {
 		var e Exam
 		var sem Semester

@@ -33,7 +33,7 @@ func (m *AssignmentModel) GetByCourse(courseId int) ([]Assignment, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	var assignments []Assignment
+	assignments := []Assignment{}
 	for rows.Next() {
 		var a Assignment
 		var releaseDate, deadlineDate sql.NullTime

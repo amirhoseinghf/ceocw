@@ -79,7 +79,7 @@ func (t *TeacherModel) GetAll() ([]Teacher, error) {
 	}
 	defer rows.Close()
 
-	var teachers []Teacher
+	teachers := []Teacher{}
 	for rows.Next() {
 		var teacher Teacher
 		err := rows.Scan(

@@ -14,10 +14,9 @@ func (app *application) routes() http.Handler {
 		app.notFound(w)
 	})
 
-	// Protected admin routes (require authentication)
-	// Helper to wrap HandlerFunc with authentication middleware
+	// Protected admin routes.
 	protected := func(h http.HandlerFunc) http.HandlerFunc {
-		return app.requireAuthentication(http.HandlerFunc(h)).ServeHTTP
+		return app.requireAdmin(http.HandlerFunc(h)).ServeHTTP
 	}
 
 	// Static files (no authentication needed)

@@ -35,7 +35,7 @@ func (b *BookModel) GetAllBooks(search string) ([]Book, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	var books []Book
+	books := []Book{}
 	for rows.Next() {
 		var b Book
 		if err := rows.Scan(&b.Id, &b.Title, &b.ImageURL, &b.DownloadURL); err != nil {

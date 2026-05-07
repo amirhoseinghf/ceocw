@@ -22,7 +22,7 @@ func (m *SlideModel) GetByCourse(courseId int) ([]Slide, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	var slides []Slide
+	slides := []Slide{}
 	for rows.Next() {
 		var s Slide
 		if err := rows.Scan(&s.Id, &s.Title, &s.FileName); err != nil {

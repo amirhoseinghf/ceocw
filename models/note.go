@@ -23,7 +23,7 @@ func (m *NoteModel) GetByCourse(courseId int) ([]Note, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	var notes []Note
+	notes := []Note{}
 	for rows.Next() {
 		var n Note
 		if err := rows.Scan(&n.Id, &n.Title, &n.FileName, &n.IsUpdated); err != nil {

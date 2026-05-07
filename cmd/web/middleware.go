@@ -53,3 +53,37 @@ func (app *application) requireAuthentication(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
+func (app *application) requireAdmin(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !app.isAuthenticated(r) {
+			http.Redirect(w, r, "/user/login?denied=true", http.StatusSeeOther)
+			return
+		}
+
+		userID, ok := app.sessionManager.Get(r.Context(), "userID").(int)
+		if !ok {
+			app.sessionManager.Remove(r.Context(), "userID")
+			http.Redirect(w, r, "/user/login?denied=true", http.StatusSeeOther)
+			return
+		}
+
+		user, err := app.users.Get(userID)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+		if user == nil || !user.IsActive {
+			app.sessionManager.Remove(r.Context(), "userID")
+			http.Redirect(w, r, "/user/login?denied=true", http.StatusSeeOther)
+			return
+		}
+		if user.UserType != "admin" {
+			app.clientError(w, http.StatusForbidden)
+			return
+		}
+
+		w.Header().Add("Cache-Control", "no-store")
+		next.ServeHTTP(w, r)
+	})
+}

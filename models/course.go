@@ -96,7 +96,7 @@ func (c *CourseModel) GetAllSummaries() ([]CourseSummary, error) {
 	}
 	defer rows.Close()
 
-	var summaries []CourseSummary
+	summaries := []CourseSummary{}
 	for rows.Next() {
 		var cs CourseSummary
 		var teacherId, semesterId int
@@ -117,7 +117,7 @@ func (c *CourseModel) GetAllSummaries() ([]CourseSummary, error) {
 		cs.SemesterName = sem.SemesterName()
 		summaries = append(summaries, cs)
 	}
-	return summaries, nil
+	return summaries, rows.Err()
 }
 
 func (c *CourseModel) Insert(course Course) (int, error) {
