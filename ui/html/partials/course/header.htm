@@ -55,6 +55,14 @@
             </div>
           </a>
           {{ end }}
+          {{ if .Course.QueraLink }}
+          <a href="{{ .Course.QueraLink }}" target="_blank" rel="noopener noreferrer">
+            <div class="info-box quera-info">
+              <span class="quera-mark">Q</span>
+              <span>صفحه کوئرا</span>
+            </div>
+          </a>
+          {{ end }}
         </div>
       </div>
     </div>

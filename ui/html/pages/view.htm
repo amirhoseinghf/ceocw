@@ -1,492 +1,400 @@
 {{define "title"}}{{.Course.Title}}{{end}}
 
+{{define "extra-head"}}
+    <link rel="stylesheet" href="/static/css/course.css">
+{{end}}
+
 {{define "main"}}
-<div class="course-container">
-  <!-- Header Section -->
-  <div class="course-header">
-    <div class="header-content">
-        <div class="left-section">
-            {{if .Course.Sources}}
-                {{range .Course.Sources}}
-                    {{if .ImageURL}}
-                        <a href="{{.DownloadURL}}" target="_blank" class="book-item">
-                          <img src="{{.ImageURL}}" alt="{{.Title}}" class="book-cover">
-                        </a>
-                    {{end}}
-                {{end}}
+<div class="course-page" dir="rtl">
+
+    <!-- ── HERO ───────────────────────────────────────────────────── -->
+    <header class="course-hero">
+        <div class="course-hero-inner">
+            {{if .Course.ImageUrl}}
+            <div class="course-hero-image">
+                <img src="{{.Course.ImageUrl}}" alt="{{.Course.Title}}" onerror="this.style.display='none';">
+            </div>
+            {{end}}
+            <div class="course-hero-text">
+                <div class="course-eyebrow">{{.Course.Semester.SemesterName}}</div>
+                <h1 class="course-title">{{.Course.Title}}</h1>
+                {{if .Course.Teacher.PageURL}}<a href="{{.Course.Teacher.PageURL}}" target="_blank" rel="noopener noreferrer" class="course-teacher-pill">{{else}}<div class="course-teacher-pill">{{end}}
+                    <img src="{{.Course.Teacher.ImageURL}}" alt="" class="course-teacher-avatar" onerror="this.style.display='none';">
+                    <div class="course-teacher-info">
+                        <span class="course-teacher-label">مدرس</span>
+                        <span class="course-teacher-name">دکتر {{.Course.Teacher.FirstName}} {{.Course.Teacher.LastName}}</span>
+                    </div>
+                {{if .Course.Teacher.PageURL}}</a>{{else}}</div>{{end}}
+            </div>
+        </div>
+    </header>
+
+    <!-- ── QUICK LINKS BAR ────────────────────────────────────────── -->
+    {{if or .Course.TelegramLink .Course.BaleLink .Course.QueraLink}}
+    <div class="course-links-bar">
+        <div class="course-links-inner">
+            {{if .Course.TelegramLink}}
+            <a href="{{.Course.TelegramLink}}" target="_blank" rel="noopener noreferrer" class="course-link-chip telegram">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/></svg>
+                <span>کانال تلگرام</span>
+            </a>
+            {{end}}
+            {{if .Course.BaleLink}}
+            <a href="{{.Course.BaleLink}}" target="_blank" rel="noopener noreferrer" class="course-link-chip bale">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm5.5 7.5l-7 7-3.5-3.5 1.4-1.4L10.5 14l5.6-5.6 1.4 1.1z"/></svg>
+                <span>کانال بله</span>
+            </a>
+            {{end}}
+            {{if .Course.QueraLink}}
+            <a href="{{.Course.QueraLink}}" target="_blank" rel="noopener noreferrer" class="course-link-chip quera">
+                <span class="quera-logo" aria-hidden="true">
+                    <svg viewBox="0 0 28 28" fill="none">
+                        <rect x="3" y="3" width="22" height="22" rx="6" fill="currentColor"/>
+                        <path d="M15.1 18.4c-3.3 0-5.6-2.1-5.6-5.1 0-3.1 2.3-5.2 5.6-5.2 3.2 0 5.5 2.1 5.5 5.2 0 1.3-.4 2.5-1.2 3.4l1.4 1.4-1.7 1.7-1.5-1.5c-.7.1-1.5.1-2.5.1Zm0-2.4c1.7 0 2.8-1 2.8-2.7s-1.1-2.8-2.8-2.8c-1.8 0-2.9 1-2.9 2.8 0 1.7 1.1 2.7 2.9 2.7Z" fill="#fff"/>
+                    </svg>
+                </span>
+                <span>صفحه کوئرا</span>
+            </a>
             {{end}}
         </div>
-        
-        <div class="right-section">
-            <h1 class="course-title">{{.Course.Title}}</h1>
-            
-             <div class="info-boxes">
-        <!-- Top row: Semester and Teacher info side by side -->
-        <div class="top-row">
-            <div class="info-box semester-info">
-                <span>{{.Course.Semester.SemesterName}}</span>
-            </div>
-            
-            <a href="{{ .Course.Teacher.PageURL }}" class="teacher-link" style="text-decoration:none; color:inherit;" target="_blank" 
-rel="noopener noreferrer">
-                <div class="info-box teacher-info">
-                    <span>دکتر {{ .Course.Teacher.FirstName }} {{ .Course.Teacher.LastName }}</span>
-                    <img 
-                        src="{{ .Course.Teacher.ImageURL }}" 
-                        alt="تصویر استاد" 
-                        class="teacher-image"
-                        onerror="this.style.display='none';"
-                    />
-                </div>
-            </a>
-        </div>
-        
-        <!-- Bottom row: Telegram and Bale info side by side -->
-        <div class="bottom-row" dir="rtl">
-            <!-- Telegram Info Box -->
-            {{ if .Course.TelegramLink }}
-            <a href="{{ .Course.TelegramLink }}" target="_blank" rel="noopener noreferrer">
-                <div class="info-box telegram-info">
-                    <div class="telegram-icon">
-                        <svg  viewBox="0 0 1080 1080" version="1.1" xmlns="http://www.w3.org/2000/svg">
-                        <g id="#000000ff">
-                        <path fill="white" opacity="1.00" d=" M 511.25 10.38 C 514.46 9.81 517.73 9.99 520.97 9.99 C 534.99 10.02 549.01 9.98 563.02 10.00 C 574.65 11.13 586.35 11.60 597.96 13.00 C 641.12 17.86 683.81 27.56 724.55 42.68 C 793.89 68.34 857.53 109.01 910.34 160.71 C 954.11 203.43 990.57 253.68 1017.25 308.73 C 1033.55 341.98 1045.81 377.11 1054.92 412.96 C 1060.92 439.68 1065.32 466.77 1068.03 494.02 C 1068.59 497.71 1068.86 501.44 1068.45 505.17 C 1067.95 508.88 1070.18 512.26 1070.02 515.97 C 1070.01 531.64 1069.96 547.32 1070.03 563.00 C 1070.17 566.38 1069.45 569.70 1069.00 573.04 C 1066.52 617.36 1058.18 661.37 1044.32 703.55 C 1033.07 739.49 1017.26 773.93 998.45 806.52 C 963.03 866.97 915.92 920.73 859.80 962.77 C 828.28 986.51 794.29 1007.04 758.33 1023.32 C 701.93 1048.99 640.84 1064.05 579.08 1068.60 C 574.32 1068.41 569.72 1069.69 565.02 1070.00 C 548.67 1070.01 532.32 1069.97 515.97 1070.02 C 512.27 1069.95 508.64 1069.17 504.96 1068.98 C 457.50 1065.94 410.44 1056.51 365.58 1040.68 C 310.03 1021.38 257.56 993.01 211.52 956.37 C 158.76 914.34 113.95 862.35 80.00 804.07 C 40.15 735.68 17.18 657.90 11.33 579.08 C 11.64 574.64 10.38 570.36 10.00 565.99 C 9.98 549.66 10.04 533.32 9.97 516.99 C 10.06 512.97 10.87 509.00 11.00 504.99 C 12.66 472.54 18.43 440.46 26.02 408.93 C 29.19 396.01 33.25 383.32 38.04 370.92 C 51.36 327.29 72.56 286.45 97.25 248.23 C 112.21 225.65 128.86 204.17 147.16 184.20 C 151.18 179.58 154.95 174.71 159.64 170.72 C 174.87 154.88 191.18 140.04 208.39 126.37 C 224.78 113.57 241.28 100.76 259.34 90.37 C 276.45 79.25 294.55 69.72 312.93 60.89 C 371.18 33.08 434.62 16.36 498.96 11.42 C 503.07 11.27 507.20 11.25 511.25 10.38 M 759.48 333.75 C 745.80 336.15 732.66 340.86 719.70 345.75 C 703.41 352.15 687.27 358.92 670.82 364.92 C 610.42 388.79 550.42 413.65 490.37 438.39 C 484.03 440.53 478.02 443.47 471.88 446.08 C 435.48 461.16 399.28 476.69 363.15 492.37 C 324.32 509.06 285.67 526.21 247.66 544.70 C 233.60 551.77 219.13 558.23 206.13 567.18 C 201.28 570.54 196.41 576.64 199.29 582.80 C 203.33 590.72 211.88 594.61 219.32 598.67 C 236.07 606.59 253.49 613.01 270.92 619.28 C 291.40 626.44 312.43 632.32 333.99 635.11 C 352.50 637.38 371.89 634.50 388.21 625.19 C 413.01 610.62 437.58 595.64 461.42 579.55 C 477.19 568.97 493.22 558.78 508.65 547.71 C 524.47 536.48 540.41 525.44 556.29 514.30 C 575.28 500.91 594.09 487.25 613.60 474.62 C 622.77 468.79 632.08 462.46 642.86 460.11 C 645.95 459.20 649.94 461.58 649.54 465.04 C 649.51 471.71 645.87 477.65 641.14 482.09 C 611.36 513.67 579.02 542.67 546.94 571.86 C 530.50 586.07 515.17 601.49 499.19 616.21 C 488.37 626.74 475.93 636.13 468.38 649.50 C 463.55 658.13 459.68 668.20 461.81 678.23 C 463.88 687.67 471.35 694.64 479.11 699.79 C 490.34 707.59 501.56 715.40 512.78 723.21 C 525.15 731.96 537.98 740.02 550.45 748.64 C 588.02 774.02 625.66 799.30 663.09 824.90 C 673.11 831.85 685.73 835.50 697.88 833.37 C 713.61 830.67 728.04 819.96 734.25 805.12 C 737.60 797.69 738.33 789.50 739.74 781.57 C 744.22 753.00 749.28 724.54 754.00 696.01 C 759.89 661.72 765.41 627.36 771.51 593.11 C 777.86 552.76 784.43 512.43 790.08 471.97 C 794.15 446.41 797.56 420.76 800.50 395.06 C 801.80 383.06 802.95 371.02 803.36 358.96 C 803.65 348.59 796.99 338.20 786.99 334.95 C 778.12 332.19 768.58 332.27 759.48 333.75 Z" />
-                        </g>
-                        </svg>
-                    </div>
-                     <span>کانال تلگرام</span>
-                </div>
-            </a>
-            {{ end }}
-            
-            <!-- Bale Info Box -->
-            {{ if .Course.BaleLink }}
-            <a href="{{ .Course.BaleLink }}" target="_blank" rel="noopener noreferrer">
-                <div class="info-box bale-info">
-                    <div class="bale-icon">
-                       <svg viewBox="0 0 128 129" version="1.1" xmlns="http://www.w3.org/2000/svg">
-                        <g id="#0aca9bff">
-                        <path fill="white" opacity="1.00" d=" M 5.59 0.00 L 7.78 0.00 C 14.87 2.47 20.38 8.05 26.63 12.06 C 36.39 4.93 48.20 0.93 60.21 0.00 L 66.16 0.00 C 80.31 0.52 94.23 5.79 105.07 14.92 C 118.84 26.31 127.32 43.71 128.00 61.56 L 128.00 66.42 C 127.40 80.96 121.79 95.22 112.17 106.16 C 101.56 118.30 86.22 126.25 70.14 127.69 C 55.69 129.11 40.73 125.47 28.68 117.33 C 11.63 106.31 0.73 86.67 0.00 66.42 L 0.00 6.35 C 0.15 3.17 2.73 0.93 5.59 0.00 M 84.47 37.47 C 74.72 47.04 65.13 56.78 55.45 66.42 C 51.38 62.54 47.60 58.33 43.39 54.59 C 38.26 50.17 29.69 51.08 25.64 56.50 C 21.90 61.13 22.17 68.37 26.26 72.71 C 33.04 79.60 39.92 86.40 46.75 93.24 C 51.40 97.73 59.54 97.80 64.04 93.08 C 76.41 80.75 88.74 68.37 101.11 56.04 C 104.26 53.08 105.74 48.47 104.72 44.25 C 103.18 35.43 91.01 31.23 84.47 37.47 Z" />
-                        </g>
-                        </svg>
-                    </div>
-                    <span>کانال بله</span>
-                </div>
-            </a>
-            {{ end }}
-        </div>
     </div>
-        </div>
-    </div>
-</div>
+    {{end}}
 
-<div class="course-info-section" dir="rtl">
-    <div class="section-title">
-        اطلاعات درس
-    </div>
-    
-    <div class="info-content">
-        {{if .Course.CourseDescription.Description}}
-        <div class="description-container">
-            <h3>توضیحات درس</h3>
-            <p dir="rtl">{{.Course.CourseDescription.Description}}</p>
-        </div>
+    <!-- ── MAIN CONTENT ───────────────────────────────────────────── -->
+    <div class="course-content-wrap">
+
+        <!-- ── BOOKS ── -->
+        {{if .Course.Sources}}
+        <section class="course-card books-card">
+            <div class="card-h">
+                <h2><span class="card-h-icon">📚</span> منابع و کتاب‌ها</h2>
+                <p class="card-h-sub">برای دانلود روی کتاب کلیک کنید</p>
+            </div>
+            <div class="books-grid">
+                {{range .Course.Sources}}
+                <a href="{{.DownloadURL}}" target="_blank" rel="noopener noreferrer" class="book-card">
+                    <div class="book-cover-wrap">
+                        {{if .ImageURL}}
+                        <img src="{{.ImageURL}}" alt="{{.Title}}" loading="lazy">
+                        {{else}}
+                        <div class="book-cover-placeholder">📖</div>
+                        {{end}}
+                        <div class="book-overlay">
+                            <span class="book-download-cta">
+                                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="18" height="18"><path d="M5 20h14v-2H5v2zM19 9h-4V3H9v6H5l7 7 7-7z"/></svg>
+                                دانلود
+                            </span>
+                        </div>
+                    </div>
+                    <div class="book-title">{{.Title}}</div>
+                </a>
+                {{end}}
+            </div>
+        </section>
         {{end}}
 
-        
-        {{if .Course.CourseDescription.ClassSchedule.DayOfWeek}}
-        <div class="schedule-container">
-            <h3>زمان‌بندی کلاس</h3>
-            <div class="schedule-details">
-                <p><strong>روز:</strong> {{.Course.CourseDescription.ClassSchedule.DayOfWeek}}</p>
-                <p><strong>زمان:</strong> {{.Course.CourseDescription.ClassSchedule.StartTime}} تا {{.Course.CourseDescription.ClassSchedule.EndTime}}</p>
-                <p><strong>محل:</strong> {{.Course.CourseDescription.ClassSchedule.Location}}</p>
+        <!-- ── INFO GRID (description / schedule / grades) ── -->
+        {{if or .Course.CourseDescription.Description .Course.CourseDescription.ScheduleItems .Course.CourseDescription.GradeDistribution}}
+        <section class="info-grid">
+            {{if .Course.CourseDescription.Description}}
+            <div class="course-card info-card">
+                <h3><span class="card-h-icon">📝</span> توضیحات درس</h3>
+                <p class="info-text">{{.Course.CourseDescription.Description}}</p>
             </div>
-        </div>
-        {{end}}
+            {{end}}
 
-        {{if .Course.CourseDescription.GradeDistribution}}
-        <div class="grade-distribution-container">
-            <h3>توزیع نمرات</h3>
-            <table class="grade-table">
-                {{range .Course.CourseDescription.GradeDistribution}}
+            {{if .Course.CourseDescription.ScheduleItems}}
+            <div class="course-card info-card">
+                <h3><span class="card-h-icon">🕐</span> زمان‌بندی کلاس</h3>
+                <div class="schedule-session-list">
+                    {{range .Course.CourseDescription.ScheduleItems}}
+                    <div class="schedule-session">
+                        <div class="schedule-day-chip">{{.DayOfWeek}}</div>
+                        <div class="schedule-session-meta">
+                            {{if or .StartTime .EndTime}}<span>{{.StartTime}}{{if .EndTime}} تا {{.EndTime}}{{end}}</span>{{end}}
+                            {{if .Location}}<span>{{.Location}}</span>{{end}}
+                        </div>
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+            {{end}}
+
+            {{if .Course.CourseDescription.GradeDistribution}}
+            <div class="course-card info-card">
+                <h3><span class="card-h-icon">📊</span> توزیع نمرات</h3>
+                <table class="grade-table">
+                    {{range .Course.CourseDescription.GradeDistribution}}
                     <tr>
                         <td>{{.Name}}</td>
-                        <td>{{.Percentage}} %</td>
+                        <td><span class="grade-pct">{{.Percentage}}٪</span></td>
                     </tr>
-                {{end}}
-            </table>
-        </div>
-        {{end}}
-    </div>
-</div>
-
-<div class="nav-section" dir="rtl">
-
-    <div class="nav-dropdown-header">
-        <span id="dropdown-selected">بخش فعلی</span>
-        <span class="arrow">▼</span>
-    </div>
-
-    <div class="nav-bar" id="nav-dropdown">
-        
-        <div class="nav-item{{if eq $.Course.ActiveSection "announcements"}} active{{end}}" id="announcements-nav">
-            اطلاعیه‌ها
-        </div>
-
-         <div class="nav-item{{if eq $.Course.ActiveSection "slides"}} active{{end}}" id="slides-nav">
-           اسلایدها
-        </div>
-
-        <div class="nav-item{{if eq $.Course.ActiveSection "assignments"}} active{{end}}" id="assignments-nav">
-          تمرین‌ها
-        </div>
-
-        <div class="nav-item{{if eq $.Course.ActiveSection "notes"}} active{{end}}" id="notes-nav">
-          جزوه‌ها
-        </div>
-        
-        <div class="nav-item{{if eq $.Course.ActiveSection "exams"}} active{{end}}" id="exams-nav">
-          امتحانات
-        </div>
-       
-    </div>
-    
-
-<!-- Announcements Section -->
-<div class="announcements-section" id="announcements-content">
-    {{if .Course.Announcements}}
-        {{range .Course.Announcements}}
-        <div class="announcement-item">
-            <div class="announcement-author">
-                <div class="author-image"></div>
-                <div class="author-name">استاد محمدی</div>
+                    {{end}}
+                </table>
             </div>
-            <p class="announcement-text">
-                {{.Content}}
-            </p>
-        </div>
+            {{end}}
+        </section>
         {{end}}
-    {{else}}
-    <div class="no-content-message">
-        اطلاعیه ای موجود نیست
-    </div>
-    {{end}}
-</div>
-    
 
-<!-- Assignments Section -->    
-<div class="assignments-section" id="assignments-content">
-    {{if .Course.Assignments}}
-    <div class="table-container">
-        <table class="assignments-table">
-            <thead>
-                <tr>
-                    <th>عنوان تمرین</th>
-                    <th>تاریخ انتشار</th>
-                    <th>آخرین مهلت</th>
-                    <th>عملیات</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{range .Course.Assignments}}
-                <tr>
-                    <td>
-                        <div class="assignment-title-container">
-                            {{.Title}}
-                            {{if .IsExtended}}
-                             <span class="extended-badge">تمدید شده</span>
-                            {{end}}
-                            {{if .IsProject}}
-                             <span class="project-badge">پروژه</span>
-                            {{end}}
+        <!-- ── TAs ── -->
+        {{if .Course.TAs}}
+        <section class="course-card tas-card">
+            <div class="card-h">
+                <h2><span class="card-h-icon">👥</span> دستیاران آموزشی</h2>
+            </div>
+            <div class="tas-grid">
+                {{range .Course.TAs}}
+                <div class="ta-card">
+                    <img src="{{if .ImageURL}}{{.ImageURL}}{{else}}/static/img/teacher-placeholder.jpg{{end}}" alt="{{.FirstName}} {{.LastName}}" class="ta-avatar" onerror="this.src='/static/img/teacher-placeholder.jpg';">
+                    <div class="ta-name">{{.FirstName}} {{.LastName}}</div>
+                    <div class="ta-links">
+                        {{if .Telegram}}<a href="{{.Telegram}}" target="_blank" rel="noopener noreferrer" title="تلگرام" class="ta-link telegram">✈️</a>{{end}}
+                        {{if .GitHub}}<a href="{{.GitHub}}" target="_blank" rel="noopener noreferrer" title="GitHub" class="ta-link github">💻</a>{{end}}
+                        {{if .LinkedIn}}<a href="{{.LinkedIn}}" target="_blank" rel="noopener noreferrer" title="LinkedIn" class="ta-link linkedin">🔗</a>{{end}}
+                        {{if .Website}}<a href="{{.Website}}" target="_blank" rel="noopener noreferrer" title="وب‌سایت" class="ta-link website">🌐</a>{{end}}
+                        {{if .Instagram}}<a href="{{.Instagram}}" target="_blank" rel="noopener noreferrer" title="اینستاگرام" class="ta-link instagram">📷</a>{{end}}
+                    </div>
+                </div>
+                {{end}}
+            </div>
+        </section>
+        {{end}}
+
+        <!-- ── TAB NAV ── -->
+        <div class="nav-section" dir="rtl">
+            <div class="nav-dropdown-header">
+                <span id="dropdown-selected">بخش فعلی</span>
+                <span class="arrow">▼</span>
+            </div>
+
+            <div class="nav-bar" id="nav-dropdown">
+                <div class="nav-item{{if eq $.Course.ActiveSection "announcements"}} active{{end}}" id="announcements-nav">
+                    <span class="nav-emoji">📢</span> اطلاعیه‌ها
+                </div>
+                <div class="nav-item{{if eq $.Course.ActiveSection "slides"}} active{{end}}" id="slides-nav">
+                    <span class="nav-emoji">🎞️</span> اسلایدها
+                </div>
+                <div class="nav-item{{if eq $.Course.ActiveSection "assignments"}} active{{end}}" id="assignments-nav">
+                    <span class="nav-emoji">📝</span> تمرین‌ها
+                </div>
+                <div class="nav-item{{if eq $.Course.ActiveSection "notes"}} active{{end}}" id="notes-nav">
+                    <span class="nav-emoji">📓</span> جزوه‌ها
+                </div>
+                <div class="nav-item{{if eq $.Course.ActiveSection "exams"}} active{{end}}" id="exams-nav">
+                    <span class="nav-emoji">📋</span> امتحانات
+                </div>
+            </div>
+
+            <!-- ── Announcements ── -->
+            <div class="content-pane announcements-section" id="announcements-content">
+                {{if .Course.Announcements}}
+                    {{range .Course.Announcements}}
+                    <div class="announcement-item">
+                        <div class="announcement-author">
+                            <div class="author-image"></div>
+                            <div class="author-name">استاد محمدی</div>
                         </div>
-                        
-                    </td>
-                    <td>
-                        {{if .ReleaseDate.IsZero}}
-                            -
-                        {{else}}
-                            {{ $jalaliReleaseDate := .ConvertToJalali .ReleaseDate}}
-                            {{$jalaliReleaseDate.ToPersianString}}
-                        {{end}}
-                    </td>
-                    <td>
-                        {{if .DeadlineDate.IsZero}}
-                            -
-                        {{else}}
-                            {{ $jalaliReleaseDate := .ConvertToJalali .DeadlineDate}}
-                            {{$jalaliReleaseDate.ToPersianString}}
-                        {{end}}
-                    </td>
-                    <td class="actions-cell">
-                        <div class="action-buttons">
-                            {{if .FileName}}
-                            <a href="/data/courses/{{$.Course.Id}}/assignments/{{.FileName}}" class="download-btn" target="_blank">
-                            
-                            {{if .IsProject}}
-                                دانلود
-                            {{else}}
-                                دانلود تمرین
+                        <p class="announcement-text">{{.Content}}</p>
+                    </div>
+                    {{end}}
+                {{else}}
+                    <div class="no-content-message">اطلاعیه‌ای موجود نیست</div>
+                {{end}}
+            </div>
+
+            <!-- ── Assignments ── -->
+            <div class="content-pane assignments-section" id="assignments-content">
+                {{if .Course.Assignments}}
+                <div class="table-container">
+                    <table class="assignments-table">
+                        <thead>
+                            <tr>
+                                <th>عنوان تمرین</th>
+                                <th>تاریخ انتشار</th>
+                                <th>آخرین مهلت</th>
+                                <th>عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{range .Course.Assignments}}
+                            <tr>
+                                <td>
+                                    <div class="assignment-title-container">
+                                        {{.Title}}
+                                        {{if .IsExtended}}<span class="extended-badge">تمدید شده</span>{{end}}
+                                        {{if .IsProject}}<span class="project-badge">پروژه</span>{{end}}
+                                    </div>
+                                </td>
+                                <td>
+                                    {{if .ReleaseDate.IsZero}}—{{else}}
+                                        {{ $j := .ConvertToJalali .ReleaseDate}}{{$j.ToPersianString}}
+                                    {{end}}
+                                </td>
+                                <td>
+                                    {{if .DeadlineDate.IsZero}}—{{else}}
+                                        {{ $j := .ConvertToJalali .DeadlineDate}}{{$j.ToPersianString}}
+                                    {{end}}
+                                </td>
+                                <td class="actions-cell">
+                                    <div class="action-buttons">
+                                        {{if .FileName}}
+                                        <a href="{{.FileName}}" class="download-btn" target="_blank">
+                                            {{if .IsProject}}دانلود{{else}}دانلود تمرین{{end}}
+                                        </a>
+                                        {{else}}—{{end}}
+                                        {{if .SolutionName}}
+                                        <a href="{{.SolutionName}}" class="download-btn solution-btn" target="_blank">دانلود سلوشن</a>
+                                        {{end}}
+                                    </div>
+                                </td>
+                            </tr>
                             {{end}}
-                            </a>
-                            {{else}}
-                             <p>-</p>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mobile-assignments-list">
+                    {{range .Course.Assignments}}
+                    <div class="mobile-assignment-item">
+                        <div class="mobile-assignment-title">
+                            {{.Title}}
+                            {{if .IsExtended}}<span class="extended-badge">تمدید شده</span>{{end}}
+                            {{if .IsProject}}<span class="project-badge">پروژه</span>{{end}}
+                        </div>
+                        <div class="mobile-assignment-actions">
+                            {{if .FileName}}
+                            <a href="{{.FileName}}" class="download-btn" target="_blank">{{if .IsProject}}دانلود{{else}}دانلود تمرین{{end}}</a>
                             {{end}}
                             {{if .SolutionName}}
-                                <a href="/data/courses/{{$.Course.Id}}/solutions/{{.SolutionName}}" class="download-btn solution-btn" target="_blank">
-                            دانلود سلوشن
-                            </a>
+                            <a href="{{.SolutionName}}" class="download-btn solution-btn" target="_blank">دانلود سلوشن</a>
                             {{end}}
                         </div>
-                        
-                    </td>
-                </tr>
-                {{end}}
-            </tbody>
-        </table>
-    </div>
-    
-    <!-- Mobile view for small screens -->
-    <div class="mobile-assignments-list">
-        {{range .Course.Assignments}}
-        <div class="mobile-assignment-item">
-            <div class="mobile-assignment-title">
-                {{.Title}}
-                {{if .IsExtended}}
-                    <span class="extended-badge">تمدید شده</span>
-                {{end}}
-                {{if .IsProject}}
-                 <span class="project-badge">پروژه</span>
-                {{end}}
-            </div>
-            <div class="mobile-assignment-actions">
-                <a href="/data/courses/{{$.Course.Id}}/assignments/{{.FileName}}" class="download-btn" target="_blank">
-                    {{if .IsProject}}
-                        دانلود
-                    {{else}}
-                        دانلود تمرین
+                    </div>
                     {{end}}
-                </a>
-                {{if .SolutionName}}
-                <a href="/data/courses/{{$.Course.Id}}/solutions/{{.SolutionName}}" class="download-btn solution-btn" target="_blank">
-                   دانلود سلوشن
-                </a>
-                {{end}}
+                </div>
+                {{else}}<div class="no-content-message">تمرینی موجود نیست</div>{{end}}
             </div>
-        </div>
-        {{end}}
-    </div>
-    
-    {{else}}
-    <div class="no-content-message">
-        تمرینی موجود نیست
-    </div>
-    {{end}}
-</div>
 
-<!-- Slides Section -->
-<div class="assignments-section" id="slides-content">
-    {{if .Course.Slides}}
-    <div class="table-container">
-        <table class="assignments-table">
-            <thead>
-                <tr>
-                    <th>ایندکس</th>
-                    <th>عنوان اسلاید</th>
-                    <th>عملیات</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{range $i, $slide := .Course.Slides}}
-                <tr>
-                    <td>
-                        {{$i}}
-                    </td>
-                    <td>
-                        <div class="assignment-title-container">
-                            {{$slide.Title}}
+            <!-- ── Slides ── -->
+            <div class="content-pane assignments-section" id="slides-content">
+                {{if .Course.Slides}}
+                <div class="table-container">
+                    <table class="assignments-table">
+                        <thead><tr><th>ایندکس</th><th>عنوان اسلاید</th><th>عملیات</th></tr></thead>
+                        <tbody>
+                            {{range $i, $slide := .Course.Slides}}
+                            <tr>
+                                <td>{{$i}}</td>
+                                <td><div class="assignment-title-container">{{$slide.Title}}</div></td>
+                                <td class="actions-cell">
+                                    <div class="action-buttons">
+                                        <a href="{{$slide.FileName}}" class="download-btn" target="_blank">دانلود</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mobile-slides-list">
+                    {{range $i, $slide := .Course.Slides}}
+                    <div class="mobile-assignment-item">
+                        <div class="mobile-assignment-title">{{$slide.Title}}</div>
+                        <div class="mobile-assignment-actions">
+                            <a href="{{$slide.FileName}}" class="download-btn" target="_blank">دانلود اسلاید</a>
                         </div>
-                        
-                    </td>
-                    <td class="actions-cell">
-                        <div class="action-buttons">
-                            <a href="/data/courses/{{$.Course.Id}}/slides/{{$slide.FileName}}" class="download-btn" target="_blank">
-                            دانلود
-                            </a>
-                        </div>
-                    </td>
-                </tr>
-                {{end}}
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Mobile view for slides -->
-    <div class="mobile-slides-list">
-        {{range $i, $slide := .Course.Slides}}
-        <div class="mobile-assignment-item">
-            <div class="mobile-assignment-title">
-                {{$slide.Title}}
+                    </div>
+                    {{end}}
+                </div>
+                {{else}}<div class="no-content-message">اسلایدی موجود نیست</div>{{end}}
             </div>
-            <div class="mobile-assignment-actions">
-                <a href="/data/courses/{{$.Course.Id}}/slides/{{$slide.FileName}}" class="download-btn" target="_blank">
-                   دانلود اسلاید
-                </a>
-            </div>
-        </div>
-        {{end}}
-    </div>
 
-    {{else}}
-    <div class="no-content-message">
-        اسلایدی موجود نیست
-    </div>
-    {{end}}
-</div>
-
-<!-- Notes Section -->
-<div class="assignments-section" id="notes-content">
-    {{if .Course.Notes}}
-    <div class="table-container">
-        <table class="assignments-table">
-            <thead>
-                <tr>
-                    <th>عنوان</th>
-                    <th>عملیات</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{range .Course.Notes}}
-                <tr>
-                    <td>
-                        <div class="assignment-title-container">
+            <!-- ── Notes ── -->
+            <div class="content-pane assignments-section" id="notes-content">
+                {{if .Course.Notes}}
+                <div class="table-container">
+                    <table class="assignments-table">
+                        <thead><tr><th>عنوان</th><th>عملیات</th></tr></thead>
+                        <tbody>
+                            {{range .Course.Notes}}
+                            <tr>
+                                <td>
+                                    <div class="assignment-title-container">
+                                        {{.Title}}
+                                        {{if .IsUpdated}}<span class="project-badge">آپدیت شده</span>{{end}}
+                                    </div>
+                                </td>
+                                <td class="actions-cell">
+                                    <div class="action-buttons">
+                                        <a href="{{.FileName}}" class="download-btn" target="_blank">دانلود</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mobile-notes-list">
+                    {{range .Course.Notes}}
+                    <div class="mobile-assignment-item">
+                        <div class="mobile-assignment-title">
                             {{.Title}}
-                            {{if .IsUpdated}}
-                             <span class="project-badge">آپدیت شده</span>
-                            {{end}}
+                            {{if .IsUpdated}}<span class="project-badge">آپدیت شده</span>{{end}}
                         </div>
-                    </td>
-                    <td class="actions-cell">
-                        <div class="action-buttons">
-                            <a href="/data/courses/{{$.Course.Id}}/notes/{{.FileName}}" class="download-btn" target="_blank">
-                            دانلود
-                            </a>
+                        <div class="mobile-assignment-actions">
+                            <a href="{{.FileName}}" class="download-btn" target="_blank">دانلود</a>
                         </div>
-                    </td>
-                </tr>
-                {{end}}
-            </tbody>
-        </table>
-    </div>
+                    </div>
+                    {{end}}
+                </div>
+                {{else}}<div class="no-content-message">جزوه‌ای موجود نیست</div>{{end}}
+            </div>
 
-    <!-- Mobile view for slides -->
-    <div class="mobile-notes-list">
-        {{range .Course.Notes}}
-        <div class="mobile-assignment-item">
-            <div class="mobile-assignment-title">
-                {{.Title}}
-                {{if .IsUpdated}}
-                 <span class="project-badge">آپدیت شده</span>
-                {{end}}
+            <!-- ── Exams ── -->
+            <div class="content-pane assignments-section" id="exams-content">
+                {{if .Course.Exams}}
+                <div class="table-container">
+                    <table class="assignments-table">
+                        <thead><tr><th>ترم</th><th>نوع امتحان</th><th>عملیات</th></tr></thead>
+                        <tbody>
+                            {{range .Course.Exams}}
+                            <tr>
+                                <td>
+                                    <div class="assignment-title-container">
+                                        {{if ne .Semester.Id 0}}{{.Semester.SemesterName}}{{else}}نامشخص{{end}}
+                                        {{if .ThisSemester}}<span class="project-badge">این ترم</span>{{end}}
+                                    </div>
+                                </td>
+                                <td class="actions-cell">{{.ExamTypeToPersian}}</td>
+                                <td class="actions-cell">
+                                    <div class="action-buttons">
+                                        <a href="{{.FileName}}" class="download-btn" target="_blank">دانلود</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mobile-exams-list">
+                    {{range .Course.Exams}}
+                    <div class="mobile-assignment-item">
+                        <div class="mobile-assignment-title">
+                            {{if .Semester.Id}}{{.Semester.SemesterName}}{{else}}نامشخص{{end}}
+                            {{if .ThisSemester}}<span class="project-badge">این ترم</span>{{end}}
+                            <span>- {{.ExamType}}</span>
+                        </div>
+                        <div class="mobile-assignment-actions">
+                            <a href="{{.FileName}}" class="download-btn" target="_blank">دانلود</a>
+                        </div>
+                    </div>
+                    {{end}}
+                </div>
+                {{else}}<div class="no-content-message">امتحانی موجود نیست</div>{{end}}
             </div>
-            <div class="mobile-assignment-actions">
-                <a href="/data/courses/{{$.Course.Id}}/notes/{{.FileName}}" class="download-btn" target="_blank">
-                   دانلود
-                </a>
-            </div>
+
         </div>
-        {{end}}
     </div>
-
-    {{else}}
-    <div class="no-content-message">
-        جزوه ای موجود نیست
-    </div>
-    {{end}}
-</div>
-
-<!-- Notes Section -->
-<div class="assignments-section" id="exams-content">
-    {{if .Course.Exams}}
-    <div class="table-container">
-        <table class="assignments-table">
-            <thead>
-                <tr>
-                    <th>ترم</th>
-                    <th>نوع امتحان</th>
-                    <th>عملیات</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{range .Course.Exams}}
-                <tr>
-                    <td>
-                        <div class="assignment-title-container">
-                            {{if ne .Semester.Id 0}}
-                                {{.Semester.SemesterName}}
-                            {{else}}
-                                نامشخص
-                            {{end}}
-                            {{if .ThisSemester}}
-                             <span class="project-badge">این ترم</span>
-                            {{end}}
-                        </div>
-                    </td>
-                    <td class="actions-cell">
-                        {{.ExamTypeToPersian}}
-                    </td>
-                    <td class="actions-cell">
-                        <div class="action-buttons">
-                            <a href="/data/courses/{{$.Course.Id}}/exams/{{.FileName}}" class="download-btn" target="_blank">
-                            دانلود
-                            </a>
-                        </div>
-                    </td>
-                </tr>
-                {{end}}
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Mobile view for slides -->
-    <div class="mobile-exams-list">
-        {{range .Course.Exams}}
-        <div class="mobile-assignment-item">
-            <div class="mobile-assignment-title">
-                {{if .Semester.Id }}
-                    {{.Semester.SemesterName}}
-                {{else}}
-                    نامشخص
-                {{end}}
-                
-                {{if .ThisSemester}}
-                 <span class="project-badge">این ترم</span>
-                {{end}}
-
-                <span>- {{.ExamType}}</span>
-
-            </div>
-            
-            <div class="mobile-assignment-actions">
-                <a href="/data/courses/{{$.Course.Id}}/exams/{{.FileName}}" class="download-btn" target="_blank">
-                   دانلود
-                </a>
-            </div>
-        </div>
-        {{end}}
-    </div>
-
-    {{else}}
-    <div class="no-content-message">
-        امتحانی موجود نیست
-    </div>
-    {{end}}
-</div>
-
 </div>
 
 <script src="/static/js/course_view.js"></script>
-
-</div>
 {{end}}

@@ -2,7 +2,7 @@
 <div id="courses-content" class="tab-content">
     <div class="content-header">
         <h1>مدیریت دوره‌ها</h1>
-        <button id="add-course-btn" class="btn btn-primary"><span class="bright-plus">+</span> افزودن دوره</button>
+        <button id="add-course-btn" class="btn btn-primary" data-admin-only><span class="bright-plus">+</span> افزودن دوره</button>
     </div>
     <div class="content-inner">
         <div id="courses-list"><div class="loading">در حال بارگذاری...</div></div>
@@ -10,9 +10,12 @@
         <div id="course-edit-panel" class="hidden">
             <div class="content-header manage-header">
                 <h1>ویرایش دوره: <span id="course-title-display"></span></h1>
-                <button id="back-to-courses-list" class="btn btn-secondary">بازگشت به لیست دوره‌ها</button>
+                <div class="header-buttons">
+                    <a id="course-public-link" class="btn btn-secondary" href="#" target="_blank" rel="noopener noreferrer">ورود به صفحه دوره</a>
+                    <button id="back-to-courses-list" class="btn btn-secondary">بازگشت به لیست دوره‌ها</button>
+                </div>
             </div>
-            <div class="edit-section">
+            <div class="edit-section" data-settings-only>
                 <h2>اطلاعات پایه</h2>
                 <form id="course-basic-form">
                     <input type="hidden" id="course-id" value="0">
@@ -36,6 +39,7 @@
                             <div class="form-group">
                                 <label>نام کوتاه (Short Name)</label>
                                 <input type="text" id="course-shortname" class="form-control" required>
+                                <small class="form-text text-muted">فقط حروف انگلیسی، عدد و آندرلاین مجاز است؛ خط تیره (-) مجاز نیست.</small>
                             </div>
                         </div>
                     </div>
@@ -69,7 +73,7 @@
                     </div>
                 </form>
             </div>
-            <div class="edit-section">
+            <div class="edit-section" data-settings-only>
                 <div class="section-header">
                     <h2 class="books-h2">منابع دوره (کتاب‌ها)</h2>
                     <div style="display: flex; gap: 10px;" class="books-buttons">
@@ -81,45 +85,54 @@
             </div>
 
             <!-- Course Description Section -->
-            <div class="edit-section">
+            <div class="edit-section" data-settings-only>
                 <h2>توضیحات دوره و برنامه کلاسی</h2>
                 <div class="description-grid">
                     <!-- Column 1: Course Description -->
-                    <div class="desc-col">
+                    <div class="desc-col" id="desc-description-col">
                         <h3>توضیحات</h3>
                         <textarea id="course-full-description" class="form-control" rows="6" placeholder="توضیحات کامل دوره..."></textarea>
                         <button type="button" id="save-description" class="btn btn-primary" style="margin-top:10px;">ذخیره توضیحات</button>
                     </div>
                     <!-- Column 2: Class Schedule -->
-                    <div class="desc-col">
+                    <div class="desc-col" id="desc-schedule-col">
                         <h3>برنامه کلاسی</h3>
-                        <div class="form-group">
-                            <label>روز هفته</label>
-                            <input type="text" id="schedule-day" class="form-control" placeholder="مثلاً شنبه">
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>ساعت شروع</label>
-                                <input type="text" id="schedule-start" class="form-control" placeholder="14:00">
-                            </div>
-                            <div class="form-group">
-                                <label>ساعت پایان</label>
-                                <input type="text" id="schedule-end" class="form-control" placeholder="16:00">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>مکان</label>
-                            <input type="text" id="schedule-location" class="form-control" placeholder="سالن ۱">
-                        </div>
+                        <div id="schedule-items-list" class="schedule-items-editor"></div>
+                        <button type="button" id="add-schedule-item" class="btn btn-secondary">+ افزودن جلسه</button>
                         <button type="button" id="save-schedule" class="btn btn-primary">ذخیره برنامه</button>
                     </div>
                     <!-- Column 3: Grade Distribution -->
-                    <div class="desc-col">
+                    <div class="desc-col" id="desc-grade-col">
                         <h3>توزیع نمرات</h3>
                         <div id="grade-items-list"></div>
                         <button type="button" id="add-grade-item" class="btn btn-secondary">+ افزودن آیتم</button>
                         <button type="button" id="save-grade-distribution" class="btn btn-primary" style="margin-top:10px;">ذخیره توزیع نمرات</button>
                     </div>
+                </div>
+            </div>
+
+            <!-- Announcements section -->
+            <div class="edit-section">
+                <div class="section-header">
+                    <h2 class="books-h2">اطلاعیه‌ها</h2>
+                </div>
+                <div class="announcement-editor">
+                    <input type="hidden" id="announcement-id" value="0">
+                    <div class="form-group">
+                        <label>عنوان اطلاعیه</label>
+                        <input type="text" id="announcement-title" class="form-control" placeholder="مثلاً تغییر زمان کلاس">
+                    </div>
+                    <div class="form-group">
+                        <label>متن اطلاعیه</label>
+                        <textarea id="announcement-content" class="form-control" rows="4" placeholder="متن اطلاعیه..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" id="save-announcement" class="btn btn-primary">ذخیره اطلاعیه</button>
+                        <button type="button" id="clear-announcement" class="btn btn-secondary">جدید</button>
+                    </div>
+                </div>
+                <div id="announcements-list">
+                    <div class="loading">در حال بارگذاری...</div>
                 </div>
             </div>
 
@@ -168,7 +181,7 @@
             </div>
 
             <!-- Teaching Assistants section -->
-            <div class="edit-section">
+            <div class="edit-section" data-settings-only>
                 <div class="section-header">
                     <h2 class="books-h2">دستیاران آموزشی (TA)</h2>
                     <div style="display: flex; gap: 10px;">
@@ -181,8 +194,31 @@
                 </div>
             </div>
 
+            <div class="edit-section" data-admin-only>
+                <div class="section-header">
+                    <h2 class="books-h2">تخصیص کاربران به دوره</h2>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>کاربر</label>
+                        <select id="course-user-select" class="form-control"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>نقش در این دوره</label>
+                        <select id="course-user-role" class="form-control">
+                            <option value="ta">TA</option>
+                            <option value="head_ta">سرپرست TA</option>
+                        </select>
+                    </div>
+                    <div class="form-group form-group-action">
+                        <button type="button" id="assign-course-user-btn" class="btn btn-primary">افزودن به دوره</button>
+                    </div>
+                </div>
+                <div id="course-users-list"><div class="loading">در حال بارگذاری...</div></div>
+            </div>
+
             <!-- Delete Course Section -->
-            <div class="delete-course-section">
+            <div class="delete-course-section" data-admin-only>
                 <button type="button" id="delete-course-btn" class="btn btn-delete btn-block">حذف دوره</button>
             </div>
             

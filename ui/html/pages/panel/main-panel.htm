@@ -1,18 +1,21 @@
 
 {{define "title"}} Panel {{end}}
 {{define "main-panel"}}
-<script src="/static/js/panel/utils.js"></script>
-<script src="/static/js/panel/teachers.js"></script>
-<script src="/static/js/panel/semesters.js"></script>
-<script src="/static/js/panel/books.js"></script>
-<script src="/static/js/panel/course-description.js"></script>
-<script src="/static/js/panel/slides.js"></script>
-<script src="/static/js/panel/assignments.js"></script>
-<script src="/static/js/panel/courses.js"></script>
-<script src="/static/js/panel/notes.js"></script>
-<script src="/static/js/panel/exams.js"></script>
-<script src="/static/js/panel/tas.js"></script>
-<script src="/static/js/panel/main.js"></script>
+<script defer src="/static/js/panel/utils.js"></script>
+<script defer src="/static/js/panel/teachers.js"></script>
+<script defer src="/static/js/panel/semesters.js"></script>
+<script defer src="/static/js/panel/books.js"></script>
+<script defer src="/static/js/panel/course-description.js"></script>
+<script defer src="/static/js/panel/slides.js"></script>
+<script defer src="/static/js/panel/assignments.js"></script>
+<script defer src="/static/js/panel/courses.js"></script>
+<script defer src="/static/js/panel/course-users.js"></script>
+<script defer src="/static/js/panel/announcements.js"></script>
+<script defer src="/static/js/panel/notes.js"></script>
+<script defer src="/static/js/panel/exams.js"></script>
+<script defer src="/static/js/panel/tas.js"></script>
+<script defer src="/static/js/panel/users.js"></script>
+<script defer src="/static/js/panel/main.js"></script>
 
 
 <div class="panel-container" dir="rtl">
@@ -22,6 +25,7 @@
         {{template "courses-content" .}}
         {{template "teachers-content" .}}
         {{template "semesters-content" .}}
+        {{template "users-content" .}}
     </main>
 </div>
 

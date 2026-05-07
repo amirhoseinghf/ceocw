@@ -45,8 +45,8 @@ function renderAssignments(assignments) {
                     <tr data-id="${a.Id}">
                         <td>${escapeHtml(a.Title)}</td>
                         <td class="assignment-description" title="${escapeHtml(a.Description || '')}">${escapeHtml(a.Description || '—')}</td>
-                        <td>${a.ReleaseDate ? new Date(a.ReleaseDate).toLocaleDateString('fa-IR') : '—'}</td>
-                        <td>${a.DeadlineDate ? new Date(a.DeadlineDate).toLocaleDateString('fa-IR') : '—'}</td>
+                        <td>${a.ReleaseDate ? formatJalaliDateTime(a.ReleaseDate) : '—'}</td>
+                        <td>${a.DeadlineDate ? formatJalaliDateTime(a.DeadlineDate) : '—'}</td>
                         <td>${a.FileName ? `<a href="${escapeHtml(a.FileName)}" target="_blank">دانلود</a>` : '—'}</td>
                         <td>${a.SolutionName ? `<a href="${escapeHtml(a.SolutionName)}" target="_blank">دانلود</a>` : '—'}</td>
                         <td>${a.IsProject ? 'پروژه' : 'تکلیف'}</td>
@@ -105,12 +105,10 @@ async function openAssignmentModal(assignmentId = 0) {
             document.getElementById('assignment-title').value = assignment.Title;
             document.getElementById('assignment-description').value = assignment.Description || '';
             if (assignment.ReleaseDate) {
-                const release = new Date(assignment.ReleaseDate);
-                document.getElementById('assignment-release-date').value = release.toISOString().slice(0, 16);
+                document.getElementById('assignment-release-date').value = formatJalaliDateTime(assignment.ReleaseDate);
             }
             if (assignment.DeadlineDate) {
-                const deadline = new Date(assignment.DeadlineDate);
-                document.getElementById('assignment-deadline-date').value = deadline.toISOString().slice(0, 16);
+                document.getElementById('assignment-deadline-date').value = formatJalaliDateTime(assignment.DeadlineDate);
             }
             document.getElementById('assignment-is-extended').checked = assignment.IsExtended;
             document.getElementById('assignment-is-project').checked = assignment.IsProject;
@@ -123,6 +121,7 @@ async function openAssignmentModal(assignmentId = 0) {
         document.getElementById('assignment-modal-title').innerText = 'افزودن تکلیف جدید';
     }
     modal.style.display = 'flex';
+    refreshFileDropzones(document);
 }
 
 function closeAssignmentModal() {
@@ -145,12 +144,23 @@ function initAssignments() {
         const assignmentId = document.getElementById('assignment-id').value;
         const title = document.getElementById('assignment-title').value;
         const description = document.getElementById('assignment-description').value;
-        const releaseDate = document.getElementById('assignment-release-date').value;
-        const deadlineDate = document.getElementById('assignment-deadline-date').value;
+        const releaseInput = document.getElementById('assignment-release-date').value;
+        const deadlineInput = document.getElementById('assignment-deadline-date').value;
+        const releaseDate = parseJalaliDateTime(releaseInput);
+        const deadlineDate = parseJalaliDateTime(deadlineInput);
         const isExtended = document.getElementById('assignment-is-extended').checked;
         const isProject = document.getElementById('assignment-is-project').checked;
         const assignmentFile = document.getElementById('assignment-file').files[0];
         const solutionFile = document.getElementById('assignment-solution').files[0];
+
+        if (releaseInput.trim() && !releaseDate) {
+            showToast('تاریخ انتشار باید شمسی و با قالب 1405/02/18 14:30 باشد', false);
+            return;
+        }
+        if (deadlineInput.trim() && !deadlineDate) {
+            showToast('تاریخ ددلاین باید شمسی و با قالب 1405/02/18 23:59 باشد', false);
+            return;
+        }
 
         const formData = new FormData();
         formData.append('title', title);

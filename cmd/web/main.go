@@ -25,6 +25,7 @@ type application struct {
 	assignments    *models.AssignmentModel
 	notes          *models.NoteModel
 	exams          *models.ExamModel
+	announcements  *models.AnnouncementModel
 	tas            *models.TAModel
 	users          *models.UserModel
 	sessionManager *scs.SessionManager
@@ -52,7 +53,7 @@ func main() {
 	}
 
 	sessionManager := scs.New()
-	sessionManager.Lifetime = 12 * time.Hour
+	sessionManager.Lifetime = 10 * 365 * 24 * time.Hour
 	sessionManager.Cookie.Persist = true
 	sessionManager.Cookie.SameSite = http.SameSiteLaxMode
 
@@ -67,6 +68,7 @@ func main() {
 		assignments:    &models.AssignmentModel{DB: db},
 		notes:          &models.NoteModel{DB: db},
 		exams:          &models.ExamModel{DB: db},
+		announcements:  &models.AnnouncementModel{DB: db},
 		tas:            &models.TAModel{DB: db},
 		users:          &models.UserModel{DB: db},
 		sessionManager: sessionManager,

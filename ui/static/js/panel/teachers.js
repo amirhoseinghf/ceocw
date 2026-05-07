@@ -27,7 +27,7 @@ function renderTeachers(teachers) {
             <tbody>
                 ${teachers.map(teacher => `
                     <tr data-id="${teacher.Id}">
-                        <td><img class="teacher-avatar" src="${teacher.ImageURL || 'https://via.placeholder.com/50'}" onerror="this.src='https://via.placeholder.com/50'"></td>
+                        <td><img class="teacher-avatar" src="${teacher.ImageURL ? `${teacher.ImageURL}${teacher.ImageURL.includes('?') ? '&' : '?'}_=${Date.now()}` : '/static/img/teacher-placeholder.jpg'}" onerror="this.src='/static/img/teacher-placeholder.jpg'"></td>
                         <td>${escapeHtml(teacher.FirstName)} ${escapeHtml(teacher.LastName)}</td>
                         <td>${escapeHtml(teacher.FirstNameEnglish)} ${escapeHtml(teacher.LastNameEnglish)}</td>
                         <td><a href="${escapeHtml(teacher.PageURL)}" target="_blank">لینک صفحه</a></td>
@@ -56,6 +56,8 @@ function renderTeachers(teachers) {
 function openModal(isEdit = false, teacherData = null) {
     const modal = document.getElementById('teacher-modal');
     const modalTitle = document.getElementById('modal-title');
+    const previewWrap = document.getElementById('teacher-image-preview-wrap');
+    const previewImg = document.getElementById('teacher-image-preview');
     if (isEdit && teacherData) {
         modalTitle.innerText = 'ویرایش استاد';
         document.getElementById('teacher-id').value = teacherData.Id;
@@ -65,11 +67,22 @@ function openModal(isEdit = false, teacherData = null) {
         document.getElementById('first-name-en').value = teacherData.FirstNameEnglish || '';
         document.getElementById('last-name-en').value = teacherData.LastNameEnglish || '';
         document.getElementById('page-url').value = teacherData.PageURL || '';
+        document.getElementById('teacher-image-file').value = '';
+        if (teacherData.ImageURL) {
+            previewImg.src = teacherData.ImageURL;
+            previewWrap.style.display = 'block';
+        } else {
+            previewImg.src = '';
+            previewWrap.style.display = 'none';
+        }
         currentEditId = teacherData.Id;
     } else {
         modalTitle.innerText = 'افزودن استاد جدید';
         document.getElementById('teacher-form').reset();
         document.getElementById('teacher-id').value = '0';
+        document.getElementById('image-url').value = '';
+        previewImg.src = '';
+        previewWrap.style.display = 'none';
         currentEditId = 0;
     }
     modal.style.display = 'flex';
@@ -120,25 +133,36 @@ async function confirmDelete() {
 }
 
 function initTeachers() {
+    document.getElementById('teacher-image-file').addEventListener('change', function() {
+        const file = this.files[0];
+        const previewWrap = document.getElementById('teacher-image-preview-wrap');
+        const previewImg = document.getElementById('teacher-image-preview');
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                previewWrap.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
     document.getElementById('teacher-form').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const teacherData = {
-            ImageURL: document.getElementById('image-url').value,
-            FirstName: document.getElementById('first-name').value,
-            LastName: document.getElementById('last-name').value,
-            FirstNameEnglish: document.getElementById('first-name-en').value,
-            LastNameEnglish: document.getElementById('last-name-en').value,
-            PageURL: document.getElementById('page-url').value
-        };
         const isEdit = currentEditId !== 0;
         const url = isEdit ? `/teachers/${currentEditId}` : '/teachers';
         const method = isEdit ? 'PUT' : 'POST';
+        const formData = new FormData();
+        formData.append('first_name', document.getElementById('first-name').value);
+        formData.append('last_name', document.getElementById('last-name').value);
+        formData.append('first_name_en', document.getElementById('first-name-en').value);
+        formData.append('last_name_en', document.getElementById('last-name-en').value);
+        formData.append('page_url', document.getElementById('page-url').value);
+        formData.append('image_url', document.getElementById('image-url').value);
+        const imageFile = document.getElementById('teacher-image-file').files[0];
+        if (imageFile) formData.append('teacher_image', imageFile);
         try {
-            const response = await fetch(url, {
-                method: method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(teacherData)
-            });
+            const response = await fetch(url, { method: method, body: formData });
             if (!response.ok) throw new Error();
             showToast(isEdit ? 'استاد با موفقیت ویرایش شد' : 'استاد با موفقیت اضافه شد', true);
             closeModal();

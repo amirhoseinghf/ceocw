@@ -130,26 +130,43 @@ async function openBookModal(bookId = 0) {
     document.getElementById('book-thumbnail').value = '';
     document.getElementById('book-download-url').value = '';
 
+    // Hide previews by default
+    const thumbCurrent = document.getElementById('book-thumbnail-current');
+    const fileCurrent  = document.getElementById('book-file-current');
+    if (thumbCurrent) thumbCurrent.style.display = 'none';
+    if (fileCurrent)  fileCurrent.style.display  = 'none';
+
     if (bookId) {
         try {
             const response = await fetch(`/books/${bookId}`);
             const book = await response.json();
-            console.log(book)
             document.getElementById('book-id').value = book.Id;
             document.getElementById('book-title').value = book.Title;
-            // Never set value of file input; only clear it.
-            // Optionally, show the existing thumbnail elsewhere if needed.
-            
-            // Clear download URL if it's a local file
-            let downloadUrl = book.DownloadURL || '';
-            if (downloadUrl.startsWith('/data/')) {
-                downloadUrl = '';   // local files cannot be edited as text
+
+            // Show existing thumbnail if any
+            if (book.ImageURL && thumbCurrent) {
+                document.getElementById('book-thumbnail-img').src = book.ImageURL + '?_=' + Date.now();
+                thumbCurrent.style.display = 'flex';
             }
-            document.getElementById('book-download-url').value = downloadUrl;
+
+            // Show existing file/link
+            const downloadUrl = book.DownloadURL || '';
+            if (downloadUrl) {
+                if (downloadUrl.startsWith('/data/')) {
+                    // Local file: show indicator
+                    if (fileCurrent) {
+                        document.getElementById('book-file-current-link').href = downloadUrl;
+                        fileCurrent.style.display = 'flex';
+                    }
+                    document.getElementById('book-download-url').value = '';
+                } else {
+                    // External link: keep it editable in the URL field
+                    document.getElementById('book-download-url').value = downloadUrl;
+                }
+            }
 
             document.getElementById('book-modal-title').innerText = 'ویرایش کتاب';
         } catch (err) {
-            console.log(err)
             showToast('خطا در دریافت اطلاعات کتاب', false);
             return;
         }

@@ -47,7 +47,7 @@ func (t *TeacherModel) Get(id int) (*Teacher, error) {
 	return teacher, nil
 }
 
-func (t *TeacherModel) Insert(teacher Teacher) error {
+func (t *TeacherModel) Insert(teacher Teacher) (int64, error) {
 
 	stmt := `
 		INSERT INTO teachers (image_url, first_name, last_name,
@@ -55,10 +55,13 @@ func (t *TeacherModel) Insert(teacher Teacher) error {
         VALUES (?, ?, ?, ?, ?, ?)
 	`
 
-	_, err := t.DB.Exec(stmt, teacher.ImageURL, teacher.FirstName, teacher.LastName,
+	result, err := t.DB.Exec(stmt, teacher.ImageURL, teacher.FirstName, teacher.LastName,
 		teacher.FirstNameEnglish, teacher.LastNameEnglish, teacher.PageURL)
-
-	return err
+	if err != nil {
+		return 0, err
+	}
+	id, err := result.LastInsertId()
+	return id, err
 }
 
 func (t *TeacherModel) GetAll() ([]Teacher, error) {

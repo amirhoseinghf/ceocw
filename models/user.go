@@ -128,6 +128,57 @@ func (m *UserModel) Get(id int) (*User, error) {
 	return user, nil
 }
 
+func (m *UserModel) GetAll() ([]User, error) {
+	rows, err := m.DB.Query(`
+        SELECT id, first_name, last_name, email, password_hash, user_type, image_path, is_active, created_at, updated_at
+        FROM users
+        ORDER BY id DESC
+    `)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	users := []User{}
+	for rows.Next() {
+		var user User
+		if err := rows.Scan(
+			&user.Id, &user.FirstName, &user.LastName, &user.Email, &user.PasswordHash,
+			&user.UserType, &user.ImagePath, &user.IsActive, &user.CreatedAt, &user.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+	return users, rows.Err()
+}
+
+func (m *UserModel) GetAssignableCourseUsers() ([]User, error) {
+	rows, err := m.DB.Query(`
+        SELECT id, first_name, last_name, email, password_hash, user_type, image_path, is_active, created_at, updated_at
+        FROM users
+        WHERE user_type IN ('ta', 'head_ta') AND is_active = 1
+        ORDER BY user_type DESC, last_name, first_name
+    `)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	users := []User{}
+	for rows.Next() {
+		var user User
+		if err := rows.Scan(
+			&user.Id, &user.FirstName, &user.LastName, &user.Email, &user.PasswordHash,
+			&user.UserType, &user.ImagePath, &user.IsActive, &user.CreatedAt, &user.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+	return users, rows.Err()
+}
+
 // Update user profile (excluding password)
 func (m *UserModel) Update(user *User) error {
 	stmt := `
@@ -135,6 +186,45 @@ func (m *UserModel) Update(user *User) error {
         WHERE id = ?
     `
 	_, err := m.DB.Exec(stmt, user.FirstName, user.LastName, user.Email, user.UserType, user.ImagePath, user.Id)
+	return err
+}
+
+func (m *UserModel) UpdateWithOptionalPassword(user *User, password string) error {
+	if password == "" {
+		stmt := `
+        UPDATE users
+        SET first_name = ?, last_name = ?, email = ?, user_type = ?, image_path = ?, is_active = ?
+        WHERE id = ?
+    `
+		_, err := m.DB.Exec(stmt, user.FirstName, user.LastName, user.Email, user.UserType, user.ImagePath, user.IsActive, user.Id)
+		if isDuplicateUserEmail(err) {
+			return ErrDuplicateEmail
+		}
+		return err
+	}
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 12)
+	if err != nil {
+		return err
+	}
+	stmt := `
+        UPDATE users
+        SET first_name = ?, last_name = ?, email = ?, user_type = ?, image_path = ?, password_hash = ?, is_active = ?
+        WHERE id = ?
+    `
+	_, err = m.DB.Exec(stmt, user.FirstName, user.LastName, user.Email, user.UserType, user.ImagePath, string(hashedPassword), user.IsActive, user.Id)
+	if isDuplicateUserEmail(err) {
+		return ErrDuplicateEmail
+	}
+	return err
+}
+
+func isDuplicateUserEmail(err error) bool {
+	var mySQLError *mysql.MySQLError
+	return errors.As(err, &mySQLError) && mySQLError.Number == 1062 && strings.Contains(mySQLError.Message, "email")
+}
+
+func (m *UserModel) SetActive(id int, isActive bool) error {
+	_, err := m.DB.Exec("UPDATE users SET is_active = ? WHERE id = ?", isActive, id)
 	return err
 }
 

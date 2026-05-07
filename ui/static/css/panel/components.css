@@ -312,10 +312,110 @@ label {
     border-radius: 8px;
     font-size: 0.9rem;
 }
+.form-text {
+    display: block;
+    margin-top: 6px;
+    font-size: 0.78rem;
+    color: #6b7280;
+}
+.input-error {
+    border-color: #d63638 !important;
+    background: #fff7f7;
+}
+.checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.hidden-by-role {
+    display: none !important;
+}
+body:not([data-user-type="admin"]) [data-admin-only],
+body[data-user-type="ta"] [data-settings-only],
+body[data-user-type="normal"] [data-settings-only] {
+    display: none !important;
+}
+.form-group-action {
+    display: flex;
+    align-items: flex-end;
+}
+.course-direct-link,
+.table-link {
+    color: #007cba;
+    text-decoration: none;
+    font-weight: 600;
+}
+.course-direct-link:hover,
+.table-link:hover {
+    text-decoration: underline;
+}
+.disabled-link {
+    pointer-events: none;
+    opacity: 0.55;
+}
+.native-file-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+.file-dropzone {
+    border: 1.5px dashed #9fb3c8;
+    border-radius: 6px;
+    background: #f8fbfd;
+    padding: 7px 12px;
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    width: 100%;
+    box-sizing: border-box;
+}
+.file-dropzone:hover,
+.file-dropzone:focus,
+.file-dropzone.is-dragover {
+    border-color: #007cba;
+    background: #eef8ff;
+    box-shadow: 0 0 0 3px rgba(0, 124, 186, 0.1);
+    outline: none;
+}
+.file-dropzone.has-file {
+    border-color: #00a32a;
+    background: #f3fff6;
+}
+.file-dropzone-icon {
+    font-size: 1rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+.file-dropzone-title {
+    font-weight: 700;
+    color: #172033;
+}
+.file-dropzone-meta,
+.file-dropzone-name {
+    font-size: 0.82rem;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.file-dropzone-name[data-empty="false"] {
+    color: #166534;
+    direction: ltr;
+    word-break: break-word;
+}
 #image-url,
 #page-url,
 #first-name-en,
-#last-name-en {
+#last-name-en,
+#user-email,
+#user-password,
+#user-image-path,
+.jalali-datetime {
     text-align: left;
 }
 .modal-buttons {
@@ -721,5 +821,170 @@ label {
     }
     .basic-info-title-fields {
         width: 100%;
+    }
+}
+
+/* Unsaved changes indicator */
+#course-basic-form.has-unsaved-changes,
+.desc-col.has-unsaved-changes {
+    outline: 2px solid rgba(220, 38, 38, 0.3);
+    border-radius: 8px;
+    background-color: rgba(254, 242, 242, 0.35);
+    transition: outline 0.2s, background-color 0.2s;
+    padding: 8px;
+}
+
+/* Current asset preview (book modal — existing file / image indicator) */
+.current-asset-preview {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    color: #0c4a6e;
+}
+.current-asset-preview img {
+    width: 42px;
+    height: 42px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid #bae6fd;
+}
+.current-asset-icon {
+    font-size: 1.4rem;
+}
+.current-asset-label {
+    flex: 1;
+    font-weight: 500;
+}
+.current-asset-link {
+    color: #0369a1;
+    text-decoration: none;
+    font-weight: 600;
+    padding: 4px 10px;
+    border: 1px solid #0369a1;
+    border-radius: 4px;
+    transition: background 0.15s;
+}
+.current-asset-link:hover {
+    background: #0369a1;
+    color: #fff;
+}
+
+/* ── Users table ─────────────────────────────────────────────────────────── */
+.user-avatar-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.user-avatar-initials {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #007cba, #005a8e);
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    letter-spacing: 1px;
+}
+.user-name-block {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.user-fullname {
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 0.9rem;
+}
+.user-email {
+    font-size: 0.78rem;
+    color: #64748b;
+}
+.role-badge, .status-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.role-normal   { background: #f1f5f9; color: #475569; }
+.role-ta       { background: #dbeafe; color: #1d4ed8; }
+.role-head-ta  { background: #fef3c7; color: #92400e; }
+.role-admin    { background: #fee2e2; color: #991b1b; }
+.status-active   { background: #dcfce7; color: #166534; }
+.status-inactive { background: #f1f5f9; color: #94a3b8; }
+.btn-success {
+    background: #16a34a;
+    color: #fff;
+    border: none;
+    padding: 5px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+.btn-success:hover { background: #15803d; }
+
+/* Existing-TAs modal: section titles and user badges */
+.existing-section-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #475569;
+    margin: 16px 0 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #e2e8f0;
+}
+.existing-section-title:first-child {
+    margin-top: 0;
+}
+.user-source-badge {
+    display: inline-block;
+    margin-right: 8px;
+    padding: 1px 8px;
+    border-radius: 12px;
+    background: #dbeafe;
+    color: #1d4ed8;
+    font-size: 0.7rem;
+    font-weight: 600;
+    vertical-align: middle;
+}
+
+.schedule-items-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.schedule-item-editor {
+    padding: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #f9fafb;
+}
+
+.schedule-item-footer {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 10px;
+}
+
+.schedule-item-footer .form-group {
+    margin-bottom: 0;
+}
+
+@media (max-width: 640px) {
+    .schedule-item-footer {
+        grid-template-columns: 1fr;
     }
 }

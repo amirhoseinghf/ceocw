@@ -54,6 +54,24 @@ func isPersianText(s string) bool {
 	return re.MatchString(s)
 }
 
+func isValidCourseShortName(s string) bool {
+	re := regexp.MustCompile(`^[A-Za-z0-9_]+$`)
+	return re.MatchString(s)
+}
+
+func isValidUserType(userType string) bool {
+	switch userType {
+	case "normal", "ta", "head_ta", "admin":
+		return true
+	default:
+		return false
+	}
+}
+
+func isValidCourseUserRole(role string) bool {
+	return role == "ta" || role == "head_ta"
+}
+
 func (app *application) isAuthenticated(r *http.Request) bool {
 	return app.sessionManager.Exists(r.Context(), "userID")
 }

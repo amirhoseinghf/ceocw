@@ -22,7 +22,7 @@ function renderCourses(courses) {
     }
     const html = `
         <table class="teachers-table">
-            <thead><tr><th>عنوان دوره</th><th>نام کوتاه</th><th>ترم</th><th>استاد</th><th>عملیات</th></tr></thead>
+            <thead><tr><th>عنوان دوره</th><th>نام کوتاه</th><th>ترم</th><th>استاد</th><th>لینک مستقیم</th><th>عملیات</th></tr></thead>
             <tbody>
                 ${courses.map(course => `
                     <tr data-id="${course.Id}">
@@ -30,6 +30,7 @@ function renderCourses(courses) {
                         <td>${escapeHtml(course.ShortName)}</td>
                         <td>${escapeHtml(course.SemesterName)}</td>
                         <td>${escapeHtml(course.TeacherName)}</td>
+                        <td>${course.Slug ? `<a class="table-link" href="/course/${escapeHtml(course.Slug)}" target="_blank" rel="noopener noreferrer">ورود</a>` : '—'}</td>
                         <td class="teacher-actions">
                             <button class="btn btn-manage manage-course" data-id="${course.Id}">مدیریت</button>
                         </td>
@@ -42,7 +43,11 @@ function renderCourses(courses) {
     document.querySelectorAll('.manage-course').forEach(btn => {
         btn.addEventListener('click', () => {
             const courseId = parseInt(btn.dataset.id);
-            showCourseManage(courseId);
+            if (typeof window.panelOpenCourse === 'function') {
+                window.panelOpenCourse(courseId);
+            } else {
+                showCourseManage(courseId);
+            }
         });
     });
 }
@@ -66,6 +71,52 @@ async function showCourseManage(courseId) {
     }
 }
 
+// ── Unsaved changes tracking ───────────────────────────────────────────────
+let _courseBasicOriginal = null;
+
+function snapshotCourseBasic() {
+    _courseBasicOriginal = {
+        title:      document.getElementById('course-title')?.value       || '',
+        shortName:  document.getElementById('course-shortname')?.value   || '',
+        telegram:   document.getElementById('course-telegram')?.value    || '',
+        bale:       document.getElementById('course-bale')?.value        || '',
+        quera:      document.getElementById('course-quera')?.value       || '',
+        semester:   document.getElementById('course-semester')?.value    || '',
+        teacher:    document.getElementById('course-teacher')?.value     || '',
+    };
+    clearUnsavedMark();
+}
+
+function checkUnsavedChanges() {
+    if (!_courseBasicOriginal) return;
+    const current = {
+        title:     document.getElementById('course-title')?.value       || '',
+        shortName: document.getElementById('course-shortname')?.value   || '',
+        telegram:  document.getElementById('course-telegram')?.value    || '',
+        bale:      document.getElementById('course-bale')?.value        || '',
+        quera:     document.getElementById('course-quera')?.value       || '',
+        semester:  document.getElementById('course-semester')?.value    || '',
+        teacher:   document.getElementById('course-teacher')?.value     || '',
+    };
+    const dirty = Object.keys(current).some(k => current[k] !== _courseBasicOriginal[k]);
+    const section = document.getElementById('course-basic-form');
+    if (section) section.classList.toggle('has-unsaved-changes', dirty);
+}
+
+function clearUnsavedMark() {
+    const section = document.getElementById('course-basic-form');
+    if (section) section.classList.remove('has-unsaved-changes');
+}
+
+function bindUnsavedWatcher() {
+    const ids = ['course-title','course-shortname','course-telegram','course-bale','course-quera','course-semester','course-teacher'];
+    ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', checkUnsavedChanges);
+        if (el) el.addEventListener('change', checkUnsavedChanges);
+    });
+}
+
 function populateCourseEditForm(course) {
     // Basic fields
     const courseIdField = document.getElementById('course-id');
@@ -82,6 +133,16 @@ function populateCourseEditForm(course) {
     if (queraField) queraField.value = course.QueraLink || '';
     const titleDisplay = document.getElementById('course-title-display');
     if (titleDisplay) titleDisplay.innerText = course.Title || 'بدون عنوان';
+    const publicLink = document.getElementById('course-public-link');
+    if (publicLink) {
+        if (course.Slug) {
+            publicLink.href = `/course/${course.Slug}`;
+            publicLink.classList.remove('disabled-link');
+        } else {
+            publicLink.href = '#';
+            publicLink.classList.add('disabled-link');
+        }
+    }
 
     // Semester and teacher dropdowns
     const semesterSelect = document.getElementById('course-semester');
@@ -104,17 +165,23 @@ function populateCourseEditForm(course) {
     }
 
     // Load other modules
+    // Snapshot for unsaved detection (after all values are set)
+    setTimeout(snapshotCourseBasic, 0);
+
     if (typeof loadCourseDescription === 'function') loadCourseDescription(course);
     if (typeof loadSlides === 'function') loadSlides(course.Id);
     if (typeof loadAssignments === 'function') loadAssignments(course.Id);
     if (typeof loadNotes === 'function') loadNotes(course.Id);
     if (typeof loadExams === 'function') loadExams(course.Id);
+    if (typeof loadAnnouncements === 'function') loadAnnouncements(course.Id);
     if (typeof loadTAs === 'function') loadTAs(course.Id);
     if (course.Id && typeof loadBooks === 'function') {
         loadBooks(course.Id);
     } else if (typeof renderBooks === 'function') {
         renderBooks([]);
     }
+    if (course.Id && typeof loadCourseUsers === 'function') loadCourseUsers(course.Id);
+    applyRoleVisibility();
 }
 
 async function loadSemesterOptions() {
@@ -262,15 +329,22 @@ function initImagePreview() {
 
 // ----- Initialization -----
 function initCourses() {
+    // Bind unsaved watcher once
+    bindUnsavedWatcher();
+
     // Back button
     const backBtn = document.getElementById('back-to-courses-list');
     if (backBtn) {
         backBtn.addEventListener('click', () => {
-            const listDiv = document.getElementById('courses-list');
-            const editDiv = document.getElementById('course-edit-panel');
-            if (listDiv) listDiv.classList.remove('hidden');
-            if (editDiv) editDiv.classList.add('hidden');
-            loadCourses();
+            if (typeof window.panelBackToCourses === 'function') {
+                window.panelBackToCourses();
+            } else {
+                const listDiv = document.getElementById('courses-list');
+                const editDiv = document.getElementById('course-edit-panel');
+                if (listDiv) listDiv.classList.remove('hidden');
+                if (editDiv) editDiv.classList.add('hidden');
+                loadCourses();
+            }
         });
     }
 
@@ -294,6 +368,10 @@ function initCourses() {
 
             if (!title || !shortName) {
                 showToast('عنوان و نام کوتاه دوره الزامی است', false);
+                return;
+            }
+            if (!isValidCourseShortName(shortName)) {
+                showToast('نام کوتاه فقط می‌تواند شامل حروف انگلیسی، عدد و آندرلاین باشد و خط تیره مجاز نیست', false);
                 return;
             }
 
@@ -330,8 +408,9 @@ function initCourses() {
                     showToast('اطلاعات پایه دوره ذخیره شد', true);
                     const titleDisplay = document.getElementById('course-title-display');
                     if (titleDisplay) titleDisplay.innerText = title;
+                    snapshotCourseBasic(); // clear unsaved indicator after save
                 } else {
-                    showToast('خطا در ذخیره اطلاعات پایه', false);
+                    showToast(xhr.responseText || 'خطا در ذخیره اطلاعات پایه', false);
                 }
             };
             xhr.onerror = () => {
@@ -400,6 +479,10 @@ function initCourses() {
                 showToast('عنوان و نام کوتاه الزامی است', false);
                 return;
             }
+            if (!isValidCourseShortName(shortName)) {
+                showToast('نام کوتاه فقط می‌تواند شامل حروف انگلیسی، عدد و آندرلاین باشد و خط تیره مجاز نیست', false);
+                return;
+            }
 
             const formData = new FormData();
             formData.append('title', title);
@@ -435,7 +518,7 @@ function initCourses() {
                     closeCourseModal();
                     loadCourses();
                 } else {
-                    showToast('خطا در ایجاد دوره', false);
+                    showToast(xhr.responseText || 'خطا در ایجاد دوره', false);
                 }
             };
             xhr.onerror = () => {

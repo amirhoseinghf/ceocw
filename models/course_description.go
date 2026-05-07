@@ -3,6 +3,7 @@ package models
 type CourseDescription struct {
 	Description       string
 	ClassSchedule     ClassSchedule     `json:"class_schedule"`     // Day and time info
+	ScheduleItems     []ClassSchedule   `json:"schedule_items"`     // Multiple weekly sessions
 	GradeDistribution GradeDistribution `json:"grade_distribution"` // Grading breakdown
 }
 

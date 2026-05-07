@@ -172,45 +172,97 @@ async function loadAllTAs(searchTerm = '') {
     const courseId = document.getElementById('course-id').value;
     container.innerHTML = '<div class="loading">در حال بارگذاری...</div>';
     try {
-        let url = '/tas';
-        if (searchTerm) url += `?search=${encodeURIComponent(searchTerm)}`;
-        const response = await fetch(url);
-        if (!response.ok) throw new Error();
-        const allTAs = await response.json();
-        // Get currently attached TAs
-        const attachedResponse = await fetch(`/courses/${courseId}/tas`);
-        const attachedTAs = await attachedResponse.json();
+        // Fetch existing teaching_assistants
+        let tasUrl = '/tas';
+        if (searchTerm) tasUrl += `?search=${encodeURIComponent(searchTerm)}`;
+        const [tasRes, attachedRes, usersRes] = await Promise.all([
+            fetch(tasUrl),
+            fetch(`/courses/${courseId}/tas`),
+            fetch('/users/tas').catch(() => ({ ok: false }))
+        ]);
+        if (!tasRes.ok) throw new Error();
+        const allTAs = await tasRes.json();
+        const attachedTAs = await attachedRes.json();
         const attachedIds = new Set(attachedTAs.map(t => t.id));
-        renderExistingTAs(allTAs, attachedIds);
+
+        // Fetch users with TA/head TA role.
+        let assignableUsers = [];
+        if (usersRes && usersRes.ok) {
+            assignableUsers = await usersRes.json();
+            // Filter by search term if any
+            if (searchTerm) {
+                const q = searchTerm.toLowerCase();
+                assignableUsers = assignableUsers.filter(u =>
+                    (`${u.firstName} ${u.lastName}`).toLowerCase().includes(q));
+            }
+        }
+
+        // Filter out users who already have a same-named TA in the course
+        const attachedNames = new Set(
+            attachedTAs.map(t => `${(t.firstName || '').trim()} ${(t.lastName || '').trim()}`.toLowerCase())
+        );
+        const filteredUsers = assignableUsers.filter(u =>
+            !attachedNames.has(`${u.firstName} ${u.lastName}`.toLowerCase())
+        );
+
+        renderExistingTAs(allTAs, attachedIds, filteredUsers);
     } catch (err) {
         console.error(err);
         container.innerHTML = '<div class="loading">خطا در بارگذاری TAها</div>';
     }
 }
 
-function renderExistingTAs(tas, attachedIds) {
+function renderExistingTAs(tas, attachedIds, assignableUsers) {
     const container = document.getElementById('existing-tas-list');
-    if (!tas.length) {
-        container.innerHTML = '<div class="loading">هیچ TA ای یافت نشد.</div>';
+    const hasTAs = tas && tas.length;
+    const hasUsers = assignableUsers && assignableUsers.length;
+    if (!hasTAs && !hasUsers) {
+        container.innerHTML = '<div class="loading">هیچ TA یا کاربری با نقش TA یافت نشد.</div>';
         return;
     }
-    const html = tas.map(ta => `
-        <div class="ta-item" data-id="${ta.id}">
-            <img src="${ta.imageUrl || '/static/img/teacher-placeholder.jpg'}" style="width:50px;height:50px;border-radius:50%;object-fit:cover;" onerror="this.src='/static/img/teacher-placeholder.jpg'">
-            <div class="ta-name">${escapeHtml(ta.firstName)} ${escapeHtml(ta.lastName)}</div>
-            ${attachedIds.has(ta.id) ? '<div class="ta-attached">✅ قبلاً اضافه شده</div>' : ''}
-        </div>
-    `).join('');
+    let html = '';
+
+    if (hasTAs) {
+        html += `<div class="existing-section-title">از مخزن TAها</div>`;
+        html += tas.map(ta => `
+            <div class="ta-item" data-source="ta" data-id="${ta.id}">
+                <img src="${ta.imageUrl || '/static/img/teacher-placeholder.jpg'}" style="width:50px;height:50px;border-radius:50%;object-fit:cover;" onerror="this.src='/static/img/teacher-placeholder.jpg'">
+                <div class="ta-name">${escapeHtml(ta.firstName)} ${escapeHtml(ta.lastName)}</div>
+                ${attachedIds.has(ta.id) ? '<div class="ta-attached">✅ قبلاً اضافه شده</div>' : ''}
+            </div>
+        `).join('');
+    }
+
+    if (hasUsers) {
+        html += `<div class="existing-section-title">از کاربران ثبت‌شده با نقش TA</div>`;
+        html += assignableUsers.map(u => `
+            <div class="ta-item" data-source="user" data-id="${u.id}">
+                <img src="${u.imagePath || '/static/img/teacher-placeholder.jpg'}" style="width:50px;height:50px;border-radius:50%;object-fit:cover;" onerror="this.src='/static/img/teacher-placeholder.jpg'">
+                <div class="ta-name">
+                    ${escapeHtml(u.firstName)} ${escapeHtml(u.lastName)}
+                    <span class="user-source-badge">کاربر ${u.userType === 'head_ta' ? 'سرپرست TA' : 'TA'}</span>
+                </div>
+            </div>
+        `).join('');
+    }
+
     container.innerHTML = html;
-    // Attach click only for unattached TAs
-    document.querySelectorAll('.ta-item').forEach(item => {
-        const taId = parseInt(item.dataset.id);
-        if (!attachedIds.has(taId)) {
+
+    // Wire clicks
+    container.querySelectorAll('.ta-item').forEach(item => {
+        const id = parseInt(item.dataset.id);
+        const source = item.dataset.source;
+        if (source === 'ta') {
+            if (attachedIds.has(id)) {
+                item.style.opacity = '0.6';
+                item.style.cursor = 'default';
+            } else {
+                item.style.cursor = 'pointer';
+                item.addEventListener('click', () => attachExistingTA(id));
+            }
+        } else if (source === 'user') {
             item.style.cursor = 'pointer';
-            item.addEventListener('click', () => attachExistingTA(taId));
-        } else {
-            item.style.opacity = '0.6';
-            item.style.cursor = 'default';
+            item.addEventListener('click', () => attachTAFromUser(id));
         }
     });
 }
@@ -224,6 +276,19 @@ async function attachExistingTA(taId) {
         loadTAs(courseId);
     } else {
         showToast('خطا در افزودن TA', false);
+    }
+}
+
+async function attachTAFromUser(userId) {
+    const courseId = document.getElementById('course-id').value;
+    try {
+        const response = await fetch(`/courses/${courseId}/ta-from-user/${userId}`, { method: 'POST' });
+        if (!response.ok) throw new Error();
+        showToast('TA از کاربر ساخته و به دوره اضافه شد', true);
+        closeExistingTAsModal();
+        loadTAs(courseId);
+    } catch {
+        showToast('خطا در افزودن TA از کاربر', false);
     }
 }
 

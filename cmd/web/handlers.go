@@ -43,6 +43,9 @@ func (app *application) courseGetByID(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
+	if _, ok := app.requireCourseView(w, r, id); !ok {
+		return
+	}
 
 	course, err := app.courses.GetByID(id)
 	if err != nil {
@@ -59,7 +62,27 @@ func (app *application) courseGetByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) coursesGetAll(w http.ResponseWriter, r *http.Request) {
-	courses, err := app.courses.GetAllSummaries()
+	var courses []models.CourseSummary
+	var err error
+	if app.isAuthenticated(r) {
+		userID, ok := app.sessionManager.Get(r.Context(), "userID").(int)
+		if ok {
+			user, userErr := app.users.Get(userID)
+			if userErr != nil {
+				app.serverError(w, userErr)
+				return
+			}
+			if user != nil && user.IsActive && (user.UserType == "ta" || user.UserType == "head_ta") {
+				courses, err = app.courses.GetAllSummariesForUser(user.Id)
+			} else {
+				courses, err = app.courses.GetAllSummaries()
+			}
+		} else {
+			courses, err = app.courses.GetAllSummaries()
+		}
+	} else {
+		courses, err = app.courses.GetAllSummaries()
+	}
 	if err != nil {
 		app.serverError(w, err)
 		return
@@ -177,12 +200,62 @@ func (app *application) teachersPut(w http.ResponseWriter, r *http.Request) {
 		app.notFound(w)
 		return
 	}
-	var teacher models.Teacher
-	if err := json.NewDecoder(r.Body).Decode(&teacher); err != nil {
-		http.Error(w, "Bad request", http.StatusBadRequest)
+	if err := r.ParseMultipartForm(20 << 20); err != nil && !strings.Contains(err.Error(), "no multipart boundary") {
+		app.clientError(w, http.StatusBadRequest)
 		return
 	}
-	teacher.Id = id
+	firstName := r.FormValue("first_name")
+	lastName := r.FormValue("last_name")
+	firstNameEn := r.FormValue("first_name_en")
+	lastNameEn := r.FormValue("last_name_en")
+	pageURL := r.FormValue("page_url")
+
+	// Get existing teacher to fall back to current image URL
+	existing, err := app.teachers.Get(id)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	imageURL := r.FormValue("image_url")
+	if imageURL == "" {
+		imageURL = existing.ImageURL
+	}
+
+	// Handle optional image upload
+	file, header, err := r.FormFile("teacher_image")
+	if err == nil {
+		defer file.Close()
+		// Remove old local image
+		if existing.ImageURL != "" && !strings.HasPrefix(existing.ImageURL, "http") {
+			os.Remove("./" + strings.TrimPrefix(existing.ImageURL, "/"))
+		}
+		dir := "./data/teacher_images"
+		os.MkdirAll(dir, 0755)
+		ext := filepath.Ext(header.Filename)
+		if ext == "" {
+			ext = ".jpg"
+		}
+		fileName := fmt.Sprintf("%d_%d%s", id, time.Now().UnixNano(), ext)
+		filePath := filepath.Join(dir, fileName)
+		dst, err := os.Create(filePath)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+		defer dst.Close()
+		io.Copy(dst, file)
+		imageURL = fmt.Sprintf("/data/teacher_images/%s", fileName)
+	}
+
+	teacher := models.Teacher{
+		Id:               id,
+		ImageURL:         imageURL,
+		FirstName:        firstName,
+		LastName:         lastName,
+		FirstNameEnglish: firstNameEn,
+		LastNameEnglish:  lastNameEn,
+		PageURL:          pageURL,
+	}
 	if err := app.teachers.Update(teacher); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -191,15 +264,60 @@ func (app *application) teachersPut(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) teachersPost(w http.ResponseWriter, r *http.Request) {
-	var teacher models.Teacher
-	if err := json.NewDecoder(r.Body).Decode(&teacher); err != nil {
+	if err := r.ParseMultipartForm(5 << 20); err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
-	if err := app.teachers.Insert(teacher); err != nil {
+	firstName := r.FormValue("first_name")
+	lastName := r.FormValue("last_name")
+	firstNameEn := r.FormValue("first_name_en")
+	lastNameEn := r.FormValue("last_name_en")
+	pageURL := r.FormValue("page_url")
+	imageURL := r.FormValue("image_url")
+
+	teacher := models.Teacher{
+		ImageURL:         imageURL,
+		FirstName:        firstName,
+		LastName:         lastName,
+		FirstNameEnglish: firstNameEn,
+		LastNameEnglish:  lastNameEn,
+		PageURL:          pageURL,
+	}
+	newID, err := app.teachers.Insert(teacher)
+	if err != nil {
 		app.serverError(w, err)
 		return
 	}
+
+	// Handle optional image upload using the new teacher's ID
+	file, header, err := r.FormFile("teacher_image")
+	if err == nil {
+		defer file.Close()
+		dir := "./data/teacher_images"
+		os.MkdirAll(dir, 0755)
+		ext := filepath.Ext(header.Filename)
+		if ext == "" {
+			ext = ".jpg"
+		}
+		fileName := fmt.Sprintf("%d%s", newID, ext)
+		filePath := filepath.Join(dir, fileName)
+		dst, err := os.Create(filePath)
+		if err == nil {
+			defer dst.Close()
+			io.Copy(dst, file)
+			newURL := fmt.Sprintf("/data/teacher_images/%s", fileName)
+			app.teachers.Update(models.Teacher{
+				Id:               int(newID),
+				ImageURL:         newURL,
+				FirstName:        firstName,
+				LastName:         lastName,
+				FirstNameEnglish: firstNameEn,
+				LastNameEnglish:  lastNameEn,
+				PageURL:          pageURL,
+			})
+		}
+	}
+
 	w.WriteHeader(http.StatusCreated)
 }
 
@@ -260,6 +378,10 @@ func (app *application) semesterInsert(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := app.semesters.Insert(semester); err != nil {
+		if strings.Contains(err.Error(), "Duplicate entry") {
+			http.Error(w, "این سال و فصل قبلاً ثبت شده است", http.StatusConflict)
+			return
+		}
 		app.serverError(w, err)
 		return
 	}
@@ -281,6 +403,10 @@ func (app *application) semesterUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	semester.Id = id
 	if err := app.semesters.Update(semester); err != nil {
+		if strings.Contains(err.Error(), "Duplicate entry") {
+			http.Error(w, "این سال و فصل قبلاً ثبت شده است", http.StatusConflict)
+			return
+		}
 		app.serverError(w, err)
 		return
 	}
@@ -307,6 +433,9 @@ func (app *application) getCourseBooks(w http.ResponseWriter, r *http.Request) {
 	courseId, err := strconv.Atoi(params.ByName("id"))
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	if _, ok := app.requireCourseView(w, r, courseId); !ok {
 		return
 	}
 	books, err := app.books.GetAllCourseBooks(courseId)
@@ -346,6 +475,9 @@ func (app *application) addBook(w http.ResponseWriter, r *http.Request) {
 	courseID, err := strconv.Atoi(params.ByName("id"))
 	if err != nil {
 		http.Error(w, "Invalid course ID", http.StatusBadRequest)
+		return
+	}
+	if _, ok := app.requireCourseSettings(w, r, courseID); !ok {
 		return
 	}
 
@@ -545,6 +677,9 @@ func (app *application) detachBook(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
+	if _, ok := app.requireCourseSettings(w, r, courseID); !ok {
+		return
+	}
 	bookID, err := strconv.Atoi(params.ByName("bookId"))
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
@@ -595,6 +730,9 @@ func (app *application) attachBookToCourse(w http.ResponseWriter, r *http.Reques
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
+	if _, ok := app.requireCourseSettings(w, r, courseID); !ok {
+		return
+	}
 	bookID, err := strconv.Atoi(params.ByName("bookId"))
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
@@ -615,21 +753,24 @@ func (app *application) updateCourseSchedule(w http.ResponseWriter, r *http.Requ
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
+	if _, ok := app.requireCourseSettings(w, r, courseID); !ok {
+		return
+	}
 	var req struct {
-		Description   string `json:"Description"`
-		ClassSchedule struct {
-			DayOfWeek string `json:"day_of_week"`
-			StartTime string `json:"start_time"`
-			EndTime   string `json:"end_time"`
-			Location  string `json:"location"`
-		} `json:"ClassSchedule"`
+		Description   string                 `json:"Description"`
+		ClassSchedule models.ClassSchedule   `json:"ClassSchedule"`
+		ScheduleItems []models.ClassSchedule `json:"schedule_items"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
-	err = app.courses.UpdateSchedule(courseID, req.ClassSchedule.DayOfWeek,
-		req.ClassSchedule.StartTime, req.ClassSchedule.EndTime, req.ClassSchedule.Location)
+	items := req.ScheduleItems
+	if items == nil && (req.ClassSchedule.DayOfWeek != "" || req.ClassSchedule.StartTime != "" ||
+		req.ClassSchedule.EndTime != "" || req.ClassSchedule.Location != "") {
+		items = []models.ClassSchedule{req.ClassSchedule}
+	}
+	err = app.courses.ReplaceScheduleItems(courseID, items)
 	if err != nil {
 		app.serverError(w, err)
 		return
@@ -642,6 +783,9 @@ func (app *application) updateGradeItems(w http.ResponseWriter, r *http.Request)
 	courseID, err := strconv.Atoi(params.ByName("id"))
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	if _, ok := app.requireCourseSettings(w, r, courseID); !ok {
 		return
 	}
 	var items []models.GradeItem
@@ -662,6 +806,9 @@ func (app *application) updateCourseDescription(w http.ResponseWriter, r *http.R
 	courseID, err := strconv.Atoi(params.ByName("id"))
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	if _, ok := app.requireCourseSettings(w, r, courseID); !ok {
 		return
 	}
 	var req struct {
@@ -688,6 +835,9 @@ func (app *application) getCourseSlides(w http.ResponseWriter, r *http.Request) 
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
+	if _, ok := app.requireCourseView(w, r, courseId); !ok {
+		return
+	}
 	slides, err := app.slides.GetByCourse(courseId)
 	if err != nil {
 		app.serverError(w, err)
@@ -704,6 +854,9 @@ func (app *application) createSlide(w http.ResponseWriter, r *http.Request) {
 	courseId, err := strconv.Atoi(params.ByName("id"))
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	if _, ok := app.requireCourseContent(w, r, courseId); !ok {
 		return
 	}
 	err = r.ParseMultipartForm(10 << 20) // 10 MB
@@ -763,6 +916,14 @@ func (app *application) deleteSlide(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
+	courseID, err := app.courseIDForRecord("slides", slideId)
+	if err != nil {
+		app.notFound(w)
+		return
+	}
+	if _, ok := app.requireCourseContent(w, r, courseID); !ok {
+		return
+	}
 	err = app.slides.Delete(slideId)
 	if err != nil {
 		app.serverError(w, err)
@@ -776,6 +937,9 @@ func (app *application) getCourseAssignments(w http.ResponseWriter, r *http.Requ
 	courseId, err := strconv.Atoi(params.ByName("id"))
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	if _, ok := app.requireCourseView(w, r, courseId); !ok {
 		return
 	}
 	assignments, err := app.assignments.GetByCourse(courseId)
@@ -796,6 +960,14 @@ func (app *application) getAssignment(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
+	courseID, err := app.courseIDForRecord("assignments", id)
+	if err != nil {
+		app.notFound(w)
+		return
+	}
+	if _, ok := app.requireCourseView(w, r, courseID); !ok {
+		return
+	}
 	a, err := app.assignments.GetByID(id)
 	if err != nil {
 		app.notFound(w)
@@ -809,6 +981,9 @@ func (app *application) createAssignment(w http.ResponseWriter, r *http.Request)
 	courseId, err := strconv.Atoi(params.ByName("id"))
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	if _, ok := app.requireCourseContent(w, r, courseId); !ok {
 		return
 	}
 	err = r.ParseMultipartForm(20 << 20) // 20 MB
@@ -907,6 +1082,14 @@ func (app *application) updateAssignment(w http.ResponseWriter, r *http.Request)
 	id, err := strconv.Atoi(params.ByName("id"))
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	courseID, err := app.courseIDForRecord("assignments", id)
+	if err != nil {
+		app.notFound(w)
+		return
+	}
+	if _, ok := app.requireCourseContent(w, r, courseID); !ok {
 		return
 	}
 	old, err := app.assignments.GetByID(id)
@@ -1025,6 +1208,14 @@ func (app *application) deleteAssignment(w http.ResponseWriter, r *http.Request)
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
+	courseID, err := app.courseIDForRecord("assignments", id)
+	if err != nil {
+		app.notFound(w)
+		return
+	}
+	if _, ok := app.requireCourseContent(w, r, courseID); !ok {
+		return
+	}
 	err = app.assignments.Delete(id)
 	if err != nil {
 		app.serverError(w, err)
@@ -1038,6 +1229,9 @@ func (app *application) getCourseNotes(w http.ResponseWriter, r *http.Request) {
 	courseId, err := strconv.Atoi(params.ByName("id"))
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	if _, ok := app.requireCourseView(w, r, courseId); !ok {
 		return
 	}
 	notes, err := app.notes.GetByCourse(courseId)
@@ -1056,6 +1250,9 @@ func (app *application) createNote(w http.ResponseWriter, r *http.Request) {
 	courseId, err := strconv.Atoi(params.ByName("id"))
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	if _, ok := app.requireCourseContent(w, r, courseId); !ok {
 		return
 	}
 	err = r.ParseMultipartForm(10 << 20) // 10 MB
@@ -1114,6 +1311,14 @@ func (app *application) deleteNote(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
+	courseID, err := app.courseIDForRecord("notes", noteId)
+	if err != nil {
+		app.notFound(w)
+		return
+	}
+	if _, ok := app.requireCourseContent(w, r, courseID); !ok {
+		return
+	}
 	err = app.notes.Delete(noteId)
 	if err != nil {
 		app.serverError(w, err)
@@ -1127,6 +1332,14 @@ func (app *application) getNote(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(params.ByName("id"))
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	courseID, err := app.courseIDForRecord("notes", id)
+	if err != nil {
+		app.notFound(w)
+		return
+	}
+	if _, ok := app.requireCourseView(w, r, courseID); !ok {
 		return
 	}
 	note, err := app.notes.Get(id)
@@ -1146,6 +1359,14 @@ func (app *application) updateNote(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(params.ByName("id"))
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	courseID, err := app.courseIDForRecord("notes", id)
+	if err != nil {
+		app.notFound(w)
+		return
+	}
+	if _, ok := app.requireCourseContent(w, r, courseID); !ok {
 		return
 	}
 	// Fetch existing note to get old file name and course ID
@@ -1228,6 +1449,9 @@ func (app *application) getCourseExams(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
+	if _, ok := app.requireCourseView(w, r, courseId); !ok {
+		return
+	}
 	exams, err := app.exams.GetByCourse(courseId)
 	if err != nil {
 		app.serverError(w, err)
@@ -1244,6 +1468,14 @@ func (app *application) getExam(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(params.ByName("id"))
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	courseID, err := app.courseIDForRecord("exams", id)
+	if err != nil {
+		app.notFound(w)
+		return
+	}
+	if _, ok := app.requireCourseView(w, r, courseID); !ok {
 		return
 	}
 	exam, err := app.exams.Get(id)
@@ -1263,6 +1495,9 @@ func (app *application) createExam(w http.ResponseWriter, r *http.Request) {
 	courseId, err := strconv.Atoi(params.ByName("id"))
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	if _, ok := app.requireCourseContent(w, r, courseId); !ok {
 		return
 	}
 	err = r.ParseMultipartForm(10 << 20)
@@ -1320,6 +1555,14 @@ func (app *application) updateExam(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(params.ByName("id"))
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	courseID, err := app.courseIDForRecord("exams", id)
+	if err != nil {
+		app.notFound(w)
+		return
+	}
+	if _, ok := app.requireCourseContent(w, r, courseID); !ok {
 		return
 	}
 	oldExam, err := app.exams.Get(id)
@@ -1396,8 +1639,126 @@ func (app *application) deleteExam(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
+	courseID, err := app.courseIDForRecord("exams", id)
+	if err != nil {
+		app.notFound(w)
+		return
+	}
+	if _, ok := app.requireCourseContent(w, r, courseID); !ok {
+		return
+	}
 	err = app.exams.Delete(id)
 	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (app *application) getCourseAnnouncements(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	courseID, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	if _, ok := app.requireCourseContent(w, r, courseID); !ok {
+		return
+	}
+	items, err := app.announcements.GetByCourse(courseID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(items)
+}
+
+func (app *application) createAnnouncement(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	courseID, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	if _, ok := app.requireCourseContent(w, r, courseID); !ok {
+		return
+	}
+	var payload struct {
+		Title   string `json:"title"`
+		Content string `json:"content"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	payload.Title = strings.TrimSpace(payload.Title)
+	payload.Content = strings.TrimSpace(payload.Content)
+	if payload.Title == "" || payload.Content == "" {
+		http.Error(w, "عنوان و متن اطلاعیه الزامی است.", http.StatusBadRequest)
+		return
+	}
+	id, err := app.announcements.Insert(courseID, payload.Title, payload.Content)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]interface{}{"id": id, "title": payload.Title, "content": payload.Content})
+}
+
+func (app *application) updateAnnouncement(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	courseID, err := app.courseIDForRecord("announcements", id)
+	if err != nil {
+		app.notFound(w)
+		return
+	}
+	if _, ok := app.requireCourseContent(w, r, courseID); !ok {
+		return
+	}
+	var payload struct {
+		Title   string `json:"title"`
+		Content string `json:"content"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	payload.Title = strings.TrimSpace(payload.Title)
+	payload.Content = strings.TrimSpace(payload.Content)
+	if payload.Title == "" || payload.Content == "" {
+		http.Error(w, "عنوان و متن اطلاعیه الزامی است.", http.StatusBadRequest)
+		return
+	}
+	if err := app.announcements.Update(id, payload.Title, payload.Content); err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (app *application) deleteAnnouncement(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	courseID, err := app.courseIDForRecord("announcements", id)
+	if err != nil {
+		app.notFound(w)
+		return
+	}
+	if _, ok := app.requireCourseContent(w, r, courseID); !ok {
+		return
+	}
+	if err := app.announcements.Delete(id); err != nil {
 		app.serverError(w, err)
 		return
 	}
@@ -1409,6 +1770,19 @@ func (app *application) updateCourseBasic(w http.ResponseWriter, r *http.Request
 	id, err := strconv.Atoi(params.ByName("id"))
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	if _, ok := app.requireCourseSettings(w, r, id); !ok {
+		return
+	}
+
+	oldCourse, err := app.courses.GetByID(id)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, err)
+		}
 		return
 	}
 
@@ -1430,9 +1804,13 @@ func (app *application) updateCourseBasic(w http.ResponseWriter, r *http.Request
 		http.Error(w, "Title and short name are required", http.StatusBadRequest)
 		return
 	}
+	if !isValidCourseShortName(shortName) {
+		http.Error(w, "نام کوتاه درس فقط می‌تواند شامل حروف انگلیسی، عدد و زیرخط باشد و نباید خط تیره داشته باشد.", http.StatusBadRequest)
+		return
+	}
 
-	// Update basic info (without image)
-	err = app.courses.UpdateBasic(id, title, shortName, "", telegramLink, baleLink, queraLink, teacherId, semesterId)
+	imageURL := oldCourse.ImageUrl
+	err = app.courses.UpdateBasic(id, title, shortName, imageURL, telegramLink, baleLink, queraLink, teacherId, semesterId)
 	if err != nil {
 		app.serverError(w, err)
 		return
@@ -1443,7 +1821,6 @@ func (app *application) updateCourseBasic(w http.ResponseWriter, r *http.Request
 	if err == nil {
 		defer file.Close()
 		// Delete old image if exists
-		oldCourse, _ := app.courses.GetByID(id)
 		if oldCourse != nil && oldCourse.ImageUrl != "" && !strings.HasPrefix(oldCourse.ImageUrl, "http") {
 			_ = os.Remove("./" + strings.TrimPrefix(oldCourse.ImageUrl, "/"))
 		}
@@ -1487,6 +1864,9 @@ func (app *application) getCourseTAs(w http.ResponseWriter, r *http.Request) {
 	courseId, err := strconv.Atoi(params.ByName("id"))
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	if _, ok := app.requireCourseView(w, r, courseId); !ok {
 		return
 	}
 	tas, err := app.tas.GetByCourse(courseId)
@@ -1536,6 +1916,9 @@ func (app *application) createTA(w http.ResponseWriter, r *http.Request) {
 	courseId, err := strconv.Atoi(params.ByName("id"))
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	if _, ok := app.requireCourseSettings(w, r, courseId); !ok {
 		return
 	}
 	// Parse multipart form (for optional image)
@@ -1609,6 +1992,14 @@ func (app *application) updateTA(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(params.ByName("id"))
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	user, ok := app.currentUser(w, r)
+	if !ok {
+		return
+	}
+	if user.UserType != "admin" {
+		http.Error(w, "این عملیات فقط برای مدیر سیستم مجاز است.", http.StatusForbidden)
 		return
 	}
 	// Get existing TA to possibly delete old image
@@ -1686,6 +2077,14 @@ func (app *application) deleteTA(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
+	user, ok := app.currentUser(w, r)
+	if !ok {
+		return
+	}
+	if user.UserType != "admin" {
+		http.Error(w, "این عملیات فقط برای مدیر سیستم مجاز است.", http.StatusForbidden)
+		return
+	}
 	if err := app.tas.Delete(id); err != nil {
 		app.serverError(w, err)
 		return
@@ -1700,6 +2099,9 @@ func (app *application) attachTA(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
+	if _, ok := app.requireCourseSettings(w, r, courseId); !ok {
+		return
+	}
 	taId, err := strconv.Atoi(params.ByName("taId"))
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
@@ -1712,11 +2114,63 @@ func (app *application) attachTA(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+// createTAFromUser creates a teaching_assistants entry derived from a system user (with TA role)
+// and attaches it to the course in a single call.
+func (app *application) createTAFromUser(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	courseId, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	if _, ok := app.requireCourseSettings(w, r, courseId); !ok {
+		return
+	}
+	userId, err := strconv.Atoi(params.ByName("userId"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	user, err := app.users.Get(userId)
+	if err != nil || user == nil {
+		app.notFound(w)
+		return
+	}
+	if user.UserType != "ta" && user.UserType != "head_ta" {
+		http.Error(w, "این کاربر TA نیست.", http.StatusBadRequest)
+		return
+	}
+	ta := &models.TeachingAssistant{
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		ImageURL:  user.ImagePath,
+	}
+	taId, err := app.tas.Insert(ta)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	if err := app.tas.AttachToCourse(courseId, taId); err != nil {
+		app.serverError(w, err)
+		return
+	}
+	if err := app.courses.AssignUserToCourse(courseId, userId, user.UserType); err != nil {
+		app.serverError(w, err)
+		return
+	}
+	ta.Id = taId
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(ta)
+}
+
 func (app *application) detachTA(w http.ResponseWriter, r *http.Request) {
 	params := httprouter.ParamsFromContext(r.Context())
 	courseId, err := strconv.Atoi(params.ByName("id"))
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	if _, ok := app.requireCourseSettings(w, r, courseId); !ok {
 		return
 	}
 	taId, err := strconv.Atoi(params.ByName("taId"))
@@ -1725,6 +2179,89 @@ func (app *application) detachTA(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := app.tas.DetachFromCourse(courseId, taId); err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (app *application) getCourseUsers(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	courseID, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	if _, ok := app.requireCourseView(w, r, courseID); !ok {
+		return
+	}
+	users, err := app.courses.GetCourseUsers(courseID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	if users == nil {
+		users = []models.CourseUser{}
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(users)
+}
+
+func (app *application) assignUserToCourse(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	courseID, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	var payload struct {
+		UserID int    `json:"userId"`
+		Role   string `json:"role"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	if payload.UserID < 1 || !isValidCourseUserRole(payload.Role) {
+		http.Error(w, "کاربر یا نقش انتخاب‌شده معتبر نیست.", http.StatusBadRequest)
+		return
+	}
+	user, err := app.users.Get(payload.UserID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	if user == nil || !user.IsActive || (user.UserType != "ta" && user.UserType != "head_ta") {
+		http.Error(w, "فقط کاربران فعال با نقش TA یا سرپرست TA قابل تخصیص به دوره هستند.", http.StatusBadRequest)
+		return
+	}
+	if payload.Role != user.UserType {
+		http.Error(w, "نقش کاربر در دوره باید با نوع حساب کاربری او همخوان باشد.", http.StatusBadRequest)
+		return
+	}
+
+	if err := app.courses.AssignUserToCourse(courseID, payload.UserID, payload.Role); err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]string{"message": "user assigned"})
+}
+
+func (app *application) removeUserFromCourse(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	courseID, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	userID, err := strconv.Atoi(params.ByName("userId"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	if err := app.courses.RemoveUserFromCourse(courseID, userID); err != nil {
 		app.serverError(w, err)
 		return
 	}
@@ -1748,6 +2285,10 @@ func (app *application) createCourse(w http.ResponseWriter, r *http.Request) {
 
 	if title == "" || shortName == "" || teacherId == 0 || semesterId == 0 {
 		http.Error(w, "Missing required fields", http.StatusBadRequest)
+		return
+	}
+	if !isValidCourseShortName(shortName) {
+		http.Error(w, "نام کوتاه درس فقط می‌تواند شامل حروف انگلیسی، عدد و زیرخط باشد و نباید خط تیره داشته باشد.", http.StatusBadRequest)
 		return
 	}
 
@@ -1814,6 +2355,202 @@ func (app *application) deleteCourse(w http.ResponseWriter, r *http.Request) {
 	}
 	err = app.courses.Delete(id)
 	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+type userResponse struct {
+	Id        int    `json:"id"`
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+	Email     string `json:"email"`
+	UserType  string `json:"userType"`
+	ImagePath string `json:"imagePath"`
+	IsActive  bool   `json:"isActive"`
+}
+
+func userToResponse(user models.User) userResponse {
+	return userResponse{
+		Id:        user.Id,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Email:     user.Email,
+		UserType:  user.UserType,
+		ImagePath: user.ImagePath,
+		IsActive:  user.IsActive,
+	}
+}
+
+func (app *application) usersGetAll(w http.ResponseWriter, r *http.Request) {
+	users, err := app.users.GetAll()
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	resp := make([]userResponse, 0, len(users))
+	for _, user := range users {
+		resp = append(resp, userToResponse(user))
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(resp)
+}
+
+func (app *application) usersGetAssignable(w http.ResponseWriter, r *http.Request) {
+	users, err := app.users.GetAssignableCourseUsers()
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	resp := make([]userResponse, 0, len(users))
+	for _, user := range users {
+		resp = append(resp, userToResponse(user))
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(resp)
+}
+
+func (app *application) usersGetTAs(w http.ResponseWriter, r *http.Request) {
+	users, err := app.users.GetAssignableCourseUsers()
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	resp := make([]userResponse, 0, len(users))
+	for _, user := range users {
+		resp = append(resp, userToResponse(user))
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(resp)
+}
+
+func (app *application) usersPost(w http.ResponseWriter, r *http.Request) {
+	var payload struct {
+		FirstName string `json:"firstName"`
+		LastName  string `json:"lastName"`
+		Email     string `json:"email"`
+		Password  string `json:"password"`
+		UserType  string `json:"userType"`
+		ImagePath string `json:"imagePath"`
+		IsActive  *bool  `json:"isActive"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	payload.FirstName = strings.TrimSpace(payload.FirstName)
+	payload.LastName = strings.TrimSpace(payload.LastName)
+	payload.Email = strings.TrimSpace(payload.Email)
+	payload.UserType = strings.TrimSpace(payload.UserType)
+	if payload.UserType == "" {
+		payload.UserType = "normal"
+	}
+	if payload.FirstName == "" || payload.LastName == "" || payload.Email == "" || payload.Password == "" {
+		http.Error(w, "نام، نام خانوادگی، ایمیل و رمز عبور الزامی است.", http.StatusBadRequest)
+		return
+	}
+	if len(payload.Password) < 6 {
+		http.Error(w, "رمز عبور باید حداقل ۶ کاراکتر باشد.", http.StatusBadRequest)
+		return
+	}
+	if !isValidUserType(payload.UserType) {
+		http.Error(w, "نوع کاربر معتبر نیست.", http.StatusBadRequest)
+		return
+	}
+
+	id, err := app.users.Insert(payload.FirstName, payload.LastName, payload.Email, payload.Password, payload.UserType, payload.ImagePath)
+	if err != nil {
+		if errors.Is(err, models.ErrDuplicateEmail) {
+			http.Error(w, "این ایمیل قبلا ثبت شده است.", http.StatusConflict)
+			return
+		}
+		app.serverError(w, err)
+		return
+	}
+	isActive := true
+	if payload.IsActive != nil {
+		isActive = *payload.IsActive
+	}
+	if !isActive {
+		if err := app.users.SetActive(id, false); err != nil {
+			app.serverError(w, err)
+			return
+		}
+	}
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]int{"id": id})
+}
+
+func (app *application) usersPut(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	var payload struct {
+		FirstName string `json:"firstName"`
+		LastName  string `json:"lastName"`
+		Email     string `json:"email"`
+		Password  string `json:"password"`
+		UserType  string `json:"userType"`
+		ImagePath string `json:"imagePath"`
+		IsActive  bool   `json:"isActive"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	payload.FirstName = strings.TrimSpace(payload.FirstName)
+	payload.LastName = strings.TrimSpace(payload.LastName)
+	payload.Email = strings.TrimSpace(payload.Email)
+	payload.UserType = strings.TrimSpace(payload.UserType)
+	if payload.FirstName == "" || payload.LastName == "" || payload.Email == "" {
+		http.Error(w, "نام، نام خانوادگی و ایمیل الزامی است.", http.StatusBadRequest)
+		return
+	}
+	if payload.Password != "" && len(payload.Password) < 6 {
+		http.Error(w, "رمز عبور باید حداقل ۶ کاراکتر باشد.", http.StatusBadRequest)
+		return
+	}
+	if !isValidUserType(payload.UserType) {
+		http.Error(w, "نوع کاربر معتبر نیست.", http.StatusBadRequest)
+		return
+	}
+
+	user := &models.User{
+		Id:        id,
+		FirstName: payload.FirstName,
+		LastName:  payload.LastName,
+		Email:     payload.Email,
+		UserType:  payload.UserType,
+		ImagePath: payload.ImagePath,
+		IsActive:  payload.IsActive,
+	}
+	if err := app.users.UpdateWithOptionalPassword(user, payload.Password); err != nil {
+		if errors.Is(err, models.ErrDuplicateEmail) {
+			http.Error(w, "این ایمیل قبلا ثبت شده است.", http.StatusConflict)
+			return
+		}
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(userToResponse(*user))
+}
+
+func (app *application) userDeactivate(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	if err := app.users.SetActive(id, false); err != nil {
 		app.serverError(w, err)
 		return
 	}
@@ -1956,7 +2693,7 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 
 	// Redirect to panel
 	app.sessionManager.Put(r.Context(), "flash", "ورود با موفقیت انجام شد")
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	http.Redirect(w, r, "/panel", http.StatusSeeOther)
 }
 
 func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {

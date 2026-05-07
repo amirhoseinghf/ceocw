@@ -23,10 +23,11 @@ function renderSemesters(semesters) {
     }
     const html = `
         <table class="teachers-table">
-            <thead><tr><th>سال</th><th>فصل</th><th>عملیات</th></tr></thead>
+            <thead><tr><th>ردیف</th><th>سال</th><th>فصل</th><th>عملیات</th></tr></thead>
             <tbody>
-                ${semesters.map(sem => `
+                ${semesters.map((sem, index) => `
                     <tr data-id="${sem.Id}">
+                        <td>${index + 1}</td>
                         <td>${sem.Year}</td>
                         <td>${sem.Season === 'spring' ? 'بهار' : 'پاییز'}</td>
                         <td class="teacher-actions">
@@ -64,7 +65,7 @@ function openSemesterModal(isEdit = false, semesterData = null) {
         modalTitle.innerText = 'افزودن ترم جدید';
         document.getElementById('semester-form').reset();
         document.getElementById('semester-id').value = '0';
-        document.getElementById('semester-year').value = new Date().getFullYear();
+        document.getElementById('semester-year').value = getCurrentJalaliYear();
         document.getElementById('semester-season').value = 'spring';
         currentSemesterId = 0;
     }
@@ -131,12 +132,15 @@ function initSemesters() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(semesterData)
             });
-            if (!response.ok) throw new Error();
+            if (!response.ok) {
+                const text = await response.text();
+                throw new Error(text || 'Save failed');
+            }
             showToast(isEdit ? 'ترم با موفقیت ویرایش شد' : 'ترم با موفقیت اضافه شد', true);
             closeSemesterModal();
             loadSemesters();
         } catch (err) {
-            showToast('خطا در ذخیره اطلاعات ترم', false);
+            showToast(err.message.includes('سال') || err.message.includes('ترم') ? err.message : 'خطا در ذخیره اطلاعات ترم', false);
         }
     });
     document.getElementById('add-semester-btn').addEventListener('click', () => openSemesterModal(false));

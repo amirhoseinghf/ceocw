@@ -26,20 +26,23 @@
             <li class="nav-item" data-tab="courses">
                 <a href="#"><span class="nav-icon">📚</span><span class="nav-text">دوره‌ها</span></a>
             </li>
-            <li class="nav-item" data-tab="teachers">
+            <li class="nav-item" data-tab="teachers" data-admin-only>
                 <a href="#"><span class="nav-icon">👨‍🏫</span><span class="nav-text">اساتید</span></a>
             </li>
-            <li class="nav-item" data-tab="semesters">
+            <li class="nav-item" data-tab="semesters" data-admin-only>
                 <a href="#"><span class="nav-icon">📅</span><span class="nav-text">ترم‌ها</span></a>
             </li>
-            <li class="nav-item logout-item">
-                <button type="button" class="logout-button-sidebar" onclick="logout()">
-                    <span class="nav-icon">🚪</span>
-                    <span class="nav-text">خروج</span>
-                </button>
+            <li class="nav-item" data-tab="users" data-admin-only>
+                <a href="#"><span class="nav-icon">👤</span><span class="nav-text">کاربران</span></a>
             </li>
         </ul>
     </nav>
+    <div class="sidebar-footer">
+        <button type="button" class="logout-button-sidebar" onclick="logout()">
+            <span class="nav-icon">🚪</span>
+            <span class="nav-text">خروج</span>
+        </button>
+    </div>
 </aside>
 
 <script>

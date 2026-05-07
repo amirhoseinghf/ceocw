@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cearchieve.amirhoseinghf.ir/models"
 	"fmt"
 	"net/http"
 )
@@ -55,35 +56,160 @@ func (app *application) requireAuthentication(next http.Handler) http.Handler {
 }
 
 func (app *application) requireAdmin(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !app.isAuthenticated(r) {
-			http.Redirect(w, r, "/user/login?denied=true", http.StatusSeeOther)
-			return
-		}
+	return app.requireRole("admin")(next)
+}
 
-		userID, ok := app.sessionManager.Get(r.Context(), "userID").(int)
-		if !ok {
-			app.sessionManager.Remove(r.Context(), "userID")
-			http.Redirect(w, r, "/user/login?denied=true", http.StatusSeeOther)
-			return
-		}
+func (app *application) requireStaff(next http.Handler) http.Handler {
+	return app.requireRole("admin", "head_ta", "ta")(next)
+}
 
-		user, err := app.users.Get(userID)
-		if err != nil {
-			app.serverError(w, err)
-			return
-		}
-		if user == nil || !user.IsActive {
-			app.sessionManager.Remove(r.Context(), "userID")
-			http.Redirect(w, r, "/user/login?denied=true", http.StatusSeeOther)
-			return
-		}
-		if user.UserType != "admin" {
-			app.clientError(w, http.StatusForbidden)
-			return
-		}
+func (app *application) requireRole(roles ...string) func(http.Handler) http.Handler {
+	allowed := map[string]bool{}
+	for _, role := range roles {
+		allowed[role] = true
+	}
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			user, ok := app.currentUser(w, r)
+			if !ok {
+				return
+			}
+			if !allowed[user.UserType] {
+				app.clientError(w, http.StatusForbidden)
+				return
+			}
+			w.Header().Add("Cache-Control", "no-store")
+			next.ServeHTTP(w, r)
+		})
+	}
+}
 
-		w.Header().Add("Cache-Control", "no-store")
-		next.ServeHTTP(w, r)
-	})
+func (app *application) currentUser(w http.ResponseWriter, r *http.Request) (*models.User, bool) {
+	if !app.isAuthenticated(r) {
+		http.Redirect(w, r, "/user/login?denied=true", http.StatusSeeOther)
+		return nil, false
+	}
+
+	userID, ok := app.sessionManager.Get(r.Context(), "userID").(int)
+	if !ok {
+		app.sessionManager.Remove(r.Context(), "userID")
+		http.Redirect(w, r, "/user/login?denied=true", http.StatusSeeOther)
+		return nil, false
+	}
+
+	user, err := app.users.Get(userID)
+	if err != nil {
+		app.serverError(w, err)
+		return nil, false
+	}
+	if user == nil || !user.IsActive {
+		app.sessionManager.Remove(r.Context(), "userID")
+		http.Redirect(w, r, "/user/login?denied=true", http.StatusSeeOther)
+		return nil, false
+	}
+	return user, true
+}
+
+func (app *application) canViewCourse(user *models.User, courseID int) (bool, error) {
+	if user.UserType == "admin" {
+		return true, nil
+	}
+	if user.UserType != "head_ta" && user.UserType != "ta" {
+		return false, nil
+	}
+	return app.courses.UserHasCourseAccess(user.Id, courseID)
+}
+
+func (app *application) canEditCourseSettings(user *models.User, courseID int) (bool, error) {
+	if user.UserType == "admin" {
+		return true, nil
+	}
+	if user.UserType != "head_ta" {
+		return false, nil
+	}
+	return app.courses.UserHasCourseAccess(user.Id, courseID)
+}
+
+func (app *application) canEditCourseContent(user *models.User, courseID int) (bool, error) {
+	if user.UserType == "admin" {
+		return true, nil
+	}
+	if user.UserType != "head_ta" && user.UserType != "ta" {
+		return false, nil
+	}
+	return app.courses.UserHasCourseAccess(user.Id, courseID)
+}
+
+func (app *application) requireCourseView(w http.ResponseWriter, r *http.Request, courseID int) (*models.User, bool) {
+	user, ok := app.currentUser(w, r)
+	if !ok {
+		return nil, false
+	}
+	allowed, err := app.canViewCourse(user, courseID)
+	if err != nil {
+		app.serverError(w, err)
+		return nil, false
+	}
+	if !allowed {
+		app.clientError(w, http.StatusForbidden)
+		return nil, false
+	}
+	return user, true
+}
+
+func (app *application) requireCourseSettings(w http.ResponseWriter, r *http.Request, courseID int) (*models.User, bool) {
+	user, ok := app.currentUser(w, r)
+	if !ok {
+		return nil, false
+	}
+	allowed, err := app.canEditCourseSettings(user, courseID)
+	if err != nil {
+		app.serverError(w, err)
+		return nil, false
+	}
+	if !allowed {
+		app.clientError(w, http.StatusForbidden)
+		return nil, false
+	}
+	return user, true
+}
+
+func (app *application) requireCourseContent(w http.ResponseWriter, r *http.Request, courseID int) (*models.User, bool) {
+	user, ok := app.currentUser(w, r)
+	if !ok {
+		return nil, false
+	}
+	allowed, err := app.canEditCourseContent(user, courseID)
+	if err != nil {
+		app.serverError(w, err)
+		return nil, false
+	}
+	if !allowed {
+		app.clientError(w, http.StatusForbidden)
+		return nil, false
+	}
+	return user, true
+}
+
+func (app *application) courseIDForRecord(table string, id int) (int, error) {
+	var query string
+	switch table {
+	case "assignments":
+		query = "SELECT course_id FROM assignments WHERE id = ?"
+	case "notes":
+		query = "SELECT course_id FROM notes WHERE id = ?"
+	case "exams":
+		query = "SELECT course_id FROM exams WHERE id = ?"
+	case "slides":
+		query = "SELECT course_id FROM slides WHERE id = ?"
+	case "announcements":
+		query = "SELECT course_id FROM announcements WHERE id = ?"
+	default:
+		return 0, fmt.Errorf("unsupported course record table %q", table)
+	}
+	var courseID int
+	if err := app.courses.DB.QueryRow(query, id).Scan(&courseID); err != nil {
+		return 0, err
+	}
+	return courseID, nil
 }
