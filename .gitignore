@@ -1,4 +1,11 @@
+# ignore data and icons
 data/
 icons-github/
+
+# ignore build artifacts
 web
 web.exe
+
+# ignore documentation files except README.md
+*.md
+!README.md
