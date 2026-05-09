@@ -2751,6 +2751,10 @@ func (app *application) userDeactivate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) userSignup(w http.ResponseWriter, r *http.Request) {
+	if app.isAuthenticated(r) {
+		http.Redirect(w, r, "/user/profile", http.StatusSeeOther)
+		return
+	}
 	app.render(w, http.StatusOK, "signup.htm", &templateData{
 		IsAuthenticated: false,
 	})
@@ -2830,6 +2834,10 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) userLogin(w http.ResponseWriter, r *http.Request) {
+	if app.isAuthenticated(r) {
+		http.Redirect(w, r, "/user/profile", http.StatusSeeOther)
+		return
+	}
 	app.render(w, http.StatusOK, "login.htm", &templateData{
 		IsAuthenticated: false,
 	})
