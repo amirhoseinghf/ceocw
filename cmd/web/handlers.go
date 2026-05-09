@@ -198,6 +198,7 @@ func (app *application) panel(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from session
 	userID, ok := app.sessionManager.Get(r.Context(), "userID").(int)
 	if !ok {
+		app.infoLog.Println("NOT OK")
 		// Shouldn't happen because requireAuthentication already checks, but handle gracefully
 		http.Redirect(w, r, "/user/login", http.StatusSeeOther)
 		return
@@ -2875,6 +2876,9 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	user, err := app.users.Get(userID)
+	userType := user.UserType
+
 	// Store user ID in session (assuming scs session manager)
 	err = app.sessionManager.RenewToken(r.Context())
 	if err != nil {
@@ -2885,7 +2889,12 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 
 	// Redirect to panel
 	app.sessionManager.Put(r.Context(), "flash", "ورود با موفقیت انجام شد")
-	http.Redirect(w, r, "/panel", http.StatusSeeOther)
+	if userType == "normal" {
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+	} else {
+		http.Redirect(w, r, "/panel", http.StatusSeeOther)
+	}
+
 }
 
 func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {

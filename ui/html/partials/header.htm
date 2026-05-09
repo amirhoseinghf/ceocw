@@ -10,40 +10,48 @@
         </div>
     </a>
     <div class="auth-buttons">
-        {{if .IsAuthenticated}}
-        <a href="/user/profile" class="signin-button">
-            <svg class="user-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Z" />
-                <path d="M4 20a8 8 0 0 1 16 0" />
-            </svg>
-            <span class="signin-button-text">پروفایل</span>
-        </a>
-        {{end}}
-        <a href=
         {{if not .IsAuthenticated}}
-        "/user/login"
-        {{else if or (eq .User.UserType "admin") (eq .User.UserType "head_ta") (eq .User.UserType "ta")}}
-        "/panel"
+            <!-- Not logged in: only login button -->
+            <a href="/user/login" class="signin-button">
+                <svg class="user-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                </svg>
+                <span class="signin-button-text">ورود</span>
+            </a>
         {{else}}
-        "/user/profile"
-        {{end}}
-        class="signin-button">
-            <svg class="user-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-            </svg>
-            <span class="signin-button-text">
-            {{if not .IsAuthenticated}}    
-                ورود
-            {{else if or (eq .User.UserType "admin") (eq .User.UserType "head_ta") (eq .User.UserType "ta")}}
-                پنل کاربری
-            {{else}}
-                حساب کاربری
-            {{end}}
-            </span>
-        </a>
-
+            <!-- Logged in: profile button always -->
+            <a href="/user/profile" class="signin-button">
+                <svg class="user-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Z" />
+                    <path d="M4 20a8 8 0 0 1 16 0" />
+                </svg>
+                <span class="signin-button-text">پروفایل</span>
+            </a>
         
+            <!-- For admin/head_ta/ta, also show panel button (logout is in sidebar) -->
+            {{if or (eq .User.UserType "admin") (eq .User.UserType "head_ta") (eq .User.UserType "ta")}}
+            <a href="/panel" class="signin-button">
+                <svg class="user-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                </svg>
+                <span class="signin-button-text">پنل کاربری</span>
+            </a>
+            {{else}}
+                <!-- For normal users: show logout button (POST) -->
+                <form action="/user/logout" method="POST" style="display: inline;">
+                    <button type="submit" class="logout-button">
+                        <svg class="user-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                            <polyline points="16 17 21 12 16 7" />
+                            <line x1="21" y1="12" x2="9" y2="12" />
+                        </svg>
+                        <span class="signin-button-text">خروج</span>
+                    </button>
+                </form>
+            {{end}}
+        {{end}}
     </div>
 </header>
 {{end}}

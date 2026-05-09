@@ -21,6 +21,28 @@
     margin-bottom: 20px;
 }
 
+.btn {
+    font-family: 'Vazir';
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-save {
+    background: #007cba;
+    color: #fff;
+}
+
+.btn {
+    white-space: nowrap;   /* keeps button text on one line */
+    flex-shrink: 0;        /* prevents button from shrinking */
+}
+
 .profile-avatar {
     width: 72px;
     height: 72px;
@@ -85,6 +107,7 @@
 }
 
 .profile-actions {
+    display: flex;
     align-items: center;
     justify-content: flex-end;
 }
