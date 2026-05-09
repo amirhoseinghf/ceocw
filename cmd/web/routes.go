@@ -73,6 +73,7 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodDelete, "/exams/:id", staff(app.deleteExam))
 	router.HandlerFunc(http.MethodGet, "/courses/:id/announcements", staff(app.getCourseAnnouncements))
 	router.HandlerFunc(http.MethodPost, "/courses/:id/announcements", staff(app.createAnnouncement))
+	router.HandlerFunc(http.MethodGet, "/announcements/:id", app.getAnnouncement)
 	router.HandlerFunc(http.MethodPut, "/announcements/:id", staff(app.updateAnnouncement))
 	router.HandlerFunc(http.MethodDelete, "/announcements/:id", staff(app.deleteAnnouncement))
 	router.HandlerFunc(http.MethodGet, "/courses/:id/tas", staff(app.getCourseTAs))

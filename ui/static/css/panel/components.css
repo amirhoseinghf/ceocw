@@ -136,6 +136,7 @@
     border-collapse: collapse;
     overflow: hidden;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    margin-top: 20px;
 }
 .teachers-table thead tr {
     background: #f8f9fa;

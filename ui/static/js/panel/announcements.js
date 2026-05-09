@@ -49,11 +49,18 @@ function renderAnnouncements(items) {
         </table>
     `;
     container.querySelectorAll('.edit-announcement').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const row = btn.closest('tr');
-            document.getElementById('announcement-id').value = btn.dataset.id;
-            document.getElementById('announcement-title').value = row.children[0].textContent;
-            document.getElementById('announcement-content').value = row.children[1].textContent;
+        btn.addEventListener('click', async () => {
+            const id = parseInt(btn.dataset.id);
+            try {
+                const response = await fetch(`/announcements/${id}`);
+                if (!response.ok) throw new Error();
+                const item = await response.json();
+                document.getElementById('announcement-id').value = item.Id;
+                document.getElementById('announcement-title').value = item.Title || '';
+                document.getElementById('announcement-content').value = item.Content || '';
+            } catch (err) {
+                showToast('خطا در دریافت اطلاعیه', false);
+            }
         });
     });
     container.querySelectorAll('.delete-announcement').forEach(btn => {
