@@ -41,6 +41,14 @@ type CourseSummary struct {
 	SemesterName string `json:"SemesterName"`
 }
 
+type TeacherCourseSummary struct {
+	Id           int
+	Title        string
+	ShortName    string
+	SemesterName string
+	Slug         string
+}
+
 type CourseUser struct {
 	CourseID  int    `json:"courseId"`
 	UserID    int    `json:"userId"`
@@ -163,6 +171,47 @@ func (c *CourseModel) getAllSummaries(extraJoin string, args ...interface{}) ([]
 		summaries = append(summaries, cs)
 	}
 	return summaries, rows.Err()
+}
+
+func (c *CourseModel) GetByTeacher(teacherID int) ([]TeacherCourseSummary, error) {
+	query := `
+        SELECT c.id, c.title, c.short_name,
+               s.season, s.year,
+               t.first_name_english, t.last_name_english
+        FROM courses c
+        JOIN semesters s ON c.semester_id = s.id
+        JOIN teachers t ON c.teacher_id = t.id
+        WHERE c.teacher_id = ?
+        ORDER BY s.year DESC, s.season DESC, c.title ASC
+    `
+	rows, err := c.DB.Query(query, teacherID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var results []TeacherCourseSummary
+	for rows.Next() {
+		var cs TeacherCourseSummary
+		var year int
+		var firstNameEng, lastNameEng, season string
+		err := rows.Scan(&cs.Id, &cs.Title, &cs.ShortName, &season, &year, &firstNameEng, &lastNameEng)
+		if err != nil {
+			return nil, err
+		}
+		semester := Semester{Season: season, Year: year}
+		cs.SemesterName = semester.SemesterName()
+		// Build slug: shortName-season-year-firstNameEng-lastNameEng
+		slugParts := []string{
+			strings.ToLower(strings.ReplaceAll(cs.ShortName, " ", "-")),
+			strings.ToLower(strings.ReplaceAll(season, " ", "-")),
+			strconv.Itoa(year),
+			strings.ToLower(strings.ReplaceAll(firstNameEng, " ", "-")),
+			strings.ToLower(strings.ReplaceAll(lastNameEng, " ", "-")),
+		}
+		cs.Slug = strings.Join(slugParts, "-")
+		results = append(results, cs)
+	}
+	return results, nil
 }
 
 func (c *CourseModel) Insert(course Course) (int, error) {

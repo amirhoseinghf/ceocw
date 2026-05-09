@@ -1,0 +1,132 @@
+/* ========== Teacher Courses Page Styles ========== */
+.teacher-courses-page {
+  background: #f6f8fb;
+  min-height: 100vh;
+  font-family: 'Vazir', Tahoma, Arial, sans-serif;
+}
+
+/* ── HERO SECTION ─────────────────────────────────────────────────── */
+.teacher-page-hero {
+  background: linear-gradient(135deg, #1e3a8a 0%, #312e81 60%, #4c1d95 100%);
+  padding: 48px 24px;
+}
+.teacher-page-hero-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+.teacher-page-avatar img {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+.teacher-page-info {
+  color: #fff;
+}
+.teacher-page-name {
+  font-size: 2rem;
+  margin: 0 0 10px;
+  font-weight: 700;
+}
+.teacher-page-link-btn {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  padding: 8px 20px;
+  border-radius: 40px;
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+.teacher-page-link-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* ── COURSES SECTION ──────────────────────────────────────────────── */
+.courses-list-section {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 24px;
+}
+.courses-list-header h2 {
+  font-size: 1.6rem;
+  font-weight: 600;
+  margin-bottom: 24px;
+  color: #0f172a;
+  padding-right: 8px;
+  border-right: 4px solid #1e3a8a;
+}
+.teacher-course-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+.teacher-course-card-link {
+  text-decoration: none;
+  color: inherit;
+}
+.teacher-course-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+}
+.teacher-course-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+  border-color: #c7d2fe;
+}
+.teacher-course-card-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+  color: #1e293b;
+}
+.teacher-course-card-semester {
+  font-size: 0.85rem;
+  color: #64748b;
+  display: inline-block;
+  background: #f1f5f9;
+  padding: 4px 12px;
+  border-radius: 40px;
+}
+
+/* ── NO CONTENT MESSAGE ───────────────────────────────────────────── */
+.no-content-message {
+  text-align: center;
+  padding: 40px 20px;
+  color: #64748b;
+  font-size: 0.95rem;
+  background: #fff;
+  border-radius: 16px;
+  border: 1px dashed #cbd5e1;
+}
+
+/* ── RESPONSIVE ───────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .teacher-page-hero {
+    padding: 32px 20px;
+  }
+  .teacher-page-hero-inner {
+    flex-direction: column;
+    text-align: center;
+    gap: 20px;
+  }
+  .teacher-page-name {
+    font-size: 1.5rem;
+  }
+  .teacher-course-grid {
+    grid-template-columns: 1fr;
+  }
+  .courses-list-header h2 {
+    font-size: 1.3rem;
+  }
+}

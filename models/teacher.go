@@ -3,6 +3,7 @@ package models
 import (
 	"database/sql"
 	"errors"
+	"strings"
 )
 
 type Teacher struct {
@@ -121,4 +122,35 @@ func (t *TeacherModel) Update(teacher Teacher) error {
 func (t *TeacherModel) Delete(id int) error {
 	_, err := t.DB.Exec("DELETE FROM teachers WHERE id = ?", id)
 	return err
+}
+
+func (t *TeacherModel) GetBySlug(firstNameEng, lastNameEng string) (*Teacher, error) {
+	// Convert hyphenated last name to space-separated for DB lookup
+	lastNameForDB := strings.ReplaceAll(lastNameEng, "-", " ")
+	stmt := `
+        SELECT id, image_url, first_name, last_name,
+               first_name_english, last_name_english, page_url
+        FROM teachers
+        WHERE LOWER(first_name_english) = LOWER(?) 
+          AND LOWER(last_name_english) = LOWER(?)
+    `
+	teacher := &Teacher{}
+	err := t.DB.QueryRow(stmt, firstNameEng, lastNameForDB).Scan(
+		&teacher.Id, &teacher.ImageURL, &teacher.FirstName, &teacher.LastName,
+		&teacher.FirstNameEnglish, &teacher.LastNameEnglish, &teacher.PageURL,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNoRecord
+		}
+		return nil, err
+	}
+	return teacher, nil
+}
+
+func (t *Teacher) TeacherSlug() string {
+	// Replace spaces with hyphens and convert to lowercase
+	first := strings.ReplaceAll(strings.ToLower(t.FirstNameEnglish), " ", "-")
+	last := strings.ReplaceAll(strings.ToLower(t.LastNameEnglish), " ", "-")
+	return first + "-" + last
 }

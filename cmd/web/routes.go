@@ -123,6 +123,9 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, "/panel", staff(app.panel))
 	router.HandlerFunc(http.MethodGet, "/panel/*subpath", staff(app.panel))
 
+	// Getting Specific Teacher's Courses
+	router.HandlerFunc(http.MethodGet, "/teacher/:slug", app.teacherCoursesView)
+
 	// Chain middleware (global)
 	standard := alice.New(app.recoverPanic, app.logRequest, secureHeaders, app.sessionManager.LoadAndSave)
 

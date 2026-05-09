@@ -2928,3 +2928,35 @@ func (app *application) getAnnouncement(w http.ResponseWriter, r *http.Request) 
 	}
 	json.NewEncoder(w).Encode(ann)
 }
+
+func (app *application) teacherCoursesView(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	slug := params.ByName("slug")
+	// Split slug: first part is first name, rest is last name (may contain hyphens)
+	parts := strings.SplitN(slug, "-", 2)
+	if len(parts) != 2 {
+		app.notFound(w)
+		return
+	}
+	firstNameEng := parts[0]
+	lastNameEng := parts[1]
+	teacher, err := app.teachers.GetBySlug(firstNameEng, lastNameEng)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+	courses, err := app.courses.GetByTeacher(teacher.Id)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	data := &templateData{
+		Teacher:        teacher,
+		TeacherCourses: courses,
+	}
+	app.render(w, http.StatusOK, "teacher_courses.htm", data)
+}

@@ -1,0 +1,47 @@
+{{define "title"}}دوره‌های {{.Teacher.FirstName}} {{.Teacher.LastName}}{{end}}
+
+{{define "extra-head"}}
+<link rel="stylesheet" href="/static/css/teacher_courses.css">
+{{end}}
+
+{{define "main"}}
+<div class="teacher-courses-page" dir="rtl">
+    <!-- Teacher Header -->
+    <div class="teacher-page-hero">
+        <div class="teacher-page-hero-inner">
+            {{if .Teacher.ImageURL}}
+            <div class="teacher-page-avatar">
+                <img src="{{.Teacher.ImageURL}}" alt="{{.Teacher.FirstName}} {{.Teacher.LastName}}">
+            </div>
+            {{end}}
+            <div class="teacher-page-info">
+                <h1 class="teacher-page-name">دکتر {{.Teacher.FirstName}} {{.Teacher.LastName}}</h1>
+                {{if .Teacher.PageURL}}
+                <a href="{{.Teacher.PageURL}}" target="_blank" class="teacher-page-link-btn">صفحه شخصی استاد</a>
+                {{end}}
+            </div>
+        </div>
+    </div>
+
+    <!-- Courses Section -->
+    <div class="courses-list-section">
+        <div class="courses-list-header">
+            <h2>دوره‌های ارائه شده</h2>
+        </div>
+        {{if .TeacherCourses}}
+        <div class="teacher-course-grid">
+            {{range .TeacherCourses}}
+            <a href="/course/{{.Slug}}" class="teacher-course-card-link">
+                <div class="teacher-course-card">
+                    <div class="teacher-course-card-title">{{.Title}}</div>
+                    <div class="teacher-course-card-semester">{{.SemesterName}}</div>
+                </div>
+            </a>
+            {{end}}
+        </div>
+        {{else}}
+        <div class="no-content-message">هیچ دوره‌ای برای این استاد یافت نشد.</div>
+        {{end}}
+    </div>
+</div>
+{{end}}

@@ -9,6 +9,8 @@ import (
 
 type templateData struct {
 	Course          *models.Course
+	Teacher         *models.Teacher
+	TeacherCourses  []models.TeacherCourseSummary
 	Error           string
 	Flash           string
 	IsAuthenticated bool

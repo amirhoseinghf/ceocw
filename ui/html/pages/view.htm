@@ -18,13 +18,13 @@
             <div class="course-hero-text">
                 <div class="course-eyebrow">{{.Course.Semester.SemesterName}}</div>
                 <h1 class="course-title">{{.Course.Title}}</h1>
-                {{if .Course.Teacher.PageURL}}<a href="{{.Course.Teacher.PageURL}}" target="_blank" rel="noopener noreferrer" class="course-teacher-pill">{{else}}<div class="course-teacher-pill">{{end}}
-                    <img src="{{.Course.Teacher.ImageURL}}" alt="" class="course-teacher-avatar" onerror="this.style.display='none';">
-                    <div class="course-teacher-info">
-                        <span class="course-teacher-name">دکتر {{.Course.Teacher.FirstName}} {{.Course.Teacher.LastName}}</span>
-                        <span class="course-teacher-label">مدرس</span>
-                    </div>
-                {{if .Course.Teacher.PageURL}}</a>{{else}}</div>{{end}}
+                {{if .Course.Teacher.PageURL}}<a href="/teacher/{{.Course.Teacher.TeacherSlug}}" class="course-teacher-pill">
+                        <img src="{{.Course.Teacher.ImageURL}}" alt="" class="course-teacher-avatar" onerror="this.style.display='none';">
+                        <div class="course-teacher-info">
+                            <span class="course-teacher-name">دکتر {{.Course.Teacher.FirstName}} {{.Course.Teacher.LastName}}</span>
+                            <span class="course-teacher-label">مدرس</span>
+                        </div>
+                    </a>{{else}}</div>{{end}}
             </div>
         </div>
     </header>
