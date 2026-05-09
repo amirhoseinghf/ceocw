@@ -210,14 +210,14 @@
   transform: translateY(-1px);
 }
 .course-link-chip.quera {
-  background: #fef3c7;
-  color: #92400e;
-  border-color: #fde68a;
+  background: #e6f7ff;        /* very light tint of #0099cc */
+  color: #0099cc;
+  border-color: #b3e6ff;
 }
 .course-link-chip.quera:hover {
-  background: #f59e0b;
+  background: #0099cc;
   color: #fff;
-  border-color: #f59e0b;
+  border-color: #0099cc;
   transform: translateY(-1px);
 }
 .quera-logo {
@@ -226,10 +226,15 @@
   justify-content: center;
   width: 22px;
   height: 22px;
-  color: #92400e;
+  color: #0099cc;
 }
-.quera-logo svg { width: 22px; height: 22px; display: block; }
-.course-link-chip.quera:hover .quera-logo { color: #fff; }
+.bale-logo {width: 22px; height: 22px; display: block;}
+.bale-logo {color:red;}
+.quera-logo img { width: 22px; height: 22px; display: block; }
+.course-link-chip.quera:hover .quera-logo img,
+.course-link-chip.bale:hover img  {
+    filter: brightness(0) invert(1);
+}
 
 /* ── CONTENT WRAP ──────────────────────────────────────────────────── */
 .course-content-wrap {
@@ -514,6 +519,12 @@
   color: #0f172a;
   margin-bottom: 12px;
 }
+.ta-icon {
+    width: 18px;
+    height: 18px;
+    display: inline-block;
+    vertical-align: middle;
+}
 .ta-links {
   display: flex;
   gap: 6px;
@@ -534,10 +545,11 @@
   transition: all 0.2s;
 }
 .ta-link:hover {
-  background: #1e3a8a;
-  border-color: #1e3a8a;
+  {{/* background: #1e3a8a;
+  border-color: #1e3a8a; */}}
   transform: scale(1.1);
 }
+
 
 /* ── TAB NAV ───────────────────────────────────────────────────────── */
 .nav-section {

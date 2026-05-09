@@ -41,17 +41,14 @@
             {{end}}
             {{if .Course.BaleLink}}
             <a href="{{.Course.BaleLink}}" target="_blank" rel="noopener noreferrer" class="course-link-chip bale">
-                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm5.5 7.5l-7 7-3.5-3.5 1.4-1.4L10.5 14l5.6-5.6 1.4 1.1z"/></svg>
+                <img src="/static/icons/small/bale.svg" alt="bale" class="bale-logo">
                 <span>کانال بله</span>
             </a>
             {{end}}
             {{if .Course.QueraLink}}
             <a href="{{.Course.QueraLink}}" target="_blank" rel="noopener noreferrer" class="course-link-chip quera">
                 <span class="quera-logo" aria-hidden="true">
-                    <svg viewBox="0 0 28 28" fill="none">
-                        <rect x="3" y="3" width="22" height="22" rx="6" fill="currentColor"/>
-                        <path d="M15.1 18.4c-3.3 0-5.6-2.1-5.6-5.1 0-3.1 2.3-5.2 5.6-5.2 3.2 0 5.5 2.1 5.5 5.2 0 1.3-.4 2.5-1.2 3.4l1.4 1.4-1.7 1.7-1.5-1.5c-.7.1-1.5.1-2.5.1Zm0-2.4c1.7 0 2.8-1 2.8-2.7s-1.1-2.8-2.8-2.8c-1.8 0-2.9 1-2.9 2.8 0 1.7 1.1 2.7 2.9 2.7Z" fill="#fff"/>
-                    </svg>
+                    <img src="/static/icons/small/quera.svg" alt="quera">
                 </span>
                 <span>صفحه کوئرا</span>
             </a>
@@ -148,11 +145,31 @@
                     <img src="{{if .ImageURL}}{{.ImageURL}}{{else}}/static/img/teacher-placeholder.jpg{{end}}" alt="{{.FirstName}} {{.LastName}}" class="ta-avatar" onerror="this.src='/static/img/teacher-placeholder.jpg';">
                     <div class="ta-name">{{.FirstName}} {{.LastName}}</div>
                     <div class="ta-links">
-                        {{if .Telegram}}<a href="{{.Telegram}}" target="_blank" rel="noopener noreferrer" title="تلگرام" class="ta-link telegram">✈️</a>{{end}}
-                        {{if .GitHub}}<a href="{{.GitHub}}" target="_blank" rel="noopener noreferrer" title="GitHub" class="ta-link github">💻</a>{{end}}
-                        {{if .LinkedIn}}<a href="{{.LinkedIn}}" target="_blank" rel="noopener noreferrer" title="LinkedIn" class="ta-link linkedin">🔗</a>{{end}}
-                        {{if .Website}}<a href="{{.Website}}" target="_blank" rel="noopener noreferrer" title="وب‌سایت" class="ta-link website">🌐</a>{{end}}
-                        {{if .Instagram}}<a href="{{.Instagram}}" target="_blank" rel="noopener noreferrer" title="اینستاگرام" class="ta-link instagram">📷</a>{{end}}
+                        {{if .Telegram}}
+                        <a href="{{.Telegram}}" target="_blank" rel="noopener noreferrer" title="تلگرام" class="ta-link telegram">
+                            <img src="/static/icons/small-colored/telegram.svg" alt="Telegram" class="ta-icon">
+                        </a>
+                        {{end}}
+                        {{if .GitHub}}
+                        <a href="{{.GitHub}}" target="_blank" rel="noopener noreferrer" title="GitHub" class="ta-link github">
+                            <img src="/static/icons/small-colored/github.svg" alt="GitHub" class="ta-icon">
+                        </a>
+                        {{end}}
+                        {{if .LinkedIn}}
+                        <a href="{{.LinkedIn}}" target="_blank" rel="noopener noreferrer" title="LinkedIn" class="ta-link linkedin">
+                            <img src="/static/icons/small-colored/linkedin.svg" alt="LinkedIn" class="ta-icon">
+                        </a>
+                        {{end}}
+                        {{if .Website}}
+                        <a href="{{.Website}}" target="_blank" rel="noopener noreferrer" title="وب‌سایت" class="ta-link website">
+                            <img src="/static/icons/small/website.svg" alt="Website" class="ta-icon">
+                        </a>
+                        {{end}}
+                        {{if .Instagram}}
+                        <a href="{{.Instagram}}" target="_blank" rel="noopener noreferrer" title="اینستاگرام" class="ta-link instagram">
+                            <img src="/static/icons/small-colored/instagram.svg" alt="Instagram" class="ta-icon">
+                        </a>
+                        {{end}}
                     </div>
                 </div>
                 {{end}}
