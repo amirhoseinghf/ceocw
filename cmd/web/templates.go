@@ -11,6 +11,8 @@ type templateData struct {
 	Course          *models.Course
 	Teacher         *models.Teacher
 	TeacherCourses  []models.TeacherCourseSummary
+	SemesterName    string
+	SemesterCourses []models.SemesterCourseItem
 	Error           string
 	Flash           string
 	IsAuthenticated bool

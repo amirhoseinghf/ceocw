@@ -49,6 +49,14 @@ type TeacherCourseSummary struct {
 	Slug         string
 }
 
+type SemesterCourseItem struct {
+	Id          int
+	Title       string
+	ShortName   string
+	Slug        string
+	TeacherName string
+}
+
 type CourseUser struct {
 	CourseID  int    `json:"courseId"`
 	UserID    int    `json:"userId"`
@@ -212,6 +220,49 @@ func (c *CourseModel) GetByTeacher(teacherID int) ([]TeacherCourseSummary, error
 		results = append(results, cs)
 	}
 	return results, nil
+}
+
+func (c *CourseModel) GetCoursesBySemester(season string, year int) ([]SemesterCourseItem, error) {
+	query := `
+        SELECT c.id, c.title, c.short_name,
+               t.first_name, t.last_name,
+               t.first_name_english, t.last_name_english,
+               s.season, s.year
+        FROM courses c
+        JOIN teachers t ON c.teacher_id = t.id
+        JOIN semesters s ON c.semester_id = s.id
+        WHERE s.season = ? AND s.year = ?
+        ORDER BY c.title ASC
+    `
+	rows, err := c.DB.Query(query, season, year)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var items []SemesterCourseItem
+	for rows.Next() {
+		var item SemesterCourseItem
+		var firstName, lastName, firstNameEng, lastNameEng, seasonStr string
+		var yearInt int
+		if err := rows.Scan(&item.Id, &item.Title, &item.ShortName,
+			&firstName, &lastName, &firstNameEng, &lastNameEng,
+			&seasonStr, &yearInt); err != nil {
+			return nil, err
+		}
+		item.TeacherName = firstName + " " + lastName
+
+		// Compute slug using the same logic as Course.Slug()
+		shortNamePart := strings.ToLower(strings.ReplaceAll(item.ShortName, " ", "-"))
+		seasonPart := strings.ToLower(strings.ReplaceAll(seasonStr, " ", "-"))
+		yearPart := strconv.Itoa(yearInt)
+		firstNamePart := strings.ToLower(strings.ReplaceAll(firstNameEng, " ", "-"))
+		lastNamePart := strings.ToLower(strings.ReplaceAll(lastNameEng, " ", "-"))
+		item.Slug = fmt.Sprintf("%s-%s-%s-%s-%s", shortNamePart, seasonPart, yearPart, firstNamePart, lastNamePart)
+
+		items = append(items, item)
+	}
+	return items, nil
 }
 
 func (c *CourseModel) Insert(course Course) (int, error) {

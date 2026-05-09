@@ -1,0 +1,35 @@
+{{define "title"}}دوره‌های ترم {{.SemesterName}}{{end}}
+
+{{define "extra-head"}}
+<link rel="stylesheet" href="/static/css/semester_courses.css">
+{{end}}
+
+{{define "main"}}
+<div class="semester-courses-page" dir="rtl">
+    <div class="semester-hero">
+        <div class="semester-hero-inner">
+            <h1 class="semester-title">دوره‌های ترم {{.SemesterName}}</h1>
+        </div>
+    </div>
+
+    <div class="courses-list-section">
+        <div class="courses-list-header">
+            <h2>لیست دوره‌ها</h2>
+        </div>
+        {{if .SemesterCourses}}
+        <div class="semester-course-grid">
+            {{range .SemesterCourses}}
+            <a href="/course/{{.Slug}}" class="semester-course-card-link">
+                <div class="semester-course-card">
+                    <div class="semester-course-card-title">{{.Title}}</div>
+                    <div class="semester-course-card-teacher">{{.TeacherName}}</div>
+                </div>
+            </a>
+            {{end}}
+        </div>
+        {{else}}
+        <div class="no-content-message">هیچ دوره‌ای برای این ترم یافت نشد.</div>
+        {{end}}
+    </div>
+</div>
+{{end}}

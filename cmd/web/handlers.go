@@ -2960,3 +2960,56 @@ func (app *application) teacherCoursesView(w http.ResponseWriter, r *http.Reques
 	}
 	app.render(w, http.StatusOK, "teacher_courses.htm", data)
 }
+
+func (app *application) semesterCoursesView(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	slug := params.ByName("slug")
+
+	parts := strings.SplitN(slug, "-", 2)
+	if len(parts) != 2 {
+		app.notFound(w)
+		return
+	}
+	seasonEng := parts[0]
+	year, err := strconv.Atoi(parts[1])
+	if err != nil {
+		app.notFound(w)
+		return
+	}
+
+	// Basic range check
+	if year < 1300 || year > 1500 {
+		app.notFound(w)
+		return
+	}
+	if seasonEng != "spring" && seasonEng != "fall" {
+		app.notFound(w)
+		return
+	}
+
+	// Verify that the semester actually exists in the database
+	exists, err := app.semesters.Exists(seasonEng, year)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	if !exists {
+		app.notFound(w)
+		return
+	}
+
+	sem := models.Semester{Season: seasonEng, Year: year}
+	semesterName := sem.SemesterName()
+
+	courses, err := app.courses.GetCoursesBySemester(seasonEng, year)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	data := &templateData{
+		SemesterName:    semesterName,
+		SemesterCourses: courses,
+	}
+	app.render(w, http.StatusOK, "semester_courses.htm", data)
+}

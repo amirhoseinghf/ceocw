@@ -34,6 +34,8 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, "/course/:slug", app.courseView)
 	router.HandlerFunc(http.MethodGet, "/courses/:id", staff(app.courseGetByID))
 	router.HandlerFunc(http.MethodGet, "/courses", app.coursesGetAll)
+	router.HandlerFunc(http.MethodGet, "/teacher/:slug", app.teacherCoursesView)
+	router.HandlerFunc(http.MethodGet, "/semester/:slug", app.semesterCoursesView)
 
 	// Authentication routes (public)
 	router.HandlerFunc(http.MethodGet, "/user/signup", app.userSignup)
@@ -122,9 +124,6 @@ func (app *application) routes() http.Handler {
 	// Panel (admin dashboard) — catch-all so /panel/courses/1 etc. serve the SPA
 	router.HandlerFunc(http.MethodGet, "/panel", staff(app.panel))
 	router.HandlerFunc(http.MethodGet, "/panel/*subpath", staff(app.panel))
-
-	// Getting Specific Teacher's Courses
-	router.HandlerFunc(http.MethodGet, "/teacher/:slug", app.teacherCoursesView)
 
 	// Chain middleware (global)
 	standard := alice.New(app.recoverPanic, app.logRequest, secureHeaders, app.sessionManager.LoadAndSave)

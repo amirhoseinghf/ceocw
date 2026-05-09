@@ -1,0 +1,93 @@
+.semester-courses-page {
+    background: #f6f8fb;
+    min-height: 100vh;
+    font-family: 'Vazir', Tahoma, Arial, sans-serif;
+}
+
+/* Hero */
+.semester-hero {
+    background: linear-gradient(135deg, #1e3a8a 0%, #312e81 60%, #4c1d95 100%);
+    padding: 48px 24px;
+}
+.semester-hero-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+.semester-title {
+    margin: 0;
+    color: #fff;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+/* Courses section */
+.courses-list-section {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 24px;
+}
+.courses-list-header h2 {
+    font-size: 1.6rem;
+    font-weight: 600;
+    margin-bottom: 24px;
+    color: #0f172a;
+    border-right: 4px solid #1e3a8a;
+    padding-right: 12px;
+}
+
+/* Grid and cards */
+.semester-course-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+.semester-course-card-link {
+    text-decoration: none;
+    color: inherit;
+}
+.semester-course-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid #e2e8f0;
+    transition: all 0.25s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+}
+.semester-course-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+    border-color: #c7d2fe;
+}
+.semester-course-card-title {
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+    color: #1e293b;
+}
+.semester-course-card-teacher {
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+/* No content */
+.no-content-message {
+    text-align: center;
+    padding: 40px;
+    background: #fff;
+    border-radius: 16px;
+    border: 1px dashed #cbd5e1;
+    color: #64748b;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .semester-hero {
+        padding: 32px 20px;
+    }
+    .semester-title {
+        font-size: 1.5rem;
+    }
+    .semester-course-grid {
+        grid-template-columns: 1fr;
+    }
+}

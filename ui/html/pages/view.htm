@@ -16,15 +16,17 @@
             </div>
             {{end}}
             <div class="course-hero-text">
-                <div class="course-eyebrow">{{.Course.Semester.SemesterName}}</div>
+                <a href="/semester/{{.Course.Semester.Season}}-{{.Course.Semester.Year}}" class="course-eyebrow-link">
+                    <div class="course-eyebrow">{{.Course.Semester.SemesterName}}</div>
+                </a>
                 <h1 class="course-title">{{.Course.Title}}</h1>
-                {{if .Course.Teacher.PageURL}}<a href="/teacher/{{.Course.Teacher.TeacherSlug}}" class="course-teacher-pill">
+                <a href="/teacher/{{.Course.Teacher.TeacherSlug}}" class="course-teacher-pill">
                         <img src="{{.Course.Teacher.ImageURL}}" alt="" class="course-teacher-avatar" onerror="this.style.display='none';">
                         <div class="course-teacher-info">
                             <span class="course-teacher-name">دکتر {{.Course.Teacher.FirstName}} {{.Course.Teacher.LastName}}</span>
                             <span class="course-teacher-label">مدرس</span>
                         </div>
-                    </a>{{else}}</div>{{end}}
+                    </a>
             </div>
         </div>
     </header>

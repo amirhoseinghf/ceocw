@@ -121,12 +121,22 @@
   max-width: min(100%, 360px);
   min-height: 58px;
   border: 1px solid rgba(255,255,255,0.15);
-  transition: background 0.2s, transform 0.2s;
+  /* transition: background 0.2s, transform 0.2s; */
 }
-.course-teacher-pill:hover {
-  background: rgba(255,255,255,0.18);
-  transform: translateY(-1px);
+.course-teacher-pill:hover  {
+  background: rgba(255, 255, 255, 0.25);
+  
 }
+
+.course-eyebrow-link {
+    text-decoration: none;
+    display: inline-block;
+}
+.course-eyebrow-link:hover .course-eyebrow {
+    background: rgba(255, 255, 255, 0.25);
+    
+}
+
 .course-teacher-avatar {
   width: 40px;
   height: 40px;

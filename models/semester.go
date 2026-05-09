@@ -89,3 +89,12 @@ func (m *SemesterModel) Delete(id int) error {
 	_, err := m.DB.Exec("DELETE FROM semesters WHERE id = ?", id)
 	return err
 }
+
+func (m *SemesterModel) Exists(season string, year int) (bool, error) {
+	var count int
+	err := m.DB.QueryRow("SELECT COUNT(*) FROM semesters WHERE season = ? AND year = ?", season, year).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
