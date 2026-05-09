@@ -121,6 +121,7 @@
     background: #f0f0f1;
     color: #1e1e1e;
     border: 1px solid #ccc;
+    text-decoration: none;
 }
 .btn-secondary:hover {
     background: #e0e0e0;
