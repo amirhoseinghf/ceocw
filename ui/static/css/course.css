@@ -545,9 +545,23 @@
   transition: all 0.2s;
 }
 .ta-link:hover {
-  {{/* background: #1e3a8a;
-  border-color: #1e3a8a; */}}
+  /* background: #1e3a8a;
+  border-color: #1e3a8a; */
   transform: scale(1.1);
+}
+
+.announcement-author {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.author-info {
+    display: flex;
+    flex-direction: column;
+}
+.announcement-date {
+    font-size: 0.75rem;
+    color: #aaa;
 }
 
 
@@ -655,7 +669,11 @@
   object-fit: cover;
   background: url('../img/teacher-placeholder.jpg') center / cover;
 }
-.author-name { font-weight: 600; color: #1e293b; font-size: 0.9rem; }
+.author-name { 
+font-family: "Vazir";
+font-weight: 600; color: #1e293b; font-size: 0.9rem; 
+
+}
 .announcement-title {
   margin: 0 0 8px;
   color: #0f172a;

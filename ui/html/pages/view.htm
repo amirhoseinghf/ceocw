@@ -209,8 +209,11 @@
                     <div class="announcement-item">
                         <div class="announcement-author">
                             <img class="author-image" src="{{if .AuthorImagePath}}{{.AuthorImagePath}}{{else}}/static/img/teacher-placeholder.jpg{{end}}" alt="" onerror="this.src='/static/img/teacher-placeholder.jpg';">
-                            <div class="author-name">
-                                {{if .AuthorFirstName}}{{.AuthorFirstName}} {{.AuthorLastName}}{{else}}ثبت‌کننده نامشخص{{end}}
+                            <div class="author-info">
+                                <div class="author-name">
+                                    {{if .AuthorFirstName}}{{.AuthorFirstName}} {{.AuthorLastName}}{{else}}ثبت‌کننده نامشخص{{end}}
+                                </div>
+                                <div class="announcement-date">{{.CreatedAtJalali}}</div>
                             </div>
                         </div>
                         {{if .Title}}<h3 class="announcement-title">{{.Title}}</h3>{{end}}

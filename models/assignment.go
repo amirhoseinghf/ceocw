@@ -140,18 +140,6 @@ func (m *AssignmentModel) Delete(id int) error {
 	return err
 }
 
-// Jalali date structure
-type Jalali struct {
-	Year  int
-	Month int
-	Day   int
-}
-
-// isLeapYear checks if a Gregorian year is a leap year
-func isLeapYear(year int) bool {
-	return (year%4 == 0 && year%100 != 0) || (year%400 == 0)
-}
-
 // gregorianToJalali converts a Gregorian time.Time to a Jalali struct
 func (a Assignment) ConvertToJalali(t time.Time) Jalali {
 	// Days in months for a non-leap Gregorian year
@@ -229,21 +217,6 @@ func (a Assignment) ConvertToJalali(t time.Time) Jalali {
 	}
 
 	return Jalali{Year: jalaliYear, Month: jalaliMonth, Day: jalaliDayOfYear}
-}
-
-// Get readable Persian date string
-func (j Jalali) ToPersianString() string {
-	months := []string{
-		"فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور",
-		"مهر", "آبان", "آذر", "دی", "بهمن", "اسفند",
-	}
-
-	if j.Month < 1 || j.Month > 12 {
-		return fmt.Sprintf("%d/%02d/%02d", j.Year, j.Month, j.Day)
-	}
-
-	monthName := months[j.Month-1]
-	return fmt.Sprintf("%d %s %d", j.Day, monthName, j.Year)
 }
 
 // Get readable Persian date with day name

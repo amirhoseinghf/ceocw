@@ -103,3 +103,7 @@ func (a *AnnouncementModel) Delete(id int) error {
 	_, err := a.DB.Exec("DELETE FROM announcements WHERE id = ?", id)
 	return err
 }
+
+func (a Announcement) CreatedAtJalali() string {
+	return GregorianToJalali(a.CreatedAt).ToPersianString()
+}
