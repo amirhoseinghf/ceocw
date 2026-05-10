@@ -154,3 +154,27 @@ func (t *Teacher) TeacherSlug() string {
 	last := strings.ReplaceAll(strings.ToLower(t.LastNameEnglish), " ", "-")
 	return first + "-" + last
 }
+
+// GetLatest returns the most recent teachers (by ID descending).
+func (t *TeacherModel) GetLatest(limit int) ([]Teacher, error) {
+	rows, err := t.DB.Query(`
+        SELECT id, image_url, first_name, last_name, first_name_english, last_name_english, page_url
+        FROM teachers
+        ORDER BY id DESC
+        LIMIT ?
+    `, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var teachers []Teacher
+	for rows.Next() {
+		var tch Teacher
+		err := rows.Scan(&tch.Id, &tch.ImageURL, &tch.FirstName, &tch.LastName, &tch.FirstNameEnglish, &tch.LastNameEnglish, &tch.PageURL)
+		if err != nil {
+			return nil, err
+		}
+		teachers = append(teachers, tch)
+	}
+	return teachers, nil
+}

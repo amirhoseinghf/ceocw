@@ -3051,3 +3051,13 @@ func (app *application) searchCourses(w http.ResponseWriter, r *http.Request) {
 	}
 	app.render(w, http.StatusOK, "search_results.htm", data)
 }
+
+func (app *application) teachersLatest(w http.ResponseWriter, r *http.Request) {
+	teachers, err := app.teachers.GetLatest(5)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(teachers)
+}

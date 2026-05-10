@@ -153,5 +153,39 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 }
 
+    async function fetchLatestTeachers() {
+    const container = document.getElementById('latest-teachers');
+    container.innerHTML = '<div class="no-results">در حال بارگذاری...</div>';
+    try {
+        const response = await fetch('/latest/teachers');
+        if (!response.ok) throw new Error();
+        const teachers = await response.json();
+        renderTeachers(teachers);
+    } catch (err) {
+        container.innerHTML = '<div class="no-results">خطا در بارگذاری مدرسین</div>';
+        console.error(err);
+    }
+}
+
+    function renderTeachers(teachers) {
+        const container = document.getElementById('latest-teachers');
+        if (!teachers.length) {
+            container.innerHTML = '<div class="no-results">هیچ مدرسی یافت نشد.</div>';
+            return;
+        }
+        const html = teachers.map(teacher => `
+            <div class="teacher-card">
+                <a href="/teacher/${teacher.FirstNameEnglish.toLowerCase()}-${teacher.LastNameEnglish.toLowerCase().replace(/ /g, '-')}" class="teacher-card-link">
+                    <img src="${teacher.ImageURL || '/static/img/teacher-placeholder.jpg'}" class="teacher-avatar" alt="${teacher.FirstName} ${teacher.LastName}" onerror="this.src='/static/img/teacher-placeholder.jpg';">
+                    <div class="teacher-name">دکتر ${teacher.FirstName} ${teacher.LastName}</div>
+                    <div class="teacher-slug">مدرس</div>
+                </a>
+            </div>
+        `).join('');
+        container.innerHTML = html;
+    }
+
+
     fetchLatestCourses();
+    fetchLatestTeachers();
 });

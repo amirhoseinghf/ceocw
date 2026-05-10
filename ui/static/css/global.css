@@ -1,0 +1,26 @@
+/* Reset and base layout */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: #f6f8fb; 
+    font-family: 'Vazir', Tahoma, Arial, sans-serif;
+}
+
+main {
+    flex: 1;  /* pushes footer down */
+}
+
+/* Ensure no extra margins from page containers */
+.home-page,
+.teacher-courses-page,
+.course-page,
+.semester-courses-page {
+    flex: 1;
+}
