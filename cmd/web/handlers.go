@@ -198,7 +198,6 @@ func (app *application) panel(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from session
 	userID, ok := app.sessionManager.Get(r.Context(), "userID").(int)
 	if !ok {
-		app.infoLog.Println("NOT OK")
 		// Shouldn't happen because requireAuthentication already checks, but handle gracefully
 		http.Redirect(w, r, "/user/login", http.StatusSeeOther)
 		return
@@ -3029,7 +3028,6 @@ func (app *application) coursesLatest(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 		return
 	}
-	app.infoLog.Printf("LAtest: %v", courses)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(courses)
 }
