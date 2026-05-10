@@ -1,0 +1,16 @@
+{{define "title"}}دسترسی غیرمجاز{{end}}
+
+{{define "extra-head"}}
+<link rel="stylesheet" href="/static/css/forbidden.css">
+{{end}}
+
+{{define "main"}}
+<div class="forbidden-container">
+    <div class="forbidden-content">
+        <div class="forbidden-icon">🚫</div>
+        <h1 class="forbidden-title">۴۰۳</h1>
+        <p class="forbidden-message" dir="rtl">شما مجوز دسترسی به این صفحه را ندارید.</p>
+        <a href="/" class="forbidden-home-btn">بازگشت به صفحه اصلی</a>
+    </div>
+</div>
+{{end}}

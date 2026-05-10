@@ -76,7 +76,7 @@ func (app *application) requireRole(roles ...string) func(http.Handler) http.Han
 				return
 			}
 			if !allowed[user.UserType] {
-				app.clientError(w, http.StatusForbidden)
+				app.forbidden(w)
 				return
 			}
 			w.Header().Add("Cache-Control", "no-store")
@@ -152,7 +152,7 @@ func (app *application) requireCourseView(w http.ResponseWriter, r *http.Request
 		return nil, false
 	}
 	if !allowed {
-		app.clientError(w, http.StatusForbidden)
+		app.forbidden(w)
 		return nil, false
 	}
 	return user, true
@@ -169,7 +169,7 @@ func (app *application) requireCourseSettings(w http.ResponseWriter, r *http.Req
 		return nil, false
 	}
 	if !allowed {
-		app.clientError(w, http.StatusForbidden)
+		app.forbidden(w)
 		return nil, false
 	}
 	return user, true
@@ -186,7 +186,7 @@ func (app *application) requireCourseContent(w http.ResponseWriter, r *http.Requ
 		return nil, false
 	}
 	if !allowed {
-		app.clientError(w, http.StatusForbidden)
+		app.forbidden(w)
 		return nil, false
 	}
 	return user, true

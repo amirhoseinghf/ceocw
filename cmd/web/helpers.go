@@ -19,7 +19,11 @@ func (app *application) clientError(w http.ResponseWriter, status int) {
 }
 
 func (app *application) notFound(w http.ResponseWriter) {
-	app.clientError(w, http.StatusNotFound)
+	app.render(w, http.StatusNotFound, "not_found.htm", &templateData{})
+}
+
+func (app *application) forbidden(w http.ResponseWriter) {
+	app.render(w, http.StatusForbidden, "forbidden.htm", &templateData{})
 }
 
 func (app *application) render(w http.ResponseWriter, status int, page string, data *templateData) {

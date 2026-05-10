@@ -5,6 +5,7 @@
     margin: 4rem auto;
     padding: 0 1.5rem;
     direction: rtl;
+    min-width: 450px;
 }
 
 #email, #password {
@@ -136,6 +137,9 @@ body {
 
 /* Responsive */
 @media (max-width: 640px) {
+    .auth-container {
+        min-width: auto;
+    }
     .auth-card {
         padding: 1.5rem;
     }
