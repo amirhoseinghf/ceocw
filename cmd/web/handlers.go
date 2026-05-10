@@ -3021,3 +3021,14 @@ func (app *application) semesterCoursesView(w http.ResponseWriter, r *http.Reque
 	}
 	app.render(w, http.StatusOK, "semester_courses.htm", data)
 }
+
+func (app *application) coursesLatest(w http.ResponseWriter, r *http.Request) {
+	limit := 4
+	courses, err := app.courses.GetLatestSummaries(limit)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(courses)
+}

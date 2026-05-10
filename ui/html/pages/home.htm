@@ -1,16 +1,35 @@
-{{define "title"}}Home{{end}}
+{{define "title"}}خانه{{end}}
 
 {{define "extra-head"}}
 <link rel="stylesheet" href="/static/css/home.css">
 {{end}}
 
 {{define "main"}}
-<div class="home-container">
-    <h1>به سایت ما خوش آمدید</h1>
-    <!-- your existing home content -->
+<div class="home-page" dir="rtl">
+    <div class="home-hero">
+        <div class="home-hero-inner">
+            <h1 class="home-title">درس افزار باز مهندسی کامپیوتر</h1>
+            <div class="home-subtitle">درست رو پیدا کن!</div>
+            <div class="search-wrapper">
+                <input type="text" id="search-input" class="search-input" placeholder="جستجوی دوره (عنوان، استاد، ترم)" autocomplete="off">
+                <span class="search-icon">🔍</span>
+                <div id="suggestions" class="suggestions-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="courses-list-section">
+        <div class="courses-list-header">
+            <h2>آخرین دوره‌ها</h2>
+        </div>
+        <div id="latest-courses" class="latest-grid">
+            <div class="no-results">در حال بارگذاری...</div>
+        </div>
+    </div>
 </div>
 <div id="toast" class="toast"></div>
 <script src="/static/js/utils.js"></script>
+<script src="/static/js/home.js"></script>
 {{if .Flash}}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
