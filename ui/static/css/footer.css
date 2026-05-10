@@ -20,11 +20,16 @@
 .github-link {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 7px;
     color: #aaa;
     text-decoration: none;
     transition: color 0.2s, opacity 0.2s;
 }
+
+.github-text {
+    font-family: "Aller";
+}
+
 .github-link:hover {
     color: #fff;
 }
@@ -33,7 +38,7 @@
     height: 20px;
     opacity: 0.7;          /* makes white icon appear greyish to match #aaa */
     transition: opacity 0.2s;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
 }
 .github-link:hover .github-icon {
     opacity: 1;            /* becomes fully white on hover */

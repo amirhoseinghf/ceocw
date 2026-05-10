@@ -43,7 +43,7 @@ a {
     border: 1.5px solid #ffffff;
     border-radius: 40px;        
     color: white;
-    font-family: 'SFPro', sans-serif;
+    font-family: 'Aller', sans-serif;
     font-size: 14px;
     font-weight: 500;
     text-decoration: none;
@@ -97,7 +97,7 @@ a {
 }
 
 .university-info h1 {
-    font-family: 'SFPro', 'Segoe UI', sans-serif;
+    font-family: 'Aller', 'Segoe UI', sans-serif;
     color: white;
     font-weight: 200;
     font-size: 17px;
@@ -105,7 +105,7 @@ a {
 }
 
 .university-info p {
-    font-family: 'SFPro', 'Segoe UI', sans-serif;
+    font-family: 'Aller', 'Segoe UI', sans-serif;
     color: rgb(205, 205, 205);
     font-weight: 200;
     font-size: 14px;
