@@ -23,11 +23,14 @@ func (app *application) routes() http.Handler {
 	}
 
 	// Static files (no authentication needed)
-	fileServer := http.FileServer(http.Dir("./ui/static"))
-	router.Handler(http.MethodGet, "/static/*filepath", http.StripPrefix("/static/", fileServer))
+	// Static files (no authentication needed)
+	router.HandlerFunc(http.MethodGet, "/static/*filepath", func(w http.ResponseWriter, r *http.Request) {
+		app.serveStaticFile(w, r, noListFileSystem{http.Dir("./ui/static")}, "/static/")
+	})
 
-	fileServerData := http.FileServer(http.Dir("./data"))
-	router.Handler(http.MethodGet, "/data/*filepath", http.StripPrefix("/data/", fileServerData))
+	router.HandlerFunc(http.MethodGet, "/data/*filepath", func(w http.ResponseWriter, r *http.Request) {
+		app.serveStaticFile(w, r, noListFileSystem{http.Dir("./data")}, "/data/")
+	})
 
 	// Public routes (no authentication)
 	router.HandlerFunc(http.MethodGet, "/", app.home)

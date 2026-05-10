@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
+	"os"
 	"regexp"
 	"runtime/debug"
+	"strings"
 )
 
 func (app *application) serverError(w http.ResponseWriter, err error) {
@@ -78,4 +80,54 @@ func isValidCourseUserRole(role string) bool {
 
 func (app *application) isAuthenticated(r *http.Request) bool {
 	return app.sessionManager.Exists(r.Context(), "userID")
+}
+
+type noListFileSystem struct {
+	fs http.FileSystem
+}
+
+func (nfs noListFileSystem) Open(name string) (http.File, error) {
+	f, err := nfs.fs.Open(name)
+	if err != nil {
+		return nil, err
+	}
+	s, err := f.Stat()
+	if err != nil {
+		f.Close()
+		return nil, err
+	}
+	if s.IsDir() {
+		f.Close()
+		return nil, os.ErrNotExist // pretend the directory does not exist
+	}
+	return f, nil
+}
+
+func (app *application) serveStaticFile(w http.ResponseWriter, r *http.Request, fs http.FileSystem, prefix string) {
+	// Remove the prefix to get the relative path
+	path := strings.TrimPrefix(r.URL.Path, prefix)
+	if path == "" || strings.HasSuffix(path, "/") {
+		app.notFound(w)
+		return
+	}
+	f, err := fs.Open(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+	defer f.Close()
+	stat, err := f.Stat()
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	if stat.IsDir() {
+		app.notFound(w)
+		return
+	}
+	http.ServeContent(w, r, stat.Name(), stat.ModTime(), f)
 }
