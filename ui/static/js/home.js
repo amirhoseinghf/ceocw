@@ -1,11 +1,27 @@
 // home.js
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('search-input');
+    const searchIcon = document.getElementById('search-icon');
     const suggestionsContainer = document.getElementById('suggestions');
     const latestContainer = document.getElementById('latest-courses');
     let allCoursesCache = null;
     let isLoadingSearch = false;
 
+    // Make the search icon clickable
+    if (searchIcon && searchInput) {
+        searchIcon.addEventListener('click', function() {
+            const query = searchInput.value.trim();
+            if (query) {
+                window.location.href = `/search?q=${encodeURIComponent(query)}`;
+            } else {
+                searchInput.focus();
+            }
+        });
+        // Ensure cursor changes to pointer (CSS already does, but double-check)
+        searchIcon.style.cursor = 'pointer';
+    }
+
+    // Load latest courses (only 4)
     async function fetchLatestCourses() {
         latestContainer.innerHTML = '<div class="no-results">در حال بارگذاری...</div>';
         try {
@@ -15,6 +31,7 @@ document.addEventListener('DOMContentLoaded', function() {
             renderLatest(courses);
         } catch (err) {
             latestContainer.innerHTML = '<div class="no-results">خطا در بارگذاری دوره‌ها</div>';
+            console.error(err);
         }
     }
 
@@ -29,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <img src="${course.ImageUrl ? escapeHtml(course.ImageUrl) : '/static/img/course-placeholder.jpg'}"
                          class="card-image"
                          alt="${escapeHtml(course.Title)}"
-                         onerror="this.onerror=null;this.src='/static/img/course_placeholder.jpg';">
+                         onerror="this.onerror=null;this.src='/static/img/course-placeholder.jpg';">
                     <div class="card-content">
                         <div class="card-title">${escapeHtml(course.Title)}</div>
                         <div class="card-teacher">${escapeHtml(course.TeacherName)}</div>
@@ -103,9 +120,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    document.addEventListener('click', function(e) {
-        if (!searchInput.contains(e.target) && !suggestionsContainer.contains(e.target)) {
-            suggestionsContainer.style.display = 'none';
+    // Search on Enter key
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const query = searchInput.value.trim();
+            if (query) {
+                window.location.href = `/search?q=${encodeURIComponent(query)}`;
+            }
         }
     });
 
@@ -113,6 +135,23 @@ document.addEventListener('DOMContentLoaded', function() {
     searchInput.addEventListener('focus', function() {
         if (searchInput.value.length > 0) handleSearchInput();
     });
+
+    // Close suggestions when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !suggestionsContainer.contains(e.target)) {
+            suggestionsContainer.style.display = 'none';
+        }
+    });
+
+    function performSearchFromIcon() {
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+        const query = searchInput.value.trim();
+        if (query) {
+            window.location.href = `/search?q=${encodeURIComponent(query)}`;
+        }
+    }
+}
 
     fetchLatestCourses();
 });

@@ -923,3 +923,57 @@ func (c *CourseModel) GetLatestSummaries(limit int) ([]CourseSummary, error) {
 	}
 	return summaries, nil
 }
+
+func (c *CourseModel) SearchCourses(query string) ([]CourseSummary, error) {
+	searchTerm := "%" + strings.ToLower(query) + "%"
+	// Use a UNION-like approach but simpler: search in title, teacher name, semester name
+	sqlQuery := `
+        SELECT 
+            c.id, c.title, c.short_name, c.image_url,
+            t.id, t.first_name, t.last_name, t.first_name_english, t.last_name_english,
+            s.id, s.season, s.year
+        FROM courses c
+        JOIN teachers t ON c.teacher_id = t.id
+        JOIN semesters s ON c.semester_id = s.id
+        WHERE LOWER(c.title) LIKE ?
+           OR LOWER(CONCAT(t.first_name, ' ', t.last_name)) LIKE ?
+           OR LOWER(s.season) LIKE ?
+           OR CAST(s.year AS CHAR) LIKE ?
+        ORDER BY c.id DESC
+    `
+	rows, err := c.DB.Query(sqlQuery, searchTerm, searchTerm, searchTerm, searchTerm)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var summaries []CourseSummary
+	for rows.Next() {
+		var cs CourseSummary
+		var teacherId, semesterId int
+		var firstName, lastName, firstNameEnglish, lastNameEnglish, season string
+		var year int
+		err := rows.Scan(
+			&cs.Id, &cs.Title, &cs.ShortName, &cs.ImageUrl,
+			&teacherId, &firstName, &lastName, &firstNameEnglish, &lastNameEnglish,
+			&semesterId, &season, &year,
+		)
+		if err != nil {
+			return nil, err
+		}
+		cs.TeacherId = teacherId
+		cs.TeacherName = firstName + " " + lastName
+		cs.SemesterId = semesterId
+		sem := Semester{Season: season, Year: year}
+		cs.SemesterName = sem.SemesterName()
+		cs.Slug = (Course{
+			ShortName: cs.ShortName,
+			Semester:  sem,
+			Teacher: Teacher{
+				FirstNameEnglish: firstNameEnglish,
+				LastNameEnglish:  lastNameEnglish,
+			},
+		}).BuildSlug()
+		summaries = append(summaries, cs)
+	}
+	return summaries, nil
+}

@@ -24,6 +24,7 @@
     font-size: 1.1rem;
     margin-bottom: 32px;
 }
+
 .search-wrapper {
     position: relative;
     max-width: 500px;
@@ -43,15 +44,34 @@
     outline: none;
     box-shadow: 0 6px 16px rgba(0,0,0,0.15);
 }
+
+.search-icon-btn {
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .search-icon {
     position: absolute;
     left: 18px;
     top: 50%;
     transform: translateY(-50%);
-    color: #94a3b8;
     font-size: 1.2rem;
-    pointer-events: none;
+    color: #94a3b8;
+    cursor: pointer;
+    z-index: 2;
+    background: transparent;
+    pointer-events: auto;   /* ensures clicks pass through */
 }
+
 .suggestions-list {
     position: absolute;
     top: 100%;

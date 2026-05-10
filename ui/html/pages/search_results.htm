@@ -1,0 +1,35 @@
+{{define "title"}}جستجو: {{.SearchQuery}}{{end}}
+
+{{define "extra-head"}}
+<link rel="stylesheet" href="/static/css/teacher_courses.css">
+{{end}}
+
+{{define "main"}}
+<div class="teacher-courses-page" dir="rtl">
+    <div class="teacher-page-hero" style="background: linear-gradient(135deg, #1e3a8a 0%, #312e81 60%, #4c1d95 100%);">
+        <div class="teacher-page-hero-inner">
+            <h1 class="teacher-page-name">نتایج جستجو برای: "{{.SearchQuery}}"</h1>
+        </div>
+    </div>
+    <div class="courses-list-section">
+        <div class="courses-list-header">
+            <h2>دوره‌های یافت شده ({{len .SearchResults}})</h2>
+        </div>
+        {{if .SearchResults}}
+        <div class="teacher-course-grid">
+            {{range .SearchResults}}
+            <a href="/course/{{.Slug}}" class="teacher-course-card-link">
+                <div class="teacher-course-card">
+                    <div class="teacher-course-card-title">{{.Title}}</div>
+                    <div class="teacher-course-card-semester">{{.SemesterName}}</div>
+                    <div class="teacher-course-card-semester" style="margin-top: 4px;">{{.TeacherName}}</div>
+                </div>
+            </a>
+            {{end}}
+        </div>
+        {{else}}
+        <div class="no-content-message">هیچ دوره‌ای برای "{{.SearchQuery}}" یافت نشد.</div>
+        {{end}}
+    </div>
+</div>
+{{end}}

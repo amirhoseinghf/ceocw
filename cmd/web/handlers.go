@@ -3029,6 +3029,25 @@ func (app *application) coursesLatest(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 		return
 	}
+	app.infoLog.Printf("LAtest: %v", courses)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(courses)
+}
+
+func (app *application) searchCourses(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query().Get("q")
+	if query == "" {
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+	results, err := app.courses.SearchCourses(query)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	data := &templateData{
+		SearchQuery:   query,
+		SearchResults: results,
+	}
+	app.render(w, http.StatusOK, "search_results.htm", data)
 }
