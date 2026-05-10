@@ -404,9 +404,9 @@
                     {{range .Course.Exams}}
                     <div class="mobile-assignment-item">
                         <div class="mobile-assignment-title">
-                            {{if .Semester.Id}}{{.Semester.SemesterName}}{{else}}نامشخص{{end}}
+                            {{if .Semester.Id}}{{.Semester.SemesterName}}{{else}}ترم نامشخص{{end}}
                             {{if .ThisSemester}}<span class="project-badge">این ترم</span>{{end}}
-                            <span>- {{.ExamType}}</span>
+                            <span>- {{.ExamTypeToPersian}}</span>
                         </div>
                         <div class="mobile-assignment-actions">
                             <a href="{{.FileName}}" class="download-btn" target="_blank">دانلود</a>

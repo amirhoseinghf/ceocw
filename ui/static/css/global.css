@@ -24,3 +24,812 @@ main {
 .semester-courses-page {
     flex: 1;
 }
+
+/* --- Vazir Font Definitions --- */
+
+/* Medium Weight (Normal) */
+@font-face {
+  font-family: "Vazir";
+  src: url("../fonts/Vazir/Vazir-Medium-FD-WOL.woff2") format("woff2"),
+       url("../fonts/Vazir/Vazir-Medium-FD-WOL.woff") format("woff");
+  font-weight: 500; /* یا normal که معمولاً معادل 400 یا 500 هست */
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Light Weight */
+@font-face {
+  font-family: "Vazir";
+  src: url("../fonts/Vazir/Vazir-Thin-FD-WOL.woff2") format("woff2"),
+       url("../fonts/Vazir/Vazir-Thin-FD-WOL.woff") format("woff");
+  font-weight: 200; /* Thin */
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Light Weight */
+@font-face {
+  font-family: "Vazir";
+  src: url("../fonts/Vazir/Vazir-Light-FD-WOL.woff2") format("woff2"),
+       url("../fonts/Vazir/Vazir-Light-FD-WOL.woff") format("woff");
+  font-weight: 300; /* Light */
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Bold Weight */
+@font-face {
+  font-family: "Vazir";
+  src: url("../fonts/Vazir/Vazir-Bold-FD-WOL.woff2") format("woff2"),
+       url("../fonts/Vazir/Vazir-Bold-FD-WOL.woff") format("woff");
+  font-weight: 700; /* Bold */
+  font-style: normal;
+  font-display: swap;
+}
+
+
+.course-container {
+  margin: 0 auto;
+  padding: 0px;
+  font-family: 'Vazir', Tahoma, Arial, sans-serif;
+}
+
+.course-header {
+    background-color: #363636;
+    width: 100%;
+    padding: 20px 60px;
+    
+}
+
+.header-content {
+    display: flex;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    gap: 30px;
+    align-items: flex-start;
+}
+
+.left-section {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.book-cover {
+    width: 150px;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+.right-section {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex-grow: 1;
+    vertical-align: middle;
+    margin-top: 10px;
+}
+
+.course-title {
+    color: white;
+    margin-bottom: 20px;
+    font-size: 2rem;
+    text-align: right;
+    flex-shrink: 0;
+    font-weight: 500;
+}
+
+.info-boxes {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: end;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.top-row, .bottom-row {
+    display: flex;
+    gap: 10px;
+}
+
+.info-box {
+    background-color: #282828;
+    border-radius: 17px;
+    padding: 15px 18px;
+    height: 58px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.teacher-image {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid white;
+    background-image: url('../img/teacher-placeholder.jpg');
+    background-size: cover;
+    background-position: center;
+    
+}
+
+.teacher-info:hover,
+.teacher-info:active {
+    background-color: #303030;
+}
+
+.telegram-info:hover,
+.telegram-info:active {
+    background-color: #0088cc; /* Telegram blue color */
+
+}
+
+.bottom-row a {
+    text-decoration: none;
+}
+
+.bale-info:hover,
+.bale-info:active {
+    background-color: #0ac99afe;
+
+}
+
+.bale-info,
+.telegram-info {
+    height: 45px;
+}
+
+.quera-info {
+    height: 45px;
+    background-color: #7c3aed;
+    color: #fff;
+}
+
+.quera-info:hover,
+.quera-info:active {
+    background-color: #6d28d9;
+}
+
+.quera-mark {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background: #fff;
+    color: #7c3aed;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: Arial, sans-serif;
+    font-weight: 700;
+}
+
+.bale-icon {
+    width: 22px;
+    height: 22px;
+}
+
+.telegram-icon {
+    width: 25px;
+    height: 25px;
+}
+
+@media (max-width: 895px) {
+    .header-content {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 20px;
+    }
+
+    .top-row,
+    .bottom-row {
+        flex-direction: column;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    
+    .course-title {
+        font-size: 1.5rem;
+    }
+    
+    .info-boxes {
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 895px) {
+    .header-content {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 20px;
+    }
+    
+    
+    .course-title {
+        font-size: 1.5rem;
+    }
+    
+    .info-boxes {
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
+}
+
+.books-section {
+  margin-bottom: 40px;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 15px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.books-section h2 {
+  color: #2c3e50;
+  margin-bottom: 20px;
+}
+
+.books-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 20px;
+}
+
+.book-item {
+  width: 100%;
+  /* height: 200px; */
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.3s ease;
+}
+
+.book-item:hover {
+  transform: translateY(-5px);
+}
+
+
+.course-info-section,
+.nav-section {
+    max-width: 1200px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+.section-title {
+    /* background-color: #282828; */
+    border-radius: 17px;
+    padding: 15px 0px;
+    text-align: right;
+    color: #282828;
+    margin-bottom: 5px;
+    font-size: 1.3rem;
+    font-weight: bold;
+}
+
+.info-content {
+    display: flex;
+    gap: 30px;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.description-container, .grade-distribution-container, .schedule-container, .course-tas-container {
+    background-color:  #363636;
+    border-radius: 17px;
+    padding: 25px;
+    color: white;
+    min-width: 200px;
+    flex-grow: 1;
+}
+
+.description-container h3, 
+.grade-distribution-container h3,
+.course-tas-container h3,
+.schedule-container h3,
+.schedule-container p {
+    margin-top: 0;
+    margin-bottom: 20px;
+    text-align: right;
+}
+
+.description-container p {
+  text-align: right;
+}
+
+.course-tas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+}
+
+.course-ta-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.course-ta-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex: 0 0 52px;
+}
+
+.course-ta-main {
+    min-width: 0;
+}
+
+.course-ta-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.course-ta-links a {
+    color: #dbeafe;
+    font-size: 0.85rem;
+    text-decoration: none;
+}
+
+.course-ta-links a:hover {
+    text-decoration: underline;
+}
+
+.grade-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: right;
+}
+
+.grade-table td {
+    padding: 10px 15px;
+    border-bottom: 1px solid #444;
+}
+
+.grade-table tr:last-child td {
+    border-bottom: none;
+}
+
+.grade-table tr:nth-child(even) {
+  background-color: #464646;
+}
+
+.schedule-details p {
+    margin: 10px 0;
+    line-height: 1.6;
+    text-align: right;
+}
+
+/* Navigation bar styling */
+.nav-bar {
+    background-color: #282828;
+    border-radius: 17px;
+    color: white;
+    margin-bottom: 5px;
+    display: flex;
+    gap: 0px;
+}
+
+
+.nav-item {
+    padding: 12px 23px;
+    border-radius: 15px;
+    border: #282828 solid 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.nav-item:hover,
+.nav-item:active {
+    background-color: #fff;
+    color: #282828;
+}
+
+/* MOBILE DROPDOWN HEADER */
+.nav-dropdown-header {
+    display: none;
+    background-color: #282828;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 17px;
+    cursor: pointer;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 16px;
+}
+
+.nav-dropdown-header .arrow {
+    font-size: 14px;
+}
+
+/* Mobile behavior */
+@media (max-width: 768px) {
+
+    /* Show dropdown header */
+    .nav-dropdown-header {
+        display: flex;
+        margin-bottom: 10px;
+    }
+
+    /* Hide nav bar until opened */
+    .nav-bar {
+        flex-direction: column;
+        display: none; /* toggled later */
+        margin-top: 8px;
+        transition: 500 1s ease-in-out;
+    }
+
+    .nav-item {
+        padding: 12px 20px;
+        border-radius: 12px;
+    }
+
+    /* When dropdown is open */
+    .nav-bar.open {
+        display: flex;
+    }
+}
+
+
+/* Announcement section styling */
+.announcements-section {
+    background-color: #282828;
+    border-radius: 17px;
+    padding: 25px;
+    color: white;
+    margin-bottom: 30px;
+}
+
+.announcement-item {
+    background-color: #3a3a3a;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.announcement-author {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.author-image {
+    background-image: url("../img/teacher-placeholder.jpg");
+    background-size: cover;
+    background-position: center;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.announcement-text {
+    line-height: 1.6;
+    margin-bottom: 15px;
+}
+
+/* Hide announcement section by default */
+.announcements-section.hidden {
+    display: none;
+}
+
+.assignments-section {
+    background-color: #282828;
+    border-radius: 17px;
+    padding: 25px;
+    color: white;
+    margin-bottom: 30px;
+}
+
+.assignments-section h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+.table-container {
+    overflow-x: auto;
+    margin: 0 -25px;
+    padding: 0 25px;
+}
+
+.assignments-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #3a3a3a;
+    border-radius: 12px;
+    overflow: hidden;
+    min-width: 600px; /* Ensure minimum width */
+}
+
+.assignments-table th,
+.assignments-table td {
+    padding: 15px 20px;
+    text-align: center;
+    border-bottom: 1px solid #444;
+    white-space: nowrap;
+}
+
+.assignments-table th {
+    background-color: #444;
+    font-weight: bold;
+}
+
+.assignments-table tr:last-child td {
+    border-bottom: none;
+}
+
+.download-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+}
+
+.download-btn:hover {
+    background-color: #45a049;
+}
+
+.extended {
+    background-color: #45a049;
+    font-size: 5px;
+    color: white;
+    padding: 3px;
+}
+
+.solution-btn {
+    background-color: #2196F3;
+    margin-right: 10px;
+}
+
+.solution-btn:hover {
+    background-color: #1976D2;
+}
+
+.extended-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    background-color: #ff9800;
+    color: white;
+    border-radius: 8px;
+    font-size: 10px;
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+.project-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    background-color: #1976D2;
+    color: white;
+    border-radius: 8px;
+    font-size: 10px;
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+.no-content-message {
+    text-align: center;
+    padding: 20px;
+    color: #ccc;
+    font-size: 16px;
+    background-color: #3a3a3a;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.mobile-assignments-list {
+    display: none; /* Hide by default */
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.mobile-assignment-item {
+    background-color: #3a3a3a;
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.mobile-assignment-title {
+    font-weight: bold;
+    text-align: center;
+}
+
+.mobile-assignment-actions {
+    display: flex;
+    justify-content: center;
+}
+
+/* Add this new class for slides mobile list */
+.mobile-slides-list,
+.mobile-notes-list,
+.mobile-exams-list {
+    display: none; /* Hide by default */
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+
+/* Update existing classes if needed */
+.mobile-assignments-list {
+    display: none; /* Initially hidden */
+}
+
+@media (max-width: 895px) {
+    .table-container,
+    .assignments-table {
+        margin: 0 -15px;
+        padding: 0 15px;
+    }
+    
+    .assignments-table {
+        min-width: 100%;
+        display: none; /* Hide desktop table */
+    }
+    
+    /* Show mobile list for assignments */
+    #assignments-content .mobile-assignments-list,
+    #slides-content .mobile-slides-list,
+    #notes-content .mobile-notes-list,
+    #exams-content .mobile-exams-list {
+        display: flex; /* Show mobile list */
+    }
+    
+    /* Ensure only one is visible at a time in mobile view */
+    .mobile-assignments-list, 
+    .mobile-slides-list,
+    .mobile-notes-list,
+    .mobile-exams-list {
+        display: none;
+    }
+    
+    .mobile-assignments-list {
+        display: flex; /* Only this for assignments section */
+    }
+}
+
+
+/* Show mobile view only on small screens */
+@media (max-width: 895px) {
+    .table-container,
+    .assignments-table {
+        margin: 0 -15px;
+        padding: 0 15px;
+    }
+    
+    .assignments-table {
+        min-width: 100%;
+        display: none; /* Hide desktop table */
+    }
+    
+    .mobile-assignments-list {
+        display: flex; /* Show mobile list */
+    }
+    
+    .assignments-table th,
+    .assignments-table td {
+        padding: 12px 10px;
+        font-size: 14px;
+    }
+    
+    .download-btn {
+        padding: 8px 16px;
+        font-size: 14px;
+    }
+
+    .solution-btn {
+        background-color: #2196F3;
+    }
+    
+    .solution-btn:hover {
+        background-color: #1976D2;
+    }
+}
+
+@media (max-width: 480px) {
+    .assignments-section {
+        padding: 15px;
+    }
+    
+    .mobile-assignment-item {
+        padding: 12px;
+    }
+    
+    .download-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    .solution-btn {
+        margin-right: 10px;
+    }
+}
+
+@media (max-width: 895px) {
+    .header-content {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 20px;
+    }
+
+    .course-title {
+        font-size: 1.5rem;
+    }
+    
+    .info-boxes {
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+        justify-content: center;
+    }
+    
+    .info-content {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .description-container, 
+    .grade-distribution-container, 
+    .schedule-container,
+    .course-tas-container {
+        width: 100%;
+    }
+}
+
+@media (max-width: 895px) {
+  .course-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .books-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+  
+  .schedule-item {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+  
+  .tab-menu {
+    flex-wrap: wrap;
+  }
+  
+  .tab-link {
+    padding: 12px 15px;
+    font-size: 0.9rem;
+  }
+}
