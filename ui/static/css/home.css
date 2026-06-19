@@ -229,6 +229,251 @@
     text-decoration: none;
     color: inherit;
 }
+.recordings-section {
+    padding-bottom: 72px;
+}
+.recordings-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+.recordings-count {
+    color: #64748b;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+.recordings-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 180px;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+.recordings-search,
+.recordings-sort {
+    width: 100%;
+    min-height: 44px;
+    border: 1px solid #dbe3ef;
+    border-radius: 10px;
+    background: #fff;
+    color: #1e293b;
+    font-family: 'Vazir', Tahoma, Arial, sans-serif;
+    font-size: 0.92rem;
+    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
+}
+.recordings-search {
+    padding: 10px 14px;
+}
+.recordings-sort {
+    padding: 10px 12px;
+    cursor: pointer;
+}
+.recordings-search:focus,
+.recordings-sort:focus {
+    outline: none;
+    border-color: #1e3a8a;
+    box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.12);
+}
+.recordings-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.recording-course-group {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    overflow: hidden;
+}
+.recording-course-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 16px 18px;
+    background: linear-gradient(90deg, #1e3a8a, #0f766e, #7c3aed);
+    color: #fff;
+}
+.recording-course-name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.6;
+}
+.recording-course-summary {
+    flex: 0 0 auto;
+    padding: 5px 10px;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.recording-sessions-list {
+    display: grid;
+    grid-template-columns: 1fr;
+}
+.recording-session-row {
+    display: grid;
+    grid-template-columns: minmax(100px, 150px) minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 14px;
+    padding: 13px 18px;
+    border-top: 1px solid #eef2f7;
+    transition: background 0.18s ease;
+}
+.recording-session-row:hover {
+    background: #f8fafc;
+}
+.recording-session-title {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 32px;
+    padding: 5px 10px;
+    color: #0f766e;
+    background: #ecfdf5;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-align: center;
+}
+.recording-file-name {
+    direction: ltr;
+    color: #64748b;
+    font-family: Consolas, 'Courier New', monospace;
+    font-size: 0.78rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+    text-align: left;
+}
+.recording-session-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+}
+.recording-session-meta span {
+    padding: 5px 9px;
+    color: #475569;
+    background: #f8fafc;
+    border: 1px solid #edf2f7;
+    border-radius: 8px;
+    font-size: 0.75rem;
+}
+.recording-session-actions {
+    display: flex;
+    gap: 8px;
+}
+.recording-download,
+.recording-copy {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 36px;
+    border-radius: 8px;
+    font-family: 'Vazir', Tahoma, Arial, sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+.recording-download {
+    flex: 1;
+    min-width: 96px;
+    padding: 0 18px;
+    color: #fff;
+    background: #1e3a8a;
+    border: 1px solid #1e3a8a;
+    text-decoration: none;
+}
+.recording-download:hover {
+    background: #172f72;
+    text-decoration: none;
+}
+.recording-copy {
+    width: 42px;
+    color: #1e3a8a;
+    background: #fff;
+    border: 1px solid #c7d2fe;
+}
+.recording-copy:hover {
+    background: #eef2ff;
+    border-color: #1e3a8a;
+}
+.recording-hint-modal[hidden] {
+    display: none;
+}
+.recording-hint-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+}
+.recording-hint-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.52);
+}
+.recording-hint-dialog {
+    position: relative;
+    width: min(100%, 520px);
+    padding: 24px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28);
+    direction: rtl;
+    text-align: right;
+}
+.recording-hint-dialog h3 {
+    margin: 0 0 12px;
+    color: #0f172a;
+    font-size: 1.15rem;
+}
+.recording-hint-dialog p {
+    margin: 0 0 12px;
+    color: #475569;
+    font-size: 0.92rem;
+    line-height: 1.9;
+}
+.recording-hint-dialog strong {
+    color: #1e3a8a;
+}
+.recording-hint-close {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 34px;
+    height: 34px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+    color: #475569;
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+}
+.recording-hint-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    margin-top: 4px;
+    padding: 0 18px;
+    border: 1px solid #1e3a8a;
+    border-radius: 9px;
+    background: #1e3a8a;
+    color: #fff;
+    font-family: 'Vazir', Tahoma, Arial, sans-serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+}
 
 @media (max-width: 768px) {
     .home-hero { padding: 32px 20px; }
@@ -236,4 +481,37 @@
     .home-subtitle { font-size: 0.9rem; }
     .latest-grid { grid-template-columns: 1fr; }
     .card-image { height: 140px; }
+    .recordings-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+    .recordings-toolbar {
+        grid-template-columns: 1fr;
+    }
+    .recording-course-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .recording-session-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    .recording-session-title {
+        justify-content: flex-start;
+    }
+    .recording-session-meta {
+        justify-content: flex-start;
+    }
+    .recording-session-actions {
+        display: grid;
+        grid-template-columns: 1fr 42px;
+    }
+    .recording-download {
+        min-width: 0;
+        padding: 0 16px;
+    }
+    .recording-hint-dialog {
+        padding: 22px 18px;
+    }
 }

@@ -34,6 +34,38 @@
             <div class="no-results">در حال بارگذاری...</div>
         </div>
     </div>
+    <div id="recordings" class="courses-list-section recordings-section">
+        <div class="courses-list-header recordings-header">
+            <h2>کلاس‌های ضبط شده</h2>
+            <div id="recordings-count" class="recordings-count"></div>
+        </div>
+        <div class="recordings-toolbar">
+            <input type="text" id="recordings-search" class="recordings-search" placeholder="جستجو در نام درس، جلسه یا فایل" autocomplete="off">
+            <select id="recordings-sort" class="recordings-sort" aria-label="مرتب‌سازی کلاس‌های ضبط شده">
+                <option value="course">نام درس</option>
+                <option value="date">جدیدترین درس‌ها</option>
+                <option value="count">بیشترین جلسه</option>
+            </select>
+        </div>
+        <div id="recordings-list" class="recordings-grid">
+            <div class="no-results">در حال بارگذاری...</div>
+        </div>
+    </div>
+</div>
+<div id="recording-hint-modal" class="recording-hint-modal" hidden>
+    <div class="recording-hint-backdrop" data-recording-hint-close></div>
+    <div class="recording-hint-dialog" role="dialog" aria-modal="true" aria-labelledby="recording-hint-title" dir="rtl">
+        <button type="button" class="recording-hint-close" data-recording-hint-close aria-label="بستن">×</button>
+        <h3 id="recording-hint-title">جستجوی کلاس ضبط شده</h3>
+        <p>
+            برای پیدا کردن ضبط‌های <strong id="recording-hint-course"></strong> به این بخش آمدید.
+            ممکن است عنوانی که برای فایل ضبط‌شده ثبت شده دقیقاً با عنوان درس یکی نباشد.
+        </p>
+        <p>
+            بهتر است چند کلیدواژه از نام درس، نام رایج درس، یا شماره جلسه را خودتان در فیلد جستجوی همین بخش وارد کنید.
+        </p>
+        <button type="button" class="recording-hint-action" data-recording-hint-close>متوجه شدم</button>
+    </div>
 </div>
 <div id="toast" class="toast"></div>
 <script src="/static/js/utils.js"></script>

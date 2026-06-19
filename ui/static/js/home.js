@@ -4,7 +4,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchIcon = document.getElementById('search-icon');
     const suggestionsContainer = document.getElementById('suggestions');
     const latestContainer = document.getElementById('latest-courses');
+    const recordingsContainer = document.getElementById('recordings-list');
+    const recordingsSearch = document.getElementById('recordings-search');
+    const recordingsSort = document.getElementById('recordings-sort');
+    const recordingsCount = document.getElementById('recordings-count');
+    const recordingHintModal = document.getElementById('recording-hint-modal');
+    const recordingHintCourse = document.getElementById('recording-hint-course');
     let allCoursesCache = null;
+    let allRecordings = [];
     let isLoadingSearch = false;
 
     // Make the search icon clickable
@@ -185,7 +192,272 @@ document.addEventListener('DOMContentLoaded', function() {
         container.innerHTML = html;
     }
 
+    function showRecordingHint(courseName) {
+        if (!recordingHintModal || !recordingHintCourse || !courseName) return;
+        recordingHintCourse.textContent = courseName;
+        recordingHintModal.hidden = false;
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeRecordingHint() {
+        if (!recordingHintModal) return;
+        recordingHintModal.hidden = true;
+        document.body.style.overflow = '';
+    }
+
+    function arToPersian(value) {
+        return String(value || '').replace(/[\u0643\u064a\u0649]/g, char => {
+            if (char === '\u0643') return '\u06a9';
+            return '\u06cc';
+        });
+    }
+
+    function toPersianDigits(value) {
+        return String(value).replace(/\d/g, digit => '۰۱۲۳۴۵۶۷۸۹'[digit]);
+    }
+
+    function normalizeSession(session) {
+        const value = arToPersian(session).trim();
+        if (!value || value === '—' || value === 'تست') return '—';
+        const englishDigits = value.replace(/[۰-۹٠-٩]/g, digit =>
+            String(digit.codePointAt(0) - (digit >= '٠' && digit <= '٩' ? 0x660 : 0x6f0))
+        );
+        if (/^\d+$/.test(englishDigits)) return `جلسه ${toPersianDigits(englishDigits)}`;
+        return value;
+    }
+
+    function sessionRank(session) {
+        const value = arToPersian(session).trim();
+        if (!value || value === '—' || value === 'تست') return Number.POSITIVE_INFINITY;
+        const normalized = value.replace(/[۰-۹٠-٩]/g, digit =>
+            String(digit.codePointAt(0) - (digit >= '٠' && digit <= '٩' ? 0x660 : 0x6f0))
+        );
+        const numericMatch = normalized.match(/\d+/);
+        if (numericMatch) return Number(numericMatch[0]);
+
+        const wordRanks = {
+            'صفر': 0,
+            'اول': 1,
+            'یک': 1,
+            'دوم': 2,
+            'دو': 2,
+            'سوم': 3,
+            'سه': 3,
+            'چهارم': 4,
+            'چهار': 4,
+            'پنجم': 5,
+            'پنج': 5,
+            'ششم': 6,
+            'شش': 6,
+            'هفتم': 7,
+            'هفت': 7,
+            'هشتم': 8,
+            'هشت': 8,
+            'نهم': 9,
+            'نه': 9,
+            'دهم': 10,
+            'ده': 10
+        };
+        const found = Object.entries(wordRanks).find(([word]) => value.includes(word));
+        return found ? found[1] : Number.POSITIVE_INFINITY;
+    }
+
+    function formatFileSize(bytes) {
+        const size = Number(bytes) || 0;
+        if (!size) return '—';
+        if (size >= 1073741824) return `${toPersianDigits((size / 1073741824).toFixed(1))} GB`;
+        if (size >= 1048576) return `${toPersianDigits((size / 1048576).toFixed(1))} MB`;
+        return `${toPersianDigits(Math.round(size / 1024))} KB`;
+    }
+
+    function formatRecordingDate(value) {
+        if (!value) return '—';
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return '—';
+        return date.toLocaleDateString('fa-IR');
+    }
+
+    function recordingSearchText(recording) {
+        return [
+            recording.course_name,
+            recording.session,
+            recording.name
+        ].map(item => arToPersian(item).toLowerCase()).join(' ');
+    }
+
+    function groupRecordingsByCourse(recordings) {
+        const groups = new Map();
+        recordings.forEach(recording => {
+            const courseName = recording.course_name || 'بدون عنوان';
+            if (!groups.has(courseName)) {
+                groups.set(courseName, {
+                    courseName,
+                    files: [],
+                    newestTime: 0,
+                    totalSize: 0
+                });
+            }
+            const group = groups.get(courseName);
+            group.files.push(recording);
+            group.newestTime = Math.max(group.newestTime, new Date(recording.modified_at || 0).getTime() || 0);
+            group.totalSize += Number(recording.size) || 0;
+        });
+
+        return Array.from(groups.values()).map(group => ({
+            ...group,
+            files: group.files.sort((a, b) =>
+                sessionRank(a.session) - sessionRank(b.session) ||
+                normalizeSession(a.session).localeCompare(normalizeSession(b.session), 'fa', { numeric: true }) ||
+                new Date(a.modified_at || 0) - new Date(b.modified_at || 0)
+            )
+        }));
+    }
+
+    async function fetchRecordings() {
+        if (!recordingsContainer) return;
+        recordingsContainer.innerHTML = '<div class="no-results">در حال بارگذاری...</div>';
+        try {
+            const response = await fetch('/recordings');
+            if (!response.ok) throw new Error();
+            const recordings = await response.json();
+            allRecordings = (recordings || []).map(recording => ({
+                ...recording,
+                course_name: arToPersian(recording.course_name),
+                session: arToPersian(recording.session)
+            }));
+            renderRecordings();
+        } catch (err) {
+            recordingsContainer.innerHTML = '<div class="no-results">خطا در بارگذاری کلاس‌های ضبط شده</div>';
+            if (recordingsCount) recordingsCount.textContent = '';
+            console.error(err);
+        }
+    }
+
+    function renderRecordings() {
+        if (!recordingsContainer) return;
+        const query = arToPersian(recordingsSearch?.value || '').trim().toLowerCase();
+        const sort = recordingsSort?.value || 'date';
+        const filtered = allRecordings.filter(recording => {
+            const session = normalizeSession(recording.session);
+            if (session === '—' && !recording.course_name && !recording.name) return false;
+            if (!query) return true;
+            return recordingSearchText(recording).includes(query);
+        });
+
+        const groups = groupRecordingsByCourse(filtered);
+        groups.sort((a, b) => {
+            switch (sort) {
+                case 'count':
+                    return b.files.length - a.files.length ||
+                        a.courseName.localeCompare(b.courseName, 'fa', { numeric: true });
+                case 'date':
+                    return b.newestTime - a.newestTime ||
+                        a.courseName.localeCompare(b.courseName, 'fa', { numeric: true });
+                case 'course':
+                default:
+                    return a.courseName.localeCompare(b.courseName, 'fa', { numeric: true });
+            }
+        });
+
+        if (recordingsCount) {
+            recordingsCount.textContent = filtered.length
+                ? `${toPersianDigits(filtered.length)} فایل`
+                : '';
+        }
+
+        if (!filtered.length) {
+            recordingsContainer.innerHTML = '<div class="no-results">هیچ فایلی یافت نشد.</div>';
+            return;
+        }
+
+        recordingsContainer.innerHTML = groups.map(group => {
+            const courseName = escapeHtml(group.courseName);
+            const sessionCount = toPersianDigits(group.files.length);
+            const totalSize = escapeHtml(formatFileSize(group.totalSize));
+            const rows = group.files.map(recording => {
+            const downloadUrl = escapeHtml(recording.download_url || '#');
+            const session = escapeHtml(normalizeSession(recording.session));
+            const fileName = escapeHtml(recording.name || '');
+            const size = escapeHtml(formatFileSize(recording.size));
+            const date = escapeHtml(formatRecordingDate(recording.modified_at));
+
+            return `
+                    <div class="recording-session-row">
+                        <div class="recording-session-title">${session}</div>
+                        <div class="recording-file-name">${fileName}</div>
+                        <div class="recording-session-meta">
+                        <span>${size}</span>
+                        <span>${date}</span>
+                    </div>
+                        <div class="recording-session-actions">
+                        <a href="${downloadUrl}" class="recording-download" target="_blank" rel="noopener">دانلود</a>
+                        <button type="button" class="recording-copy" data-url="${downloadUrl}" title="کپی لینک">⛓</button>
+                    </div>
+                </div>
+            `;
+            }).join('');
+
+            return `
+                <section class="recording-course-group">
+                    <div class="recording-course-header">
+                        <div class="recording-course-name">${courseName}</div>
+                        <div class="recording-course-summary">${sessionCount} جلسه · ${totalSize}</div>
+                    </div>
+                    <div class="recording-sessions-list">
+                        ${rows}
+                    </div>
+                </section>
+            `;
+        }).join('');
+
+        recordingsContainer.querySelectorAll('.recording-copy').forEach(button => {
+            button.addEventListener('click', () => copyRecordingLink(button.dataset.url, button));
+        });
+    }
+
+    function copyRecordingLink(url, button) {
+        const done = () => {
+            const previous = button.textContent;
+            button.textContent = '✓';
+            setTimeout(() => { button.textContent = previous; }, 1200);
+        };
+        if (navigator.clipboard?.writeText) {
+            navigator.clipboard.writeText(url).then(done).catch(() => fallbackCopyRecording(url, done));
+        } else {
+            fallbackCopyRecording(url, done);
+        }
+    }
+
+    function fallbackCopyRecording(url, done) {
+        const textArea = document.createElement('textarea');
+        textArea.value = url;
+        textArea.style.cssText = 'position:fixed;opacity:0;top:0;left:0';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            done();
+        } catch (err) {
+            window.prompt('لینک دانلود:', url);
+        }
+        document.body.removeChild(textArea);
+    }
+
+    if (recordingsSearch) recordingsSearch.addEventListener('input', renderRecordings);
+    if (recordingsSort) recordingsSort.addEventListener('change', renderRecordings);
+    document.querySelectorAll('[data-recording-hint-close]').forEach(element => {
+        element.addEventListener('click', closeRecordingHint);
+    });
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape') closeRecordingHint();
+    });
+    const recordingCourseParam = new URLSearchParams(window.location.search).get('recording_course');
+    if (recordingCourseParam) {
+        showRecordingHint(recordingCourseParam);
+    }
 
     fetchLatestCourses();
     fetchLatestTeachers();
+    fetchRecordings();
 });

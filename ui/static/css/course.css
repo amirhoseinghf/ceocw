@@ -289,6 +289,48 @@
   font-size: 0.85rem;
   font-weight: 400;
 }
+.course-recordings-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-color: #bfdbfe;
+  background: linear-gradient(135deg, #eff6ff 0%, #ffffff 56%, #ecfdf5 100%);
+}
+.course-recordings-text {
+  min-width: 0;
+}
+.course-recordings-text h2 {
+  margin-bottom: 8px;
+}
+.course-recordings-text p {
+  margin: 0;
+  color: #475569;
+  font-size: 0.92rem;
+  line-height: 1.8;
+}
+.course-recordings-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-height: 42px;
+  padding: 0 18px;
+  color: #fff;
+  background: #1e3a8a;
+  border: 1px solid #1e3a8a;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+.course-recordings-link:hover {
+  background: #1e40af;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(30, 58, 138, 0.18);
+  text-decoration: none;
+}
 
 /* ── BOOKS ─────────────────────────────────────────────────────────── */
 .books-card { background: #fff; }
@@ -733,7 +775,9 @@ font-weight: 600; color: #1e293b; font-size: 0.9rem;
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 7px 16px;
+  min-width: 86px;
+  justify-content: center;
+  padding: 7px 18px;
   background: #1e3a8a;
   color: #fff;
   text-decoration: none;
@@ -806,6 +850,13 @@ font-weight: 600; color: #1e293b; font-size: 0.9rem;
   .course-title { font-size: 1.7rem; }
   .course-content-wrap { padding: 0 16px 40px; }
   .course-card { padding: 18px; }
+  .course-recordings-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .course-recordings-link {
+    width: 100%;
+  }
   .info-grid { grid-template-columns: 1fr; }
   .books-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 14px; }
   .tas-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
@@ -870,5 +921,5 @@ font-weight: 600; color: #1e293b; font-size: 0.9rem;
   .course-title { font-size: 1.4rem; }
   .books-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
   .course-links-bar { padding: 12px 16px; }
-  .download-btn { padding: 6px 12px; font-size: 0.8rem; }
+  .download-btn { min-width: 78px; padding: 6px 14px; font-size: 0.8rem; }
 }

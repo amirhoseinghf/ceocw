@@ -41,6 +41,7 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, "/semester/:slug", app.semesterCoursesView)
 	router.HandlerFunc(http.MethodGet, "/latest/courses", app.coursesLatest)
 	router.HandlerFunc(http.MethodGet, "/latest/teachers", app.teachersLatest)
+	router.HandlerFunc(http.MethodGet, "/recordings", app.recordingsGetAll)
 	router.HandlerFunc(http.MethodGet, "/search", app.searchCourses)
 
 	// Authentication routes (public)

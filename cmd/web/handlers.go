@@ -3059,3 +3059,72 @@ func (app *application) teachersLatest(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(teachers)
 }
+
+type recordingFile struct {
+	Name        string `json:"name"`
+	Size        int64  `json:"size"`
+	ModifiedAt  string `json:"modified_at"`
+	CourseName  string `json:"course_name"`
+	Session     string `json:"session"`
+	JobID       string `json:"job_id"`
+	DownloadURL string `json:"download_url"`
+}
+
+type recordingsAggregate struct {
+	Files   []recordingFile `json:"files"`
+	Domains []struct {
+		Files []recordingFile `json:"files"`
+	} `json:"domains"`
+}
+
+func (app *application) recordingsGetAll(w http.ResponseWriter, r *http.Request) {
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Get("http://t.bsdo.ir:7041/api/aggregate")
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		app.clientError(w, http.StatusBadGateway)
+		return
+	}
+
+	var aggregate recordingsAggregate
+	if err := json.NewDecoder(resp.Body).Decode(&aggregate); err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	files := aggregate.Files
+	if len(files) == 0 {
+		for _, domain := range aggregate.Domains {
+			files = append(files, domain.Files...)
+		}
+	}
+
+	files = dedupeRecordingFiles(files)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(files)
+}
+
+func dedupeRecordingFiles(files []recordingFile) []recordingFile {
+	seen := make(map[string]bool, len(files))
+	unique := make([]recordingFile, 0, len(files))
+	for _, file := range files {
+		key := file.JobID
+		if key == "" {
+			key = file.DownloadURL
+		}
+		if key == "" {
+			key = fmt.Sprintf("%s|%s|%s|%d", file.Name, file.CourseName, file.Session, file.Size)
+		}
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+		unique = append(unique, file)
+	}
+	return unique
+}
