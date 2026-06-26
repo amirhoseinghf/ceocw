@@ -250,12 +250,14 @@ func (app *application) teachersGetAll(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(teachers)
 }
 
 func (app *application) teachersGet(w http.ResponseWriter, r *http.Request) {
 	params := httprouter.ParamsFromContext(r.Context())
 	id, err := strconv.Atoi(params.ByName("id"))
+
 	if err != nil || id < 1 {
 		app.notFound(w)
 		return
@@ -269,7 +271,7 @@ func (app *application) teachersGet(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(teacher)
 }
 
@@ -293,6 +295,10 @@ func (app *application) teachersPut(w http.ResponseWriter, r *http.Request) {
 	// Get existing teacher to fall back to current image URL
 	existing, err := app.teachers.Get(id)
 	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+			return
+		}
 		app.serverError(w, err)
 		return
 	}
@@ -344,6 +350,7 @@ func (app *application) teachersPut(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) teachersPost(w http.ResponseWriter, r *http.Request) {
+	app.infoLog.Println("We Get Here!")
 	if err := r.ParseMultipartForm(5 << 20); err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
@@ -364,6 +371,7 @@ func (app *application) teachersPost(w http.ResponseWriter, r *http.Request) {
 		PageURL:          pageURL,
 	}
 	newID, err := app.teachers.Insert(teacher)
+
 	if err != nil {
 		app.serverError(w, err)
 		return
