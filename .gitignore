@@ -3,8 +3,8 @@ data/
 icons-github/
 
 # ignore build artifacts
-web
-web.exe
+/web
+/web.exe
 
 # ignore documentation files except README.md
 *.md
