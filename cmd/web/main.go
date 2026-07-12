@@ -9,8 +9,8 @@ import (
 	"os"
 	"time"
 
-	"cearchieve.amirhoseinghf.ir/models"
 	"github.com/alexedwards/scs/v2"
+	"github.com/amirhoseinghf/ceocw/models"
 	_ "github.com/go-sql-driver/mysql"
 )
 

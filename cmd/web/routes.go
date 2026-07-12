@@ -16,10 +16,10 @@ func (app *application) routes() http.Handler {
 
 	// Protected routes.
 	staff := func(h http.HandlerFunc) http.HandlerFunc {
-		return app.requireStaff(http.HandlerFunc(h)).ServeHTTP
+		return app.requireStaff(h).ServeHTTP
 	}
 	admin := func(h http.HandlerFunc) http.HandlerFunc {
-		return app.requireAdmin(http.HandlerFunc(h)).ServeHTTP
+		return app.requireAdmin(h).ServeHTTP
 	}
 
 	// Static files (no authentication needed)

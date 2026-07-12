@@ -16,7 +16,7 @@ import (
 	"strings"
 	"time"
 
-	"cearchieve.amirhoseinghf.ir/models"
+	"github.com/amirhoseinghf/ceocw/models"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -350,7 +350,6 @@ func (app *application) teachersPut(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) teachersPost(w http.ResponseWriter, r *http.Request) {
-	app.infoLog.Println("We Get Here!")
 	if err := r.ParseMultipartForm(5 << 20); err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
@@ -435,7 +434,12 @@ func (app *application) semestersGetAll(w http.ResponseWriter, r *http.Request) 
 		}
 		return
 	}
-	json.NewEncoder(w).Encode(semesters)
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(semesters)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
 }
 
 // GET /semesters/{id}
@@ -455,16 +459,33 @@ func (app *application) semesterGet(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	json.NewEncoder(w).Encode(semester)
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(semester)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
 }
 
 // POST /semesters
 func (app *application) semesterInsert(w http.ResponseWriter, r *http.Request) {
-	var semester models.Semester
-	if err := json.NewDecoder(r.Body).Decode(&semester); err != nil {
+	if err := r.ParseMultipartForm(5 << 20); err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
+	season := r.FormValue("season")
+	year := r.FormValue("year")
+	yearInt, err := strconv.ParseInt(year, 10, 64)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	semester := models.Semester{
+		Season: season,
+		Year:   int(yearInt),
+	}
+
 	if err := app.semesters.Insert(semester); err != nil {
 		if strings.Contains(err.Error(), "Duplicate entry") {
 			http.Error(w, "این سال و فصل قبلاً ثبت شده است", http.StatusConflict)
@@ -484,11 +505,35 @@ func (app *application) semesterUpdate(w http.ResponseWriter, r *http.Request) {
 		app.notFound(w)
 		return
 	}
-	var semester models.Semester
-	if err := json.NewDecoder(r.Body).Decode(&semester); err != nil {
+
+	if err := r.ParseMultipartForm(20 << 20); err != nil && !strings.Contains(err.Error(), "no multipart boundary") {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
+
+	_, err = app.semesters.Get(id)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+			return
+		}
+		app.serverError(w, err)
+		return
+	}
+
+	season := r.FormValue("season")
+	year := r.FormValue("year")
+	yearInt, err := strconv.ParseInt(year, 10, 64)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	semester := models.Semester{
+		Season: season,
+		Year:   int(yearInt),
+	}
+
 	semester.Id = id
 	if err := app.semesters.Update(semester); err != nil {
 		if strings.Contains(err.Error(), "Duplicate entry") {

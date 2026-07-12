@@ -4,7 +4,7 @@ import (
 	"html/template"
 	"path/filepath"
 
-	"cearchieve.amirhoseinghf.ir/models"
+	"github.com/amirhoseinghf/ceocw/models"
 )
 
 type templateData struct {

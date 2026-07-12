@@ -1,4 +1,4 @@
-module cearchieve.amirhoseinghf.ir
+module github.com/amirhoseinghf/ceocw
 
 go 1.21.5
 

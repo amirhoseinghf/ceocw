@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"cearchieve.amirhoseinghf.ir/models"
+	"github.com/amirhoseinghf/ceocw/models"
 )
 
 func secureHeaders(next http.Handler) http.Handler {
@@ -73,6 +73,7 @@ func (app *application) requireRole(roles ...string) func(http.Handler) http.Han
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			user, ok := app.currentUser(w, r)
 			if !ok {
+				app.forbidden(w)
 				return
 			}
 			if !allowed[user.UserType] {
@@ -87,7 +88,7 @@ func (app *application) requireRole(roles ...string) func(http.Handler) http.Han
 
 func (app *application) currentUser(w http.ResponseWriter, r *http.Request) (*models.User, bool) {
 	if !app.isAuthenticated(r) {
-		http.Redirect(w, r, "/user/login?denied=true", http.StatusSeeOther)
+		http.Redirect(w, r, "/user/login?denied=true", http.StatusForbidden)
 		return nil, false
 	}
 
