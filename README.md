@@ -5,7 +5,7 @@
 
 # CEOCW — Computer Engineering OpenCourseWare
 
-A self-hosted course archive and management platform for publishing lecture slides, notes, assignments, exams, and announcements by semester and teacher.
+A course archive and management platform for publishing lecture slides, notes, assignments, exams, and announcements by semester and teacher.
 
 [![Go Version](https://img.shields.io/badge/Go-1.21.5-00ADD8?logo=go)](https://go.dev/)
 [![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql&logoColor=white)](https://www.mysql.com/)
