@@ -77,7 +77,7 @@ It was originally built for [Shahid Beheshti University](https://cse.sbu.ac.ir),
 This is the fastest way to get the app and database running together.
 
 ```bash
-git clone https://github.com/<your-username>/ceocw.git
+git clone https://github.com/amirhoseinghf/ceocw.git
 cd ceocw
 docker compose up
 ```
